@@ -17,27 +17,60 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     async function checkSession() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
 
-      if (!session) return
+        if (sessionError) {
+          console.error(sessionError)
+          setCheckingSession(false)
+          return
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single()
+        if (!session?.user) {
+          setCheckingSession(false)
+          return
+        }
 
-      if (profile?.role === 'company') {
-        router.replace('/company')
-      } else {
-        router.replace('/worker')
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          console.error(profileError)
+          setCheckingSession(false)
+          return
+        }
+
+        if (!profile?.role) {
+          setCheckingSession(false)
+          return
+        }
+
+        if (profile.role === 'company') {
+          router.replace('/company')
+          return
+        }
+
+        if (profile.role === 'worker') {
+          router.replace('/worker')
+          return
+        }
+
+        setCheckingSession(false)
+      } catch (err) {
+        console.error(err)
+        setCheckingSession(false)
       }
     }
 
@@ -52,11 +85,11 @@ export default function LoginPage() {
 
   const subtitle = useMemo(() => {
     if (mode === 'signup') {
-      return 'Create your SitePassport account and choose whether you are registering as an operative or a company.'
+      return 'Create your SitePassport account and choose whether you are an operative or a company.'
     }
 
     if (mode === 'forgot') {
-      return 'Enter your email address and we will send you a password reset link.'
+      return 'Enter your email and we will send you a password reset link.'
     }
 
     return 'Login to open your SitePassport dashboard.'
@@ -73,17 +106,34 @@ export default function LoginPage() {
   }
 
   async function goToCorrectDashboard(userId: string) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
-    if (profile?.role === 'company') {
-      router.replace('/company')
-    } else {
-      router.replace('/worker')
+    if (profileError) {
+      console.error(profileError)
+      setError('Could not load account profile.')
+      return
     }
+
+    if (!profile?.role) {
+      setError('Account profile not found. Please contact support or create a new account.')
+      return
+    }
+
+    if (profile.role === 'company') {
+      router.replace('/company')
+      return
+    }
+
+    if (profile.role === 'worker') {
+      router.replace('/worker')
+      return
+    }
+
+    setError('Invalid account role.')
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -191,38 +241,46 @@ export default function LoginPage() {
         setMessage('Password reset email sent. Please check your inbox.')
         return
       }
-    } catch {
+    } catch (err) {
+      console.error(err)
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const modeButtonStyle = (active: boolean) => ({
-    minHeight: 54,
-    padding: '0 18px',
-    borderRadius: 16,
-    border: active ? '1px solid #243caa' : '1px solid #d7e0ec',
-    background: active ? '#243caa' : '#f8fbff',
-    color: active ? '#ffffff' : '#243caa',
-    fontSize: 16,
-    fontWeight: 800,
-    cursor: 'pointer' as const,
-    transition: '0.18s ease',
-  })
-
-  const roleButtonStyle = (active: boolean) => ({
-    minHeight: 60,
-    padding: '0 18px',
-    borderRadius: 18,
-    border: active ? '1px solid #243caa' : '1px solid #d7e0ec',
-    background: active ? '#eef3ff' : '#ffffff',
-    color: '#09154b',
-    fontSize: 18,
-    fontWeight: 800,
-    cursor: 'pointer' as const,
-    transition: '0.18s ease',
-  })
+  if (checkingSession) {
+    return (
+      <main className="page-shell">
+        <div className="container">
+          <div
+            style={{
+              minHeight: 'calc(100vh - 48px)',
+              display: 'grid',
+              placeItems: 'center',
+            }}
+          >
+            <section
+              className="card"
+              style={{
+                width: '100%',
+                maxWidth: 640,
+                textAlign: 'center',
+              }}
+            >
+              <div className="brand" style={{ color: '#16307f' }}>
+                SITEPASSPORT
+              </div>
+              <h1 className="section-title">Loading SitePassport</h1>
+              <p className="section-subtitle" style={{ marginBottom: 0 }}>
+                Please wait a moment.
+              </p>
+            </section>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="page-shell">
@@ -231,7 +289,7 @@ export default function LoginPage() {
           style={{
             minHeight: 'calc(100vh - 48px)',
             display: 'grid',
-            gridTemplateColumns: '1.08fr 0.92fr',
+            gridTemplateColumns: '1.1fr 0.9fr',
             gap: 24,
             alignItems: 'stretch',
           }}
@@ -239,40 +297,22 @@ export default function LoginPage() {
           <section
             className="hero"
             style={{
-              minHeight: 680,
+              minHeight: 620,
               flexDirection: 'column',
               alignItems: 'flex-start',
               justifyContent: 'space-between',
               marginBottom: 0,
-              padding: 38,
+              padding: 36,
             }}
           >
             <div>
               <div className="brand">SITEPASSPORT</div>
 
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                  marginBottom: 22,
-                }}
-              >
-                Construction workforce passport system
-              </div>
-
               <h1
                 style={{
-                  fontSize: 68,
-                  maxWidth: 760,
-                  marginBottom: 18,
-                  lineHeight: 0.95,
+                  fontSize: 64,
+                  maxWidth: 700,
+                  marginBottom: 16,
                 }}
               >
                 Digital operative passports for real site use
@@ -281,12 +321,12 @@ export default function LoginPage() {
               <p
                 style={{
                   fontSize: 22,
-                  maxWidth: 660,
-                  lineHeight: 1.45,
+                  maxWidth: 640,
                 }}
               >
-                Store operative details, CSCS card image, qualifications, expiry dates,
-                QR code, and passport summary in one secure place for fast site checks.
+                Store operative details, CSCS card image, qualifications, expiry
+                dates, QR code, and passport summary in one secure place for fast
+                site checks.
               </p>
             </div>
 
@@ -295,7 +335,7 @@ export default function LoginPage() {
                 display: 'grid',
                 gap: 18,
                 width: '100%',
-                maxWidth: 660,
+                maxWidth: 620,
               }}
             >
               <div
@@ -303,7 +343,7 @@ export default function LoginPage() {
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.14)',
                   borderRadius: 24,
-                  padding: 22,
+                  padding: 20,
                 }}
               >
                 <div
@@ -315,58 +355,11 @@ export default function LoginPage() {
                     marginBottom: 8,
                   }}
                 >
-                  1. Build your passport
+                  Construction workforce passport system
                 </div>
-                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.92)', lineHeight: 1.45 }}>
-                  Add your details, CSCS card image, right to work expiry, and qualifications.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  borderRadius: 24,
-                  padding: 22,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 800,
-                    letterSpacing: 1.5,
-                    textTransform: 'uppercase',
-                    marginBottom: 8,
-                  }}
-                >
-                  2. Show your QR on site
-                </div>
-                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.92)', lineHeight: 1.45 }}>
-                  Let managers open your public profile instantly for site access and checks.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  borderRadius: 24,
-                  padding: 22,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 800,
-                    letterSpacing: 1.5,
-                    textTransform: 'uppercase',
-                    marginBottom: 8,
-                  }}
-                >
-                  3. Manage operatives as a company
-                </div>
-                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.92)', lineHeight: 1.45 }}>
-                  Scan, review, save, and manage operatives from one company dashboard.
+                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.9)' }}>
+                  Built for operatives, supervisors, and companies working on real
+                  construction sites.
                 </div>
               </div>
             </div>
@@ -378,8 +371,7 @@ export default function LoginPage() {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              minHeight: 680,
-              padding: 34,
+              minHeight: 620,
             }}
           >
             <div
@@ -387,51 +379,39 @@ export default function LoginPage() {
                 display: 'flex',
                 gap: 10,
                 flexWrap: 'wrap',
-                marginBottom: 26,
+                marginBottom: 24,
               }}
             >
               <button
                 type="button"
+                className={mode === 'login' ? 'btn btn-secondary' : 'btn btn-primary'}
                 onClick={() => switchMode('login')}
-                style={modeButtonStyle(mode === 'login')}
               >
                 Login
               </button>
 
               <button
                 type="button"
+                className={mode === 'signup' ? 'btn btn-secondary' : 'btn btn-primary'}
                 onClick={() => switchMode('signup')}
-                style={modeButtonStyle(mode === 'signup')}
               >
                 Create account
               </button>
 
               <button
                 type="button"
+                className={mode === 'forgot' ? 'btn btn-secondary' : 'btn btn-primary'}
                 onClick={() => switchMode('forgot')}
-                style={modeButtonStyle(mode === 'forgot')}
               >
                 Forgot password
               </button>
             </div>
 
-            <h2
-              className="section-title"
-              style={{
-                fontSize: 44,
-                marginBottom: 10,
-              }}
-            >
+            <h2 className="section-title" style={{ fontSize: 42 }}>
               {title}
             </h2>
 
-            <p
-              className="section-subtitle"
-              style={{
-                marginBottom: 28,
-                maxWidth: 560,
-              }}
-            >
+            <p className="section-subtitle" style={{ marginBottom: 28 }}>
               {subtitle}
             </p>
 
@@ -445,7 +425,6 @@ export default function LoginPage() {
                   color: '#167342',
                   fontWeight: 700,
                   border: '1px solid #cdebd8',
-                  lineHeight: 1.45,
                 }}
               >
                 {message}
@@ -462,7 +441,6 @@ export default function LoginPage() {
                   color: '#bb1f1f',
                   fontWeight: 700,
                   border: '1px solid #f2c2c2',
-                  lineHeight: 1.45,
                 }}
               >
                 {error}
@@ -473,7 +451,6 @@ export default function LoginPage() {
               {mode === 'signup' ? (
                 <div className="field">
                   <label>I am registering as</label>
-
                   <div
                     style={{
                       display: 'grid',
@@ -483,16 +460,16 @@ export default function LoginPage() {
                   >
                     <button
                       type="button"
+                      className={role === 'worker' ? 'btn btn-secondary' : 'btn btn-primary'}
                       onClick={() => setRole('worker')}
-                      style={roleButtonStyle(role === 'worker')}
                     >
                       Operative
                     </button>
 
                     <button
                       type="button"
+                      className={role === 'company' ? 'btn btn-secondary' : 'btn btn-primary'}
                       onClick={() => setRole('company')}
-                      style={roleButtonStyle(role === 'company')}
                     >
                       Company
                     </button>
@@ -537,12 +514,8 @@ export default function LoginPage() {
                 </div>
               ) : null}
 
-              <div className="form-actions" style={{ marginTop: 10 }}>
-                <button
-                  type="submit"
-                  className="btn btn-secondary"
-                  disabled={loading}
-                >
+              <div className="form-actions" style={{ marginTop: 8 }}>
+                <button type="submit" className="btn btn-secondary" disabled={loading}>
                   {loading
                     ? 'Please wait...'
                     : mode === 'login'
@@ -567,12 +540,11 @@ export default function LoginPage() {
 
             <div
               style={{
-                marginTop: 30,
-                paddingTop: 22,
+                marginTop: 28,
+                paddingTop: 20,
                 borderTop: '1px solid #dde5f0',
                 color: '#4d648c',
                 fontSize: 16,
-                lineHeight: 1.5,
               }}
             >
               {mode === 'login' ? (
