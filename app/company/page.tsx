@@ -382,7 +382,7 @@ export default function CompanyPage() {
             alignItems: 'stretch',
           }}
         >
-          <div style={{ flex: 1, minWidth: 280 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div className="brand">SITEPASSPORT</div>
 
             <h1
@@ -564,7 +564,7 @@ export default function CompanyPage() {
         <section
           style={{
             display: 'grid',
-            gridTemplateColumns: '1.2fr 0.8fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
             gap: 24,
             marginBottom: 24,
           }}
@@ -628,6 +628,7 @@ export default function CompanyPage() {
                     fontWeight: 900,
                     color: '#08153d',
                     marginBottom: 8,
+                    lineHeight: 1.15,
                   }}
                 >
                   Scan operative QR
@@ -669,6 +670,7 @@ export default function CompanyPage() {
                     fontWeight: 900,
                     color: '#08153d',
                     marginBottom: 8,
+                    lineHeight: 1.15,
                   }}
                 >
                   Check expiry status
@@ -710,6 +712,7 @@ export default function CompanyPage() {
                     fontWeight: 900,
                     color: '#08153d',
                     marginBottom: 8,
+                    lineHeight: 1.15,
                   }}
                 >
                   Save or remove operatives
@@ -836,7 +839,7 @@ export default function CompanyPage() {
               marginBottom: 24,
             }}
           >
-            <div>
+            <div style={{ minWidth: 0 }}>
               <h2
                 style={{
                   margin: 0,
@@ -870,7 +873,7 @@ export default function CompanyPage() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'minmax(240px, 1fr) minmax(220px, 260px)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: 16,
               marginBottom: 18,
             }}
@@ -1061,7 +1064,7 @@ export default function CompanyPage() {
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: '170px 1fr auto',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                         gap: 18,
                         alignItems: 'start',
                       }}
@@ -1084,6 +1087,7 @@ export default function CompanyPage() {
                           <div
                             style={{
                               width: '100%',
+                              maxWidth: 260,
                               aspectRatio: '1.58 / 1',
                               borderRadius: '18px',
                               border: '1px solid #d7e1ef',
@@ -1111,6 +1115,7 @@ export default function CompanyPage() {
                           <div
                             style={{
                               width: '100%',
+                              maxWidth: 260,
                               aspectRatio: '1.58 / 1',
                               borderRadius: '18px',
                               display: 'flex',
@@ -1126,7 +1131,13 @@ export default function CompanyPage() {
                               lineHeight: 1.3,
                             }}
                           >
-                            {worker.fullName ? worker.fullName.split(' ').slice(0, 2).map((part) => part[0]?.toUpperCase() ?? '').join('') : 'SP'}
+                            {worker.fullName
+                              ? worker.fullName
+                                  .split(' ')
+                                  .slice(0, 2)
+                                  .map((part) => part[0]?.toUpperCase() ?? '')
+                                  .join('')
+                              : 'SP'}
                           </div>
                         )}
                       </div>
@@ -1142,7 +1153,7 @@ export default function CompanyPage() {
                             alignItems: 'flex-start',
                           }}
                         >
-                          <div>
+                          <div style={{ minWidth: 0 }}>
                             <div
                               style={{
                                 fontSize: '32px',
@@ -1165,7 +1176,9 @@ export default function CompanyPage() {
                                 lineHeight: 1.45,
                               }}
                             >
-                              {(worker.role || 'No role') + ' • ' + (worker.company || 'No company')}
+                              {(worker.role || 'No role') +
+                                ' • ' +
+                                (worker.company || 'No company')}
                             </div>
 
                             <div
@@ -1269,13 +1282,10 @@ export default function CompanyPage() {
                         style={{
                           display: 'grid',
                           gap: 10,
-                          minWidth: 160,
+                          alignContent: 'start',
                         }}
                       >
-                        <Link
-                          href={`/scan/${worker.workerId}`}
-                          className="btn btn-secondary"
-                        >
+                        <Link href={`/scan/${worker.workerId}`} className="btn btn-secondary">
                           View operative
                         </Link>
 

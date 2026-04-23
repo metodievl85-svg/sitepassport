@@ -83,10 +83,7 @@ function normalizeQualification(
   }
 }
 
-function mapWorkerRow(
-  worker: any,
-  qualifications: any[] | null | undefined
-): Worker {
+function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Worker {
   return {
     id: worker.id,
     user_id: worker.user_id ?? '',
@@ -171,11 +168,10 @@ export default function WorkerPage() {
         return
       }
 
-      const { data: qualificationsRows, error: qualificationsError } =
-        await supabase
-          .from('qualifications')
-          .select('*')
-          .eq('worker_id', workerRow.id)
+      const { data: qualificationsRows, error: qualificationsError } = await supabase
+        .from('qualifications')
+        .select('*')
+        .eq('worker_id', workerRow.id)
 
       if (qualificationsError) {
         console.error('qualifications load error:', qualificationsError)
@@ -185,7 +181,7 @@ export default function WorkerPage() {
       setLoading(false)
     }
 
-    load()
+    void load()
   }, [router])
 
   async function handleLogout() {
@@ -225,7 +221,7 @@ export default function WorkerPage() {
               <div className="brand">SITEPASSPORT</div>
               <h1>My Passport</h1>
               <p>Your operative account is active and ready to set up.</p>
-              <p style={{ marginTop: 10, color: '#d7e4ff', fontWeight: 700 }}>
+              <p style={{ marginTop: 10, color: '#d7e4ff', fontWeight: 700, wordBreak: 'break-word' }}>
                 Logged in as: {accountEmail || 'Operative'}
               </p>
             </div>
@@ -241,9 +237,9 @@ export default function WorkerPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1.2fr 0.8fr',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
                 gap: 24,
-                alignItems: 'center',
+                alignItems: 'start',
               }}
             >
               <div>
@@ -315,11 +311,18 @@ export default function WorkerPage() {
     <main className="page-shell">
       <div className="container">
         <section className="hero">
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div className="brand">SITEPASSPORT</div>
             <h1>My Passport</h1>
             <p>Your personal operative passport, ready for site checks and sharing.</p>
-            <p style={{ marginTop: 10, color: '#d7e4ff', fontWeight: 700 }}>
+            <p
+              style={{
+                marginTop: 10,
+                color: '#d7e4ff',
+                fontWeight: 700,
+                wordBreak: 'break-word',
+              }}
+            >
               Logged in as: {accountEmail || 'Operative'}
             </p>
           </div>
@@ -339,7 +342,14 @@ export default function WorkerPage() {
           </div>
         </section>
 
-        <section className="grid-3">
+        <section
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: 24,
+            marginBottom: 24,
+          }}
+        >
           <div className="stat-card">
             <div className="stat-title">CSCS status</div>
             <div className="stat-value" style={{ fontSize: 30 }}>
@@ -392,7 +402,14 @@ export default function WorkerPage() {
           </div>
         </section>
 
-        <section className="main-grid">
+        <section
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr',
+            gap: 24,
+            alignItems: 'start',
+          }}
+        >
           <div className="card">
             <div
               style={{
@@ -404,7 +421,7 @@ export default function WorkerPage() {
                 marginBottom: 4,
               }}
             >
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <h2 className="section-title">Passport summary</h2>
                 <p className="section-subtitle">
                   Your main operative information in one place.
@@ -432,8 +449,8 @@ export default function WorkerPage() {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '340px 1fr',
-                gap: 28,
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: 24,
                 alignItems: 'start',
                 marginTop: 24,
               }}
@@ -516,14 +533,15 @@ export default function WorkerPage() {
                 </p>
               </div>
 
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <h3
                   style={{
                     margin: 0,
-                    fontSize: 56,
+                    fontSize: 'clamp(40px, 7vw, 56px)',
                     lineHeight: 0.98,
                     color: '#08153d',
                     letterSpacing: -1,
+                    wordBreak: 'break-word',
                   }}
                 >
                   {passport.fullName || 'Operative'}
@@ -532,9 +550,10 @@ export default function WorkerPage() {
                 <p
                   style={{
                     margin: '12px 0 0',
-                    fontSize: 22,
+                    fontSize: 'clamp(18px, 4vw, 22px)',
                     color: '#4d648c',
                     lineHeight: 1.4,
+                    wordBreak: 'break-word',
                   }}
                 >
                   {passport.role || 'No role'} • {passport.company || 'No company'}
@@ -562,7 +581,13 @@ export default function WorkerPage() {
                     Operative details
                   </div>
 
-                  <div className="worker-meta">
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                      gap: 16,
+                    }}
+                  >
                     <div>
                       <div className="meta-label">Email</div>
                       <div className="meta-value">{passport.email || '—'}</div>
@@ -625,6 +650,7 @@ export default function WorkerPage() {
                       fontSize: 17,
                       lineHeight: 1.55,
                       color: '#08153d',
+                      wordBreak: 'break-word',
                     }}
                   >
                     {passport.notes || 'No notes added.'}
@@ -681,6 +707,7 @@ export default function WorkerPage() {
                             margin: 0,
                             fontSize: 22,
                             color: '#08153d',
+                            wordBreak: 'break-word',
                           }}
                         >
                           {qualification.name || 'Qualification'}
@@ -691,7 +718,13 @@ export default function WorkerPage() {
                         </span>
                       </div>
 
-                      <div className="worker-meta">
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                          gap: 16,
+                        }}
+                      >
                         <div>
                           <div className="meta-label">Card / certificate number</div>
                           <div className="meta-value">{qualification.number || '—'}</div>

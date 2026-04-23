@@ -1,9 +1,8 @@
 'use client'
 
-import { FormEvent, useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useRouter } from 'next/navigation'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -12,78 +11,53 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
-  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        setReady(true)
-        setError('')
-      }
-    })
-
-    async function prepareRecovery() {
+    async function handleRecovery() {
       try {
-        const url = new URL(window.location.href)
-        const code = url.searchParams.get('code')
+        const hash = window.location.hash
 
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-          if (error) {
-            console.error(error)
-            setError('This password reset link is invalid or has expired.')
-            setReady(false)
-            return
-          }
-
-          setReady(true)
+        if (!hash || !hash.includes('access_token')) {
+          setError('This password reset link is invalid or has expired.')
           return
         }
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+        const params = new URLSearchParams(hash.replace('#', ''))
 
-        if (session?.user) {
-          setReady(true)
+        const access_token = params.get('access_token')
+        const refresh_token = params.get('refresh_token')
+
+        if (!access_token || !refresh_token) {
+          setError('This password reset link is invalid or incomplete.')
           return
         }
 
-        const hash = window.location.hash.toLowerCase()
-        if (hash.includes('access_token=')) {
-          setReady(true)
+        // Set session from reset link
+        const { error } = await supabase.auth.setSession({
+          access_token,
+          refresh_token,
+        })
+
+        if (error) {
+          setError(error.message)
           return
         }
 
-        setError('This password reset link is invalid or has expired.')
-        setReady(false)
+        setReady(true)
       } catch (err) {
         console.error(err)
-        setError('Could not open password reset.')
-        setReady(false)
+        setError('Failed to prepare password reset.')
       }
     }
 
-    void prepareRecovery()
-
-    return () => {
-      subscription.unsubscribe()
-    }
+    handleRecovery()
   }, [])
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setMessage('')
+  async function handleReset() {
     setError('')
-
-    if (!password.trim()) {
-      setError('Please enter your new password.')
-      return
-    }
+    setMessage('')
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters.')
@@ -95,23 +69,26 @@ export default function ResetPasswordPage() {
       return
     }
 
-    setLoading(true)
-
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
+      setLoading(true)
+
+      const { error } = await supabase.auth.updateUser({
         password,
       })
 
-      if (updateError) {
-        setError(updateError.message)
+      if (error) {
+        setError(error.message)
         return
       }
 
-      await supabase.auth.signOut()
-      router.replace('/login?reset=success')
+      setMessage('Password updated successfully. Redirecting to login...')
+
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
     } catch (err) {
       console.error(err)
-      setError('Something went wrong. Please try again.')
+      setError('Something went wrong.')
     } finally {
       setLoading(false)
     }
@@ -124,49 +101,23 @@ export default function ResetPasswordPage() {
           <section className="hero auth-hero">
             <div>
               <div className="brand">SITEPASSPORT</div>
-
               <h1 className="auth-hero-title">Choose your new password</h1>
-
               <p className="auth-hero-text">
-                Finish your password reset securely, then log back in to your
-                SitePassport account.
+                Finish your password reset securely, then log back in.
               </p>
-            </div>
-
-            <div className="auth-hero-panels">
-              <div className="auth-hero-panel">
-                <div className="auth-hero-panel-label">Secure password reset</div>
-                <div className="auth-hero-panel-text">
-                  Enter a new password below to complete the reset process.
-                </div>
-              </div>
             </div>
           </section>
 
           <section className="card auth-card">
-            <h2 className="section-title auth-card-title">Set new password</h2>
+            <h2 className="section-title auth-card-title">
+              Set new password
+            </h2>
 
-            <p className="section-subtitle" style={{ marginBottom: 28 }}>
-              Enter your new password and confirm it below.
-            </p>
+            {!ready && !error && (
+              <p className="section-subtitle">Preparing password reset...</p>
+            )}
 
-            {message ? (
-              <div
-                style={{
-                  marginBottom: 18,
-                  borderRadius: 18,
-                  padding: '14px 16px',
-                  background: '#e9f8ef',
-                  color: '#167342',
-                  fontWeight: 700,
-                  border: '1px solid #cdebd8',
-                }}
-              >
-                {message}
-              </div>
-            ) : null}
-
-            {error ? (
+            {error && (
               <div
                 style={{
                   marginBottom: 18,
@@ -180,67 +131,55 @@ export default function ResetPasswordPage() {
               >
                 {error}
               </div>
-            ) : null}
-
-            {!ready ? (
-              <div
-                style={{
-                  borderRadius: 18,
-                  padding: '16px 18px',
-                  background: '#f8fbff',
-                  border: '1px solid #d7e1ef',
-                  color: '#4d648c',
-                  fontWeight: 700,
-                }}
-              >
-                Preparing password reset...
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="form-grid-1">
-                <div className="field">
-                  <label htmlFor="password">New password</label>
-                  <input
-                    id="password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-
-                <div className="field">
-                  <label htmlFor="confirmPassword">Confirm new password</label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Repeat new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                </div>
-
-                <div className="form-actions" style={{ marginTop: 8 }}>
-                  <button type="submit" className="btn btn-secondary" disabled={loading}>
-                    {loading ? 'Please wait...' : 'Save new password'}
-                  </button>
-                </div>
-              </form>
             )}
 
-            <div className="auth-footer">
-              Back to{' '}
-              <Link
-                href="/login"
+            {message && (
+              <div
                 style={{
-                  color: '#2f4fd0',
-                  fontWeight: 800,
+                  marginBottom: 18,
+                  borderRadius: 18,
+                  padding: '14px 16px',
+                  background: '#e9f8ef',
+                  color: '#167342',
+                  fontWeight: 700,
+                  border: '1px solid #cdebd8',
                 }}
               >
-                login
-              </Link>
-            </div>
+                {message}
+              </div>
+            )}
+
+            {ready && (
+              <div className="form-grid-1">
+                <div className="field">
+                  <label>New password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="field">
+                  <label>Confirm password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleReset}
+                    disabled={loading}
+                  >
+                    {loading ? 'Updating...' : 'Update password'}
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         </div>
       </div>

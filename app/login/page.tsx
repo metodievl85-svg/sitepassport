@@ -140,7 +140,7 @@ export default function LoginPage() {
     }
 
     if (!profile?.role) {
-      setError('Account profile not found. Please contact support or create a new account.')
+      setError('Account profile not found. Please contact support.')
       return
     }
 
@@ -219,26 +219,16 @@ export default function LoginPage() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: cleanEmail,
           password,
+          options: {
+            data: {
+              role,
+            },
+          },
         })
 
         if (signUpError) {
           setError(signUpError.message)
           return
-        }
-
-        const userId = data.user?.id
-
-        if (userId) {
-          const { error: profileError } = await supabase.from('profiles').upsert({
-            id: userId,
-            email: cleanEmail,
-            role,
-          })
-
-          if (profileError) {
-            setError(profileError.message)
-            return
-          }
         }
 
         clearPasswordFields()
@@ -248,7 +238,7 @@ export default function LoginPage() {
           return
         }
 
-        setMessage('Account created. Please check your email to confirm your account.')
+        setMessage('Account created. Please check your email to confirm your account before logging in.')
         setMode('login')
         return
       }
