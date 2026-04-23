@@ -49,8 +49,8 @@ a {
 
 .container {
   max-width: 1560px;
-  margin: 0 auto;
   width: 100%;
+  margin: 0 auto;
 }
 
 .hero {
@@ -976,10 +976,12 @@ a {
 
   .hero {
     gap: 16px;
+    padding: 20px;
   }
 
   .hero h1 {
     font-size: 34px;
+    max-width: 100%;
   }
 
   .hero p {
@@ -1032,6 +1034,7 @@ a {
 
   .auth-layout {
     min-height: auto;
+    grid-template-columns: 1fr;
     gap: 16px;
   }
 
