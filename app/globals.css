@@ -937,7 +937,7 @@ a {
 
   .auth-hero {
     padding: 28px;
-    min-height: 420px;
+    min-height: 340px;
   }
 
   .auth-hero-title {
@@ -1039,46 +1039,47 @@ a {
   }
 
   .auth-hero {
-    padding: 22px;
-    min-height: 280px;
+    padding: 18px;
+    min-height: unset;
     justify-content: flex-start;
-    gap: 18px;
+    gap: 14px;
   }
 
   .auth-hero-title {
-    font-size: 34px;
-    line-height: 1.05;
-    margin-bottom: 12px;
+    font-size: 28px;
+    line-height: 1.08;
+    margin-bottom: 10px;
     max-width: 100%;
   }
 
   .auth-hero-text {
-    font-size: 16px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.45;
     max-width: 100%;
   }
 
   .auth-hero-panels {
     max-width: 100%;
-    gap: 14px;
+    gap: 12px;
   }
 
   .auth-hero-panel {
-    border-radius: 20px;
-    padding: 16px;
+    border-radius: 18px;
+    padding: 14px;
   }
 
   .auth-hero-panel-label {
-    font-size: 12px;
-    letter-spacing: 1.2px;
+    font-size: 11px;
+    letter-spacing: 1.1px;
   }
 
   .auth-hero-panel-text {
-    font-size: 15px;
+    font-size: 14px;
+    line-height: 1.4;
   }
 
   .auth-card {
-    padding: 22px;
+    padding: 20px;
     min-height: unset;
   }
 
