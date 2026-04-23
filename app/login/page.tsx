@@ -24,6 +24,18 @@ export default function LoginPage() {
   const [checkingSession, setCheckingSession] = useState(true)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth <= 760)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     async function checkSession() {
@@ -300,37 +312,113 @@ export default function LoginPage() {
   return (
     <main className="page-shell">
       <div className="container">
-        <div className="auth-layout">
-          <section className="hero auth-hero">
-            <div>
-              <div className="brand">SITEPASSPORT</div>
+        <div
+          style={{
+            minHeight: 'calc(100vh - 48px)',
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr)',
+            gap: isMobile ? 14 : 18,
+            alignItems: 'start',
+            maxWidth: isMobile ? 760 : 820,
+            margin: '0 auto',
+          }}
+        >
+          <section
+            className="hero"
+            style={{
+              marginBottom: 0,
+              minHeight: 'unset',
+              padding: isMobile ? 18 : 22,
+              alignItems: 'flex-start',
+              gap: isMobile ? 10 : 14,
+            }}
+          >
+            <div style={{ minWidth: 0, width: '100%' }}>
+              <div
+                className="brand"
+                style={{
+                  marginBottom: isMobile ? 10 : 12,
+                  fontSize: isMobile ? 14 : 18,
+                  letterSpacing: isMobile ? 3 : 4,
+                }}
+              >
+                SITEPASSPORT
+              </div>
 
-              <h1 className="auth-hero-title">
+              <h1
+                style={{
+                  fontSize: isMobile ? 24 : 40,
+                  lineHeight: isMobile ? 1.08 : 1.02,
+                  maxWidth: '100%',
+                  marginBottom: isMobile ? 8 : 10,
+                }}
+              >
                 Digital operative passports for real site use
               </h1>
 
-              <p className="auth-hero-text">
-                Store operative details, CSCS card image, qualifications, expiry
-                dates, QR code, and passport summary in one secure place for fast
-                site checks.
+              <p
+                style={{
+                  fontSize: isMobile ? 14 : 18,
+                  lineHeight: isMobile ? 1.45 : 1.5,
+                  maxWidth: '100%',
+                  marginBottom: 0,
+                }}
+              >
+                Store operative details, CSCS card image, qualifications, expiry dates,
+                QR code, and passport summary in one secure place for fast site checks.
               </p>
             </div>
 
-            <div className="auth-hero-panels">
-              <div className="auth-hero-panel">
-                <div className="auth-hero-panel-label">
+            {!isMobile ? (
+              <div
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.14)',
+                  borderRadius: 20,
+                  padding: 16,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    letterSpacing: 1.3,
+                    textTransform: 'uppercase',
+                    marginBottom: 6,
+                  }}
+                >
                   Construction workforce passport system
                 </div>
-                <div className="auth-hero-panel-text">
+                <div
+                  style={{
+                    fontSize: 16,
+                    color: 'rgba(255,255,255,0.9)',
+                    lineHeight: 1.45,
+                  }}
+                >
                   Built for operatives, supervisors, and companies working on real
                   construction sites.
                 </div>
               </div>
-            </div>
+            ) : null}
           </section>
 
-          <section className="card auth-card">
-            <div className="auth-tabs">
+          <section
+            className="card auth-card"
+            style={{
+              minHeight: 'unset',
+              padding: isMobile ? 18 : 22,
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: 10,
+                marginBottom: 22,
+              }}
+            >
               <button
                 type="button"
                 className={mode === 'login' ? 'btn btn-secondary' : 'btn btn-primary'}
@@ -356,9 +444,23 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <h2 className="section-title auth-card-title">{title}</h2>
+            <h2
+              className="section-title"
+              style={{
+                fontSize: isMobile ? 30 : 32,
+                marginBottom: 8,
+              }}
+            >
+              {title}
+            </h2>
 
-            <p className="section-subtitle" style={{ marginBottom: 28 }}>
+            <p
+              className="section-subtitle"
+              style={{
+                marginBottom: 24,
+                fontSize: isMobile ? 16 : 18,
+              }}
+            >
               {subtitle}
             </p>
 
@@ -398,7 +500,13 @@ export default function LoginPage() {
               {mode === 'signup' ? (
                 <div className="field">
                   <label>I am registering as</label>
-                  <div className="auth-role-grid">
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr',
+                      gap: 12,
+                    }}
+                  >
                     <button
                       type="button"
                       className={role === 'worker' ? 'btn btn-secondary' : 'btn btn-primary'}
@@ -482,7 +590,16 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <div className="auth-footer">
+            <div
+              style={{
+                marginTop: 24,
+                paddingTop: 18,
+                borderTop: '1px solid #dde5f0',
+                color: '#4d648c',
+                fontSize: 16,
+                lineHeight: 1.5,
+              }}
+            >
               {mode === 'login' ? (
                 <>
                   Don&apos;t have an account yet?{' '}
@@ -540,7 +657,7 @@ export default function LoginPage() {
               )}
             </div>
 
-            <div style={{ marginTop: 18 }}>
+            <div style={{ marginTop: 16 }}>
               <Link
                 href="/"
                 style={{
