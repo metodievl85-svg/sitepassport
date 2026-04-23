@@ -760,6 +760,101 @@ a {
   font-weight: 700;
 }
 
+/* Auth page */
+.auth-layout {
+  min-height: calc(100vh - 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.auth-hero {
+  min-height: 620px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0;
+  padding: 36px;
+}
+
+.auth-hero-title {
+  font-size: 64px;
+  max-width: 700px;
+  margin-bottom: 16px;
+}
+
+.auth-hero-text {
+  font-size: 22px;
+  max-width: 640px;
+}
+
+.auth-hero-panels {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.auth-hero-panel {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  padding: 20px;
+}
+
+.auth-hero-panel-label {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.auth-hero-panel-text {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.45;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 620px;
+}
+
+.auth-card-title {
+  font-size: 42px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.auth-role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.auth-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #dde5f0;
+  color: #4d648c;
+  font-size: 16px;
+}
+
+.auth-loading-wrap {
+  min-height: calc(100vh - 48px);
+  display: grid;
+  place-items: center;
+}
+
 @media (max-width: 1200px) {
   .hero {
     align-items: flex-start;
@@ -784,6 +879,23 @@ a {
     flex-direction: row;
     flex-wrap: wrap;
   }
+
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-hero,
+  .auth-card {
+    min-height: unset;
+  }
+
+  .auth-hero-title {
+    font-size: 52px;
+  }
+
+  .auth-hero-text {
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -793,6 +905,24 @@ a {
 
   .pdf-photo-wrap {
     max-width: 260px;
+  }
+
+  .auth-hero {
+    padding: 28px;
+  }
+
+  .auth-hero-title {
+    font-size: 44px;
+    max-width: 100%;
+  }
+
+  .auth-hero-text {
+    font-size: 18px;
+    max-width: 100%;
+  }
+
+  .auth-card-title {
+    font-size: 38px;
   }
 }
 
@@ -867,5 +997,62 @@ a {
 
   .btn {
     width: 100%;
+  }
+
+  .auth-layout {
+    min-height: auto;
+    gap: 16px;
+  }
+
+  .auth-hero {
+    padding: 22px;
+  }
+
+  .auth-hero-title {
+    font-size: 34px;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+
+  .auth-hero-text {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .auth-hero-panel {
+    border-radius: 20px;
+    padding: 16px;
+  }
+
+  .auth-hero-panel-label {
+    font-size: 12px;
+    letter-spacing: 1.2px;
+  }
+
+  .auth-hero-panel-text {
+    font-size: 15px;
+  }
+
+  .auth-card {
+    padding: 22px;
+  }
+
+  .auth-card-title {
+    font-size: 32px;
+  }
+
+  .auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .auth-role-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-footer {
+    font-size: 15px;
+    line-height: 1.5;
   }
 }

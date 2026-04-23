@@ -8,6 +8,10 @@ import { supabase } from '../lib/supabase'
 type Mode = 'login' | 'signup' | 'forgot'
 type Role = 'worker' | 'company'
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 export default function LoginPage() {
   const router = useRouter()
 
@@ -74,8 +78,19 @@ export default function LoginPage() {
       }
     }
 
-    checkSession()
+    void checkSession()
   }, [router])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const url = new URL(window.location.href)
+    const reset = url.searchParams.get('reset')
+
+    if (reset === 'success') {
+      setMessage('Password updated successfully. Please log in with your new password.')
+    }
+  }, [])
 
   const title = useMemo(() => {
     if (mode === 'signup') return 'Create your account'
@@ -100,8 +115,14 @@ export default function LoginPage() {
     setError('')
   }
 
+  function clearPasswordFields() {
+    setPassword('')
+    setConfirmPassword('')
+  }
+
   function switchMode(nextMode: Mode) {
     resetMessages()
+    clearPasswordFields()
     setMode(nextMode)
   }
 
@@ -140,8 +161,15 @@ export default function LoginPage() {
     e.preventDefault()
     resetMessages()
 
-    if (!email.trim()) {
+    const cleanEmail = email.trim().toLowerCase()
+
+    if (!cleanEmail) {
       setError('Please enter your email.')
+      return
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setError('Please enter a valid email address.')
       return
     }
 
@@ -167,7 +195,7 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         })
 
@@ -189,7 +217,7 @@ export default function LoginPage() {
 
       if (mode === 'signup') {
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: cleanEmail,
           password,
         })
 
@@ -203,7 +231,7 @@ export default function LoginPage() {
         if (userId) {
           const { error: profileError } = await supabase.from('profiles').upsert({
             id: userId,
-            email: email.trim(),
+            email: cleanEmail,
             role,
           })
 
@@ -213,11 +241,14 @@ export default function LoginPage() {
           }
         }
 
-        setMessage(
-          'Account created. Please check your email for confirmation if required, then log in.'
-        )
-        setPassword('')
-        setConfirmPassword('')
+        clearPasswordFields()
+
+        if (data.session?.user?.id) {
+          await goToCorrectDashboard(data.session.user.id)
+          return
+        }
+
+        setMessage('Account created. Please check your email to confirm your account.')
         setMode('login')
         return
       }
@@ -225,11 +256,11 @@ export default function LoginPage() {
       if (mode === 'forgot') {
         const redirectTo =
           typeof window !== 'undefined'
-            ? `${window.location.origin}/login`
+            ? `${window.location.origin}/reset-password`
             : undefined
 
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-          email.trim(),
+          cleanEmail,
           redirectTo ? { redirectTo } : undefined
         )
 
@@ -253,13 +284,7 @@ export default function LoginPage() {
     return (
       <main className="page-shell">
         <div className="container">
-          <div
-            style={{
-              minHeight: 'calc(100vh - 48px)',
-              display: 'grid',
-              placeItems: 'center',
-            }}
-          >
+          <div className="auth-loading-wrap">
             <section
               className="card"
               style={{
@@ -285,79 +310,28 @@ export default function LoginPage() {
   return (
     <main className="page-shell">
       <div className="container">
-        <div
-          style={{
-            minHeight: 'calc(100vh - 48px)',
-            display: 'grid',
-            gridTemplateColumns: '1.1fr 0.9fr',
-            gap: 24,
-            alignItems: 'stretch',
-          }}
-        >
-          <section
-            className="hero"
-            style={{
-              minHeight: 620,
-              flexDirection: 'column',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              marginBottom: 0,
-              padding: 36,
-            }}
-          >
+        <div className="auth-layout">
+          <section className="hero auth-hero">
             <div>
               <div className="brand">SITEPASSPORT</div>
 
-              <h1
-                style={{
-                  fontSize: 64,
-                  maxWidth: 700,
-                  marginBottom: 16,
-                }}
-              >
+              <h1 className="auth-hero-title">
                 Digital operative passports for real site use
               </h1>
 
-              <p
-                style={{
-                  fontSize: 22,
-                  maxWidth: 640,
-                }}
-              >
+              <p className="auth-hero-text">
                 Store operative details, CSCS card image, qualifications, expiry
                 dates, QR code, and passport summary in one secure place for fast
                 site checks.
               </p>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 18,
-                width: '100%',
-                maxWidth: 620,
-              }}
-            >
-              <div
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  borderRadius: 24,
-                  padding: 20,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 800,
-                    letterSpacing: 1.5,
-                    textTransform: 'uppercase',
-                    marginBottom: 8,
-                  }}
-                >
+            <div className="auth-hero-panels">
+              <div className="auth-hero-panel">
+                <div className="auth-hero-panel-label">
                   Construction workforce passport system
                 </div>
-                <div style={{ fontSize: 18, color: 'rgba(255,255,255,0.9)' }}>
+                <div className="auth-hero-panel-text">
                   Built for operatives, supervisors, and companies working on real
                   construction sites.
                 </div>
@@ -365,23 +339,8 @@ export default function LoginPage() {
             </div>
           </section>
 
-          <section
-            className="card"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              minHeight: 620,
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap',
-                marginBottom: 24,
-              }}
-            >
+          <section className="card auth-card">
+            <div className="auth-tabs">
               <button
                 type="button"
                 className={mode === 'login' ? 'btn btn-secondary' : 'btn btn-primary'}
@@ -407,9 +366,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <h2 className="section-title" style={{ fontSize: 42 }}>
-              {title}
-            </h2>
+            <h2 className="section-title auth-card-title">{title}</h2>
 
             <p className="section-subtitle" style={{ marginBottom: 28 }}>
               {subtitle}
@@ -451,13 +408,7 @@ export default function LoginPage() {
               {mode === 'signup' ? (
                 <div className="field">
                   <label>I am registering as</label>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: 12,
-                    }}
-                  >
+                  <div className="auth-role-grid">
                     <button
                       type="button"
                       className={role === 'worker' ? 'btn btn-secondary' : 'btn btn-primary'}
@@ -485,6 +436,7 @@ export default function LoginPage() {
                   placeholder="info@sitepassportapp.co.uk"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
               </div>
 
@@ -497,6 +449,7 @@ export default function LoginPage() {
                     placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   />
                 </div>
               ) : null}
@@ -510,6 +463,7 @@ export default function LoginPage() {
                     placeholder="Repeat password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
               ) : null}
@@ -538,15 +492,7 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <div
-              style={{
-                marginTop: 28,
-                paddingTop: 20,
-                borderTop: '1px solid #dde5f0',
-                color: '#4d648c',
-                fontSize: 16,
-              }}
-            >
+            <div className="auth-footer">
               {mode === 'login' ? (
                 <>
                   Don&apos;t have an account yet?{' '}
