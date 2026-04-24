@@ -385,19 +385,9 @@ export default function CompanyPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="brand">SITEPASSPORT</div>
 
-            <h1
-              style={{
-                marginBottom: 14,
-              }}
-            >
-              Company dashboard
-            </h1>
+            <h1 style={{ marginBottom: 14 }}>Company dashboard</h1>
 
-            <p
-              style={{
-                maxWidth: 760,
-              }}
-            >
+            <p style={{ maxWidth: 760 }}>
               Manage operatives, review expiry status, scan QR codes, and keep your
               workforce records organised from one responsive control centre.
             </p>
@@ -410,53 +400,24 @@ export default function CompanyPage() {
                 marginTop: 22,
               }}
             >
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: 42,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.14)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Desktop-first
-              </span>
-
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: 42,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.14)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Mobile-friendly
-              </span>
-
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: 42,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.14)',
-                  border: '1px solid rgba(255,255,255,0.16)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Real-time workforce view
-              </span>
+              {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((item) => (
+                <span
+                  key={item}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    minHeight: 42,
+                    padding: '0 16px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.14)',
+                    border: '1px solid rgba(255,255,255,0.16)',
+                    fontSize: 14,
+                    fontWeight: 800,
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
             </div>
           </div>
 
@@ -500,12 +461,7 @@ export default function CompanyPage() {
               </div>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gap: 12,
-              }}
-            >
+            <div style={{ display: 'grid', gap: 12 }}>
               <Link href="/scan" className="btn btn-primary">
                 Scan QR
               </Link>
@@ -635,7 +591,8 @@ export default function CompanyPage() {
             </div>
           </div>
         </section>
-                <section className="card">
+
+        <section className="card">
           <div
             style={{
               display: 'flex',
@@ -674,7 +631,6 @@ export default function CompanyPage() {
             </Link>
           </div>
 
-          {/* SEARCH + SORT */}
           <div
             style={{
               display: 'grid',
@@ -712,7 +668,6 @@ export default function CompanyPage() {
             </select>
           </div>
 
-          {/* FILTERS */}
           <div
             style={{
               display: 'flex',
@@ -725,10 +680,7 @@ export default function CompanyPage() {
               All
             </button>
 
-            <button
-              style={getFilterButtonStyle(filter, 'valid')}
-              onClick={() => setFilter('valid')}
-            >
+            <button style={getFilterButtonStyle(filter, 'valid')} onClick={() => setFilter('valid')}>
               Valid
             </button>
 
@@ -747,7 +699,6 @@ export default function CompanyPage() {
             </button>
           </div>
 
-          {/* EMPTY */}
           {savedWorkers.length === 0 ? (
             <div
               style={{
@@ -763,9 +714,7 @@ export default function CompanyPage() {
               </Link>
             </div>
           ) : filteredWorkers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 30 }}>
-              No results
-            </div>
+            <div style={{ textAlign: 'center', padding: 30 }}>No results</div>
           ) : (
             <div style={{ display: 'grid', gap: 14 }}>
               {filteredWorkers.map((worker) => {
@@ -785,16 +734,16 @@ export default function CompanyPage() {
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: '100px 1fr',
+                        gridTemplateColumns: '100px 1fr auto',
                         gap: 14,
                         alignItems: 'center',
                       }}
                     >
-                      {/* SMALL CARD IMAGE */}
                       <div>
                         {worker.photo ? (
                           <img
                             src={worker.photo}
+                            alt={worker.fullName || 'Operative'}
                             style={{
                               width: '100%',
                               borderRadius: 12,
@@ -818,8 +767,7 @@ export default function CompanyPage() {
                         )}
                       </div>
 
-                      {/* TEXT */}
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <div
                           style={{
                             fontSize: 20,
@@ -868,31 +816,52 @@ export default function CompanyPage() {
                           </span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* ACTIONS */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 10,
-                        marginTop: 12,
-                      }}
-                    >
-                      <Link
-                        href={`/scan/${worker.workerId}`}
-                        className="btn btn-secondary"
-                        style={{ flex: 1 }}
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 8,
+                          alignItems: 'center',
+                          justifyContent: 'flex-end',
+                          flexWrap: 'wrap',
+                        }}
                       >
-                        View
-                      </Link>
+                        <Link
+                          href={`/scan/${worker.workerId}`}
+                          className="btn btn-secondary"
+                          style={{
+                            minHeight: 38,
+                            padding: '0 14px',
+                            borderRadius: 12,
+                            fontSize: 14,
+                            fontWeight: 800,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          View
+                        </Link>
 
-                      <button
-                        onClick={() => handleRemoveSavedWorker(worker.savedId)}
-                        className="btn btn-danger"
-                        style={{ flex: 1 }}
-                      >
-                        Remove
-                      </button>
+                        <button
+                          onClick={() => handleRemoveSavedWorker(worker.savedId)}
+                          disabled={removingId === worker.savedId}
+                          type="button"
+                          style={{
+                            minHeight: 38,
+                            padding: '0 12px',
+                            borderRadius: 12,
+                            border: '1px solid #efc1c1',
+                            background: '#fff7f7',
+                            color: '#b42318',
+                            fontSize: 14,
+                            fontWeight: 800,
+                            cursor: removingId === worker.savedId ? 'not-allowed' : 'pointer',
+                            opacity: removingId === worker.savedId ? 0.6 : 1,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {removingId === worker.savedId ? 'Removing...' : 'Remove'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
