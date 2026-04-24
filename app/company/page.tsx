@@ -144,7 +144,14 @@ function getFilterButtonStyle(current: FilterValue, value: FilterValue) {
 function SitePassportLogo() {
   return (
     <div className="company-logo-brand">
-      <img src="/sitepassport-logo.svg" alt="SitePassport" />
+      <img src="/sitepassport-icon.svg" alt="SitePassport" />
+      <div className="company-logo-text">
+        <div className="company-logo-name">
+          <span>Site</span>
+          <strong>Passport</strong>
+        </div>
+        <div className="company-logo-tagline">VERIFY. CONFIRM. TRUST.</div>
+      </div>
     </div>
   )
 }
@@ -380,24 +387,55 @@ export default function CompanyPage() {
             .company-logo-brand {
               display: inline-flex;
               align-items: center;
-              width: 100%;
-              max-width: 300px;
-              margin-bottom: 16px;
-              padding: 8px 12px;
-              border-radius: 16px;
-              background: rgba(255, 255, 255, 0.94);
-              box-shadow: 0 10px 28px rgba(9, 21, 75, 0.16);
+              gap: 16px;
+              margin-bottom: 18px;
             }
 
             .company-logo-brand img {
               display: block;
-              width: 100%;
-              height: auto;
+              width: 72px;
+              height: 72px;
+              object-fit: contain;
+            }
+
+            .company-logo-name {
+              font-size: 38px;
+              font-weight: 900;
+              line-height: 1;
+              letter-spacing: -1.2px;
+              color: #ffffff;
+            }
+
+            .company-logo-name strong {
+              color: #7fb3ff;
+            }
+
+            .company-logo-tagline {
+              margin-top: 8px;
+              font-size: 13px;
+              font-weight: 800;
+              letter-spacing: 4px;
+              color: rgba(255, 255, 255, 0.72);
             }
 
             @media (max-width: 700px) {
               .company-logo-brand {
-                max-width: 245px;
+                gap: 12px;
+                margin-bottom: 16px;
+              }
+
+              .company-logo-brand img {
+                width: 56px;
+                height: 56px;
+              }
+
+              .company-logo-name {
+                font-size: 28px;
+              }
+
+              .company-logo-tagline {
+                font-size: 10px;
+                letter-spacing: 2px;
               }
             }
           `}</style>
@@ -895,19 +933,42 @@ export default function CompanyPage() {
         .company-logo-brand {
           display: inline-flex;
           align-items: center;
-          width: 100%;
-          max-width: 300px;
-          margin-bottom: 16px;
-          padding: 8px 12px;
-          border-radius: 16px;
-          background: rgba(255, 255, 255, 0.94);
-          box-shadow: 0 10px 28px rgba(9, 21, 75, 0.16);
+          gap: 16px;
+          margin-bottom: 18px;
         }
 
         .company-logo-brand img {
           display: block;
-          width: 100%;
-          height: auto;
+          width: 72px;
+          height: 72px;
+          object-fit: contain;
+          flex: 0 0 auto;
+        }
+
+        .company-logo-text {
+          min-width: 0;
+        }
+
+        .company-logo-name {
+          font-size: 38px;
+          font-weight: 900;
+          line-height: 1;
+          letter-spacing: -1.2px;
+          color: #ffffff;
+          white-space: nowrap;
+        }
+
+        .company-logo-name strong {
+          color: #7fb3ff;
+        }
+
+        .company-logo-tagline {
+          margin-top: 8px;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 4px;
+          color: rgba(255, 255, 255, 0.72);
+          white-space: nowrap;
         }
 
         .saved-operative-row {
@@ -927,7 +988,22 @@ export default function CompanyPage() {
 
         @media (max-width: 700px) {
           .company-logo-brand {
-            max-width: 245px;
+            gap: 12px;
+            margin-bottom: 16px;
+          }
+
+          .company-logo-brand img {
+            width: 56px;
+            height: 56px;
+          }
+
+          .company-logo-name {
+            font-size: 28px;
+          }
+
+          .company-logo-tagline {
+            font-size: 10px;
+            letter-spacing: 2px;
           }
 
           .company-search-row {
@@ -948,7 +1024,21 @@ export default function CompanyPage() {
 
         @media (max-width: 420px) {
           .company-logo-brand {
-            max-width: 225px;
+            gap: 10px;
+          }
+
+          .company-logo-brand img {
+            width: 48px;
+            height: 48px;
+          }
+
+          .company-logo-name {
+            font-size: 24px;
+          }
+
+          .company-logo-tagline {
+            font-size: 9px;
+            letter-spacing: 1.4px;
           }
 
           .saved-operative-row {
