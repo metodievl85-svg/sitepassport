@@ -144,10 +144,11 @@ function getFilterButtonStyle(current: FilterValue, value: FilterValue) {
 function SitePassportLogo() {
   return (
     <div
+      className="company-brand-logo"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        marginBottom: 18,
+        marginBottom: 14,
         maxWidth: '100%',
       }}
     >
@@ -156,9 +157,9 @@ function SitePassportLogo() {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(320px, 100%)',
+          width: 'min(520px, 100%)',
           height: 'auto',
-          maxHeight: 86,
+          maxHeight: 142,
           objectFit: 'contain',
         }}
       />
@@ -388,7 +389,15 @@ export default function CompanyPage() {
           <section className="hero">
             <div>
               <SitePassportLogo />
-              <h1>Loading company dashboard...</h1>
+              <h1
+                style={{
+                  fontSize: 'clamp(24px, 3vw, 34px)',
+                  lineHeight: 1.08,
+                  marginBottom: 12,
+                }}
+              >
+                Loading company dashboard...
+              </h1>
               <p>Please wait while your company workspace is prepared.</p>
             </div>
           </section>
@@ -410,7 +419,16 @@ export default function CompanyPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <SitePassportLogo />
 
-            <h1 style={{ marginBottom: 14 }}>Company dashboard</h1>
+            <h1
+              style={{
+                marginBottom: 14,
+                fontSize: 'clamp(26px, 3.2vw, 42px)',
+                lineHeight: 1.08,
+                fontWeight: 900,
+              }}
+            >
+              Company dashboard
+            </h1>
 
             <p style={{ maxWidth: 760 }}>
               Manage operatives, review expiry status, scan QR codes, and keep your
@@ -883,6 +901,10 @@ export default function CompanyPage() {
       </div>
 
       <style jsx>{`
+        .company-brand-logo {
+          transform-origin: left center;
+        }
+
         .saved-operative-row {
           display: grid;
           grid-template-columns: 100px 1fr auto;
@@ -912,6 +934,13 @@ export default function CompanyPage() {
             grid-column: 1 / -1;
             justify-content: flex-start;
             padding-top: 8px;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .company-brand-logo img {
+            width: min(360px, 100%) !important;
+            max-height: 104px !important;
           }
         }
 
