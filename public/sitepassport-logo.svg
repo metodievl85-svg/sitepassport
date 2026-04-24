@@ -1,15 +1,35 @@
 <svg width="720" height="170" viewBox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="720" height="170" fill="white"/>
 
-  <rect x="24" y="30" width="92" height="92" rx="22" fill="#0B3FD7"/>
-  <path d="M70 45L100 58V82C100 105 88 122 70 132C52 122 40 105 40 82V58L70 45Z" fill="white"/>
-  <rect x="61" y="65" width="8" height="8" fill="#071847"/>
-  <rect x="76" y="65" width="8" height="8" fill="#071847"/>
-  <rect x="61" y="82" width="8" height="8" fill="#071847"/>
-  <path d="M49 88L66 105L95 73" stroke="#0B3FD7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Shield -->
+  <path d="M40 10 L100 30 L100 80 C100 120 70 150 40 160 C10 150 -20 120 -20 80 L-20 30 Z"
+        fill="#1e40af"/>
 
-  <text x="145" y="78" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="800" fill="#071847">Site</text>
-  <text x="238" y="78" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="800" fill="#0B3FD7">Passport</text>
+  <!-- QR squares -->
+  <rect x="10" y="40" width="12" height="12" fill="#ffffff"/>
+  <rect x="28" y="40" width="12" height="12" fill="#ffffff"/>
+  <rect x="10" y="58" width="12" height="12" fill="#ffffff"/>
+  <rect x="28" y="58" width="12" height="12" fill="#ffffff"/>
 
-  <text x="147" y="118" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" letter-spacing="7" fill="#5A6F96">VERIFY. CONFIRM. TRUST.</text>
+  <rect x="60" y="45" width="10" height="10" fill="#ffffff"/>
+  <rect x="75" y="60" width="8" height="8" fill="#ffffff"/>
+
+  <!-- Checkmark -->
+  <path d="M20 95 L38 112 L75 75"
+        stroke="#22c55e"
+        stroke-width="10"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"/>
+
+  <!-- TEXT -->
+  <text x="140" y="75" font-family="Arial, sans-serif" font-size="42" font-weight="800">
+    <tspan fill="#0f172a">Site</tspan>
+    <tspan fill="#2563eb">Passport</tspan>
+  </text>
+
+  <!-- TAGLINE -->
+  <text x="140" y="115" font-family="Arial, sans-serif" font-size="18" letter-spacing="3" fill="#64748b">
+    VERIFY. CONFIRM. TRUST.
+  </text>
+
 </svg>
