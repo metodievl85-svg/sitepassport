@@ -520,331 +520,137 @@ export default function CompanyPage() {
         <section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 18,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 14,
             marginBottom: 24,
           }}
         >
-          <div className="stat-card">
-            <div className="stat-title">Saved operatives</div>
-            <div className="stat-value" style={{ fontSize: 42 }}>
+          <div
+            style={{
+              background: '#fbfdff',
+              border: '1px solid #d7e1ef',
+              borderRadius: 22,
+              padding: 18,
+            }}
+          >
+            <div className="meta-label">Saved operatives</div>
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 900,
+                color: '#09154b',
+                lineHeight: 1,
+                marginTop: 8,
+              }}
+            >
               {savedWorkers.length}
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-title">Scans today</div>
-            <div className="stat-value" style={{ fontSize: 42 }}>
+          <div
+            style={{
+              background: '#fbfdff',
+              border: '1px solid #d7e1ef',
+              borderRadius: 22,
+              padding: 18,
+            }}
+          >
+            <div className="meta-label">Scans today</div>
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 900,
+                color: '#09154b',
+                lineHeight: 1,
+                marginTop: 8,
+              }}
+            >
               {scansToday}
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-title">Active operatives</div>
-            <div className="stat-value" style={{ fontSize: 42 }}>
+          <div
+            style={{
+              background: '#fbfdff',
+              border: '1px solid #d7e1ef',
+              borderRadius: 22,
+              padding: 18,
+            }}
+          >
+            <div className="meta-label">Active</div>
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 900,
+                color: '#167342',
+                lineHeight: 1,
+                marginTop: 8,
+              }}
+            >
               {activeWorkers}
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-title">Expiring soon</div>
-            <div className="stat-value" style={{ fontSize: 42 }}>
+          <div
+            style={{
+              background: '#fff8ea',
+              border: '1px solid #efd6ac',
+              borderRadius: 22,
+              padding: 18,
+            }}
+          >
+            <div className="meta-label">Expiring soon</div>
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 900,
+                color: '#9b5d00',
+                lineHeight: 1,
+                marginTop: 8,
+              }}
+            >
               {expiringSoonCount}
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-title">Expired</div>
-            <div className="stat-value" style={{ fontSize: 42 }}>
+          <div
+            style={{
+              background: '#fff1f1',
+              border: '1px solid #efc1c1',
+              borderRadius: 22,
+              padding: 18,
+            }}
+          >
+            <div className="meta-label">Expired</div>
+            <div
+              style={{
+                fontSize: 34,
+                fontWeight: 900,
+                color: '#b42318',
+                lineHeight: 1,
+                marginTop: 8,
+              }}
+            >
               {expiredCount}
             </div>
           </div>
         </section>
-
-        <section
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 24,
-            marginBottom: 24,
-          }}
-        >
-          <div className="card">
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#08153d',
-              }}
-            >
-              Quick actions
-            </h2>
-
-            <p
-              style={{
-                margin: '10px 0 22px',
-                color: '#4d648c',
-                fontSize: 17,
-                lineHeight: 1.5,
-              }}
-            >
-              Use these shortcuts to manage operatives quickly from laptop, tablet, or
-              phone.
-            </p>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: 14,
-              }}
-            >
-              <Link
-                href="/scan"
-                style={{
-                  border: '1px solid #d7e1ef',
-                  borderRadius: 22,
-                  background: '#fbfdff',
-                  padding: 18,
-                  textDecoration: 'none',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 800,
-                    letterSpacing: 1.4,
-                    textTransform: 'uppercase',
-                    color: '#62779a',
-                    marginBottom: 10,
-                  }}
-                >
-                  Scan
-                </div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 900,
-                    color: '#08153d',
-                    marginBottom: 8,
-                    lineHeight: 1.15,
-                  }}
-                >
-                  Scan operative QR
-                </div>
-                <div
-                  style={{
-                    color: '#4d648c',
-                    fontSize: 16,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Open an operative verification page instantly.
-                </div>
-              </Link>
-
-              <div
-                style={{
-                  border: '1px solid #d7e1ef',
-                  borderRadius: 22,
-                  background: '#fbfdff',
-                  padding: 18,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 800,
-                    letterSpacing: 1.4,
-                    textTransform: 'uppercase',
-                    color: '#62779a',
-                    marginBottom: 10,
-                  }}
-                >
-                  Review
-                </div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 900,
-                    color: '#08153d',
-                    marginBottom: 8,
-                    lineHeight: 1.15,
-                  }}
-                >
-                  Check expiry status
-                </div>
-                <div
-                  style={{
-                    color: '#4d648c',
-                    fontSize: 16,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Review CSCS and right to work statuses before site access.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  border: '1px solid #d7e1ef',
-                  borderRadius: 22,
-                  background: '#fbfdff',
-                  padding: 18,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 800,
-                    letterSpacing: 1.4,
-                    textTransform: 'uppercase',
-                    color: '#62779a',
-                    marginBottom: 10,
-                  }}
-                >
-                  Manage
-                </div>
-                <div
-                  style={{
-                    fontSize: 24,
-                    fontWeight: 900,
-                    color: '#08153d',
-                    marginBottom: 8,
-                    lineHeight: 1.15,
-                  }}
-                >
-                  Save or remove operatives
-                </div>
-                <div
-                  style={{
-                    color: '#4d648c',
-                    fontSize: 16,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Keep your company list clean and up to date.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#08153d',
-              }}
-            >
-              Alerts
-            </h2>
-
-            <p
-              style={{
-                margin: '10px 0 22px',
-                color: '#4d648c',
-                fontSize: 17,
-                lineHeight: 1.5,
-              }}
-            >
-              Focus first on operatives who may need attention.
-            </p>
-
-            <div
-              style={{
-                display: 'grid',
-                gap: 14,
-              }}
-            >
-              <div
-                style={{
-                  border: '1px solid #efd6ac',
-                  background: '#fff8ea',
-                  borderRadius: 20,
-                  padding: 18,
-                }}
-              >
-                <div className="meta-label" style={{ marginBottom: 8 }}>
-                  Expiring soon
-                </div>
-                <div
-                  style={{
-                    fontSize: 34,
-                    fontWeight: 900,
-                    color: '#9b5d00',
-                    lineHeight: 1,
-                  }}
-                >
-                  {expiringSoonCount}
-                </div>
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: '#8a6632',
-                    fontSize: 15,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Operatives with documents expiring in the next 30 days.
-                </div>
-              </div>
-
-              <div
-                style={{
-                  border: '1px solid #efc1c1',
-                  background: '#fff1f1',
-                  borderRadius: 20,
-                  padding: 18,
-                }}
-              >
-                <div className="meta-label" style={{ marginBottom: 8 }}>
-                  Expired
-                </div>
-                <div
-                  style={{
-                    fontSize: 34,
-                    fontWeight: 900,
-                    color: '#b42318',
-                    lineHeight: 1,
-                  }}
-                >
-                  {expiredCount}
-                </div>
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: '#8c4b4b',
-                    fontSize: 15,
-                    lineHeight: 1.45,
-                  }}
-                >
-                  Operatives with expired CSCS or right to work records.
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="card">
+                <section className="card">
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              gap: 20,
+              gap: 16,
               flexWrap: 'wrap',
-              marginBottom: 24,
+              marginBottom: 20,
             }}
           >
             <div style={{ minWidth: 0 }}>
               <h2
                 style={{
                   margin: 0,
-                  fontSize: 44,
-                  lineHeight: 1,
+                  fontSize: 34,
                   fontWeight: 900,
                   color: '#09154b',
                 }}
@@ -854,14 +660,12 @@ export default function CompanyPage() {
 
               <p
                 style={{
-                  marginTop: 12,
-                  marginBottom: 0,
-                  fontSize: 18,
-                  color: '#4f6792',
-                  lineHeight: 1.5,
+                  marginTop: 10,
+                  fontSize: 16,
+                  color: '#5a6f96',
                 }}
               >
-                Search, filter, sort, review, and open operative verification pages.
+                Search, filter and manage your workforce
               </p>
             </div>
 
@@ -870,58 +674,51 @@ export default function CompanyPage() {
             </Link>
           </div>
 
+          {/* SEARCH + SORT */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 16,
-              marginBottom: 18,
+              gridTemplateColumns: '1fr 160px',
+              gap: 12,
+              marginBottom: 16,
             }}
           >
             <input
               value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search by name, role, or company"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
               style={{
-                width: '100%',
-                minHeight: '58px',
+                minHeight: 50,
+                borderRadius: 14,
                 border: '1px solid #d7e1ef',
-                background: '#f8fbff',
-                borderRadius: '18px',
-                padding: '0 18px',
-                outline: 'none',
-                fontSize: '16px',
-                color: '#09154b',
+                padding: '0 14px',
+                fontSize: 15,
               }}
             />
 
             <select
               value={sortBy}
-              onChange={(event) => setSortBy(event.target.value as SortValue)}
+              onChange={(e) => setSortBy(e.target.value as SortValue)}
               style={{
-                width: '100%',
-                minHeight: '58px',
+                minHeight: 50,
+                borderRadius: 14,
                 border: '1px solid #d7e1ef',
-                background: '#f8fbff',
-                borderRadius: '18px',
-                padding: '0 18px',
-                outline: 'none',
-                fontSize: '16px',
-                color: '#09154b',
-                cursor: 'pointer',
+                padding: '0 12px',
+                fontSize: 15,
               }}
             >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
             </select>
           </div>
 
+          {/* FILTERS */}
           <div
             style={{
               display: 'flex',
-              gap: '12px',
+              gap: 10,
               flexWrap: 'wrap',
-              marginBottom: '24px',
+              marginBottom: 20,
             }}
           >
             <button style={getFilterButtonStyle(filter, 'all')} onClick={() => setFilter('all')}>
@@ -939,7 +736,7 @@ export default function CompanyPage() {
               style={getFilterButtonStyle(filter, 'expiring')}
               onClick={() => setFilter('expiring')}
             >
-              Expiring soon
+              Soon
             </button>
 
             <button
@@ -950,354 +747,152 @@ export default function CompanyPage() {
             </button>
           </div>
 
+          {/* EMPTY */}
           {savedWorkers.length === 0 ? (
             <div
               style={{
-                marginTop: '10px',
-                background: '#f8fbff',
-                border: '2px dashed #d7e1ef',
-                borderRadius: '28px',
-                padding: '56px 24px',
                 textAlign: 'center',
+                padding: 40,
+                border: '2px dashed #d7e1ef',
+                borderRadius: 20,
               }}
             >
-              <div
-                style={{
-                  width: '84px',
-                  height: '84px',
-                  borderRadius: '50%',
-                  background: '#edf2ff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '38px',
-                  margin: '0 auto',
-                }}
-              >
-                👷
-              </div>
-
-              <h3
-                style={{
-                  marginTop: '22px',
-                  marginBottom: '12px',
-                  fontSize: '38px',
-                  fontWeight: 900,
-                  color: '#09154b',
-                }}
-              >
-                No saved operatives yet
-              </h3>
-
-              <p
-                style={{
-                  maxWidth: '760px',
-                  margin: '0 auto',
-                  fontSize: '18px',
-                  lineHeight: 1.5,
-                  color: '#5a6f96',
-                }}
-              >
-                Start by scanning an operative QR code and save them to your company dashboard.
-              </p>
-
-              <div style={{ marginTop: 26 }}>
-                <Link href="/scan" className="btn btn-primary">
-                  Scan first operative
-                </Link>
-              </div>
+              <h3>No operatives yet</h3>
+              <Link href="/scan" className="btn btn-primary">
+                Scan first
+              </Link>
             </div>
           ) : filteredWorkers.length === 0 ? (
-            <div
-              style={{
-                marginTop: '10px',
-                background: '#f8fbff',
-                border: '2px dashed #d7e1ef',
-                borderRadius: '28px',
-                padding: '46px 24px',
-                textAlign: 'center',
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '32px',
-                  fontWeight: 900,
-                  color: '#09154b',
-                }}
-              >
-                No operatives match your search
-              </h3>
-
-              <p
-                style={{
-                  marginTop: '14px',
-                  fontSize: '18px',
-                  lineHeight: 1.5,
-                  color: '#5a6f96',
-                }}
-              >
-                Try a different search term, filter, or sort option.
-              </p>
+            <div style={{ textAlign: 'center', padding: 30 }}>
+              No results
             </div>
           ) : (
-            <div
-              style={{
-                display: 'grid',
-                gap: 18,
-              }}
-            >
+            <div style={{ display: 'grid', gap: 14 }}>
               {filteredWorkers.map((worker) => {
                 const cscsStatus = getStatus(worker.cscsExpiry)
-                const rightToWorkStatus = getStatus(worker.rightToWorkExpiry)
+                const rtwStatus = getStatus(worker.rightToWorkExpiry)
 
                 return (
                   <div
                     key={worker.savedId}
                     style={{
-                      background: '#fbfdff',
                       border: '1px solid #d7e1ef',
-                      borderRadius: '26px',
-                      padding: '20px',
+                      borderRadius: 18,
+                      padding: 16,
+                      background: '#fbfdff',
                     }}
                   >
                     <div
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                        gap: 18,
-                        alignItems: 'start',
+                        gridTemplateColumns: '100px 1fr',
+                        gap: 14,
+                        alignItems: 'center',
                       }}
                     >
+                      {/* SMALL CARD IMAGE */}
                       <div>
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            letterSpacing: '1.8px',
-                            textTransform: 'uppercase',
-                            fontWeight: 800,
-                            color: '#6b7fa3',
-                            marginBottom: '8px',
-                          }}
-                        >
-                          CSCS card
-                        </div>
-
                         {worker.photo ? (
-                          <div
+                          <img
+                            src={worker.photo}
                             style={{
                               width: '100%',
-                              maxWidth: 260,
-                              aspectRatio: '1.58 / 1',
-                              borderRadius: '18px',
-                              border: '1px solid #d7e1ef',
-                              background: '#ffffff',
-                              padding: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
+                              borderRadius: 12,
+                              objectFit: 'cover',
                             }}
-                          >
-                            <img
-                              src={worker.photo}
-                              alt={`${worker.fullName} CSCS card`}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain',
-                                borderRadius: '12px',
-                                display: 'block',
-                                background: '#ffffff',
-                              }}
-                            />
-                          </div>
+                          />
                         ) : (
                           <div
                             style={{
-                              width: '100%',
-                              maxWidth: 260,
-                              aspectRatio: '1.58 / 1',
-                              borderRadius: '18px',
+                              height: 70,
+                              borderRadius: 12,
+                              background: '#edf2ff',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: '22px',
                               fontWeight: 900,
-                              color: '#243caa',
-                              background: '#edf2ff',
-                              border: '1px dashed #c7d5e6',
-                              textAlign: 'center',
-                              padding: '14px',
-                              lineHeight: 1.3,
                             }}
                           >
-                            {worker.fullName
-                              ? worker.fullName
-                                  .split(' ')
-                                  .slice(0, 2)
-                                  .map((part) => part[0]?.toUpperCase() ?? '')
-                                  .join('')
-                              : 'SP'}
+                            SP
                           </div>
                         )}
                       </div>
 
-                      <div style={{ minWidth: 0 }}>
+                      {/* TEXT */}
+                      <div>
                         <div
                           style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            gap: 16,
-                            flexWrap: 'wrap',
-                            marginBottom: 12,
-                            alignItems: 'flex-start',
+                            fontSize: 20,
+                            fontWeight: 900,
+                            color: '#09154b',
                           }}
                         >
-                          <div style={{ minWidth: 0 }}>
-                            <div
-                              style={{
-                                fontSize: '32px',
-                                lineHeight: 1,
-                                fontWeight: 900,
-                                color: '#09154b',
-                                marginBottom: '10px',
-                                wordBreak: 'break-word',
-                              }}
-                            >
-                              {worker.fullName || 'Operative'}
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize: '18px',
-                                color: '#56709b',
-                                marginBottom: '10px',
-                                wordBreak: 'break-word',
-                                lineHeight: 1.45,
-                              }}
-                            >
-                              {(worker.role || 'No role') +
-                                ' • ' +
-                                (worker.company || 'No company')}
-                            </div>
-
-                            <div
-                              style={{
-                                fontSize: '14px',
-                                color: '#6b7fa3',
-                                fontWeight: 700,
-                              }}
-                            >
-                              Saved {formatDate(worker.savedAt)}
-                            </div>
-                          </div>
-
-                          <div
-                            style={{
-                              display: 'flex',
-                              gap: '10px',
-                              flexWrap: 'wrap',
-                            }}
-                          >
-                            <div
-                              style={{
-                                background: cscsStatus.bg,
-                                color: cscsStatus.color,
-                                borderRadius: '999px',
-                                padding: '10px 14px',
-                                fontSize: '14px',
-                                fontWeight: 800,
-                              }}
-                            >
-                              CSCS: {cscsStatus.text}
-                            </div>
-
-                            <div
-                              style={{
-                                background: rightToWorkStatus.bg,
-                                color: rightToWorkStatus.color,
-                                borderRadius: '999px',
-                                padding: '10px 14px',
-                                fontSize: '14px',
-                                fontWeight: 800,
-                              }}
-                            >
-                              Right to work: {rightToWorkStatus.text}
-                            </div>
-                          </div>
+                          {worker.fullName || 'Operative'}
                         </div>
 
                         <div
                           style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                            gap: '14px',
+                            fontSize: 14,
+                            color: '#5a6f96',
+                            marginBottom: 6,
                           }}
                         >
-                          <div
-                            style={{
-                              border: '1px solid #d7e1ef',
-                              borderRadius: '18px',
-                              padding: '14px',
-                              background: '#ffffff',
-                            }}
-                          >
-                            <div className="meta-label">CSCS expiry</div>
-                            <div
-                              style={{
-                                fontSize: '18px',
-                                fontWeight: 800,
-                                color: '#09154b',
-                                marginTop: 6,
-                              }}
-                            >
-                              {formatDate(worker.cscsExpiry)}
-                            </div>
-                          </div>
+                          {worker.role} • {worker.company}
+                        </div>
 
-                          <div
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <span
                             style={{
-                              border: '1px solid #d7e1ef',
-                              borderRadius: '18px',
-                              padding: '14px',
-                              background: '#ffffff',
+                              background: cscsStatus.bg,
+                              color: cscsStatus.color,
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 12,
+                              fontWeight: 800,
                             }}
                           >
-                            <div className="meta-label">Right to work</div>
-                            <div
-                              style={{
-                                fontSize: '18px',
-                                fontWeight: 800,
-                                color: '#09154b',
-                                marginTop: 6,
-                              }}
-                            >
-                              {formatDate(worker.rightToWorkExpiry)}
-                            </div>
-                          </div>
+                            CSCS
+                          </span>
+
+                          <span
+                            style={{
+                              background: rtwStatus.bg,
+                              color: rtwStatus.color,
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 12,
+                              fontWeight: 800,
+                            }}
+                          >
+                            RTW
+                          </span>
                         </div>
                       </div>
+                    </div>
 
-                      <div
-                        style={{
-                          display: 'grid',
-                          gap: 10,
-                          alignContent: 'start',
-                        }}
+                    {/* ACTIONS */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 10,
+                        marginTop: 12,
+                      }}
+                    >
+                      <Link
+                        href={`/scan/${worker.workerId}`}
+                        className="btn btn-secondary"
+                        style={{ flex: 1 }}
                       >
-                        <Link href={`/scan/${worker.workerId}`} className="btn btn-secondary">
-                          View operative
-                        </Link>
+                        View
+                      </Link>
 
-                        <button
-                          onClick={() => handleRemoveSavedWorker(worker.savedId)}
-                          disabled={removingId === worker.savedId}
-                          className="btn btn-danger"
-                          type="button"
-                        >
-                          {removingId === worker.savedId ? 'Removing...' : 'Remove'}
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleRemoveSavedWorker(worker.savedId)}
+                        className="btn btn-danger"
+                        style={{ flex: 1 }}
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
                 )
