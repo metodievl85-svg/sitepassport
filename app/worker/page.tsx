@@ -221,7 +221,14 @@ export default function WorkerPage() {
               <div className="brand">SITEPASSPORT</div>
               <h1>My Passport</h1>
               <p>Your operative account is active and ready to set up.</p>
-              <p style={{ marginTop: 10, color: '#d7e4ff', fontWeight: 700, wordBreak: 'break-word' }}>
+              <p
+                style={{
+                  marginTop: 10,
+                  color: '#d7e4ff',
+                  fontWeight: 700,
+                  wordBreak: 'break-word',
+                }}
+              >
                 Logged in as: {accountEmail || 'Operative'}
               </p>
             </div>
@@ -234,73 +241,15 @@ export default function WorkerPage() {
           </section>
 
           <section className="card">
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: 24,
-                alignItems: 'start',
-              }}
-            >
-              <div>
-                <h2 className="section-title">No passport yet</h2>
-                <p className="section-subtitle" style={{ marginBottom: 18 }}>
-                  Create your operative passport to add your details, qualifications,
-                  CSCS card image, QR code, and PDF export.
-                </p>
+            <h2 className="section-title">No passport yet</h2>
+            <p className="section-subtitle">
+              Create your operative passport to add your details, qualifications, CSCS
+              card image, QR code, and PDF export.
+            </p>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 12,
-                    flexWrap: 'wrap',
-                    marginTop: 22,
-                  }}
-                >
-                  <Link href="/worker/create" className="btn btn-secondary">
-                    Create my passport
-                  </Link>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  border: '1px dashed #cbd6e5',
-                  borderRadius: 24,
-                  padding: 24,
-                  background: '#fbfdff',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 14,
-                    fontWeight: 800,
-                    letterSpacing: 1.6,
-                    textTransform: 'uppercase',
-                    color: '#62779a',
-                    marginBottom: 12,
-                  }}
-                >
-                  What you will add
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gap: 12,
-                    color: '#4d648c',
-                    fontSize: 16,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  <div>• Personal and company details</div>
-                  <div>• CSCS card image and expiry</div>
-                  <div>• Right to work expiry</div>
-                  <div>• Qualifications and certificates</div>
-                  <div>• QR code and PDF passport</div>
-                </div>
-              </div>
-            </div>
+            <Link href="/worker/create" className="btn btn-secondary">
+              Create my passport
+            </Link>
           </section>
         </div>
       </main>
@@ -310,7 +259,13 @@ export default function WorkerPage() {
   return (
     <main className="page-shell">
       <div className="container">
-        <section className="hero">
+        <section
+          className="hero"
+          style={{
+            marginBottom: 24,
+            alignItems: 'stretch',
+          }}
+        >
           <div style={{ minWidth: 0 }}>
             <div className="brand">SITEPASSPORT</div>
             <h1>My Passport</h1>
@@ -339,6 +294,332 @@ export default function WorkerPage() {
             <button className="btn btn-outline" type="button" onClick={handleLogout}>
               Logout
             </button>
+          </div>
+        </section>
+
+        <section
+          className="card"
+          style={{
+            marginBottom: 24,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 16,
+              flexWrap: 'wrap',
+              alignItems: 'flex-start',
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 className="section-title">Passport summary</h2>
+              <p className="section-subtitle" style={{ marginBottom: 0 }}>
+                Your main operative information in one place.
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span className={getStatusClass(cscsStatus)}>
+                CSCS: {getStatusText(cscsStatus)}
+              </span>
+
+              <span className={getStatusClass(rtwStatus)}>
+                Right to work: {getStatusText(rtwStatus)}
+              </span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: 24,
+              alignItems: 'start',
+            }}
+          >
+            <div
+              style={{
+                border: '1px solid #d7e0ec',
+                borderRadius: 28,
+                padding: 20,
+                background: '#f8fbff',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: 1.4,
+                  textTransform: 'uppercase',
+                  color: '#62779a',
+                  marginBottom: 14,
+                }}
+              >
+                CSCS card image
+              </div>
+
+              {passport.photo ? (
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 22,
+                    background: '#ffffff',
+                    padding: 10,
+                  }}
+                >
+                  <img
+                    src={passport.photo}
+                    alt={`${passport.fullName} CSCS card`}
+                    style={{
+                      width: '100%',
+                      aspectRatio: '1.58 / 1',
+                      objectFit: 'contain',
+                      borderRadius: 16,
+                      background: '#ffffff',
+                      display: 'block',
+                    }}
+                  />
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: '100%',
+                    aspectRatio: '1.58 / 1',
+                    borderRadius: 20,
+                    border: '1px dashed #c7d5e6',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#eef3ff',
+                    color: '#16307f',
+                    fontSize: 18,
+                    fontWeight: 800,
+                    textAlign: 'center',
+                    padding: 20,
+                  }}
+                >
+                  No CSCS card image uploaded
+                </div>
+              )}
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 'clamp(34px, 7vw, 56px)',
+                  lineHeight: 0.98,
+                  color: '#08153d',
+                  letterSpacing: -1,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {passport.fullName || 'Operative'}
+              </h3>
+
+              <p
+                style={{
+                  margin: '12px 0 0',
+                  fontSize: 'clamp(18px, 4vw, 22px)',
+                  color: '#4d648c',
+                  lineHeight: 1.4,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {passport.role || 'No role'} • {passport.company || 'No company'}
+              </p>
+
+              <div
+                style={{
+                  border: '1px solid #d7e0ec',
+                  borderRadius: 24,
+                  padding: 20,
+                  background: '#fbfdff',
+                  marginTop: 24,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 900,
+                    letterSpacing: 1.6,
+                    textTransform: 'uppercase',
+                    color: '#62779a',
+                    marginBottom: 16,
+                  }}
+                >
+                  Operative details
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: 16,
+                  }}
+                >
+                  <div>
+                    <div className="meta-label">Email</div>
+                    <div className="meta-value">{passport.email || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Phone</div>
+                    <div className="meta-value">{passport.phone || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">CSCS card</div>
+                    <div className="meta-value">{passport.cscsCard || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">CSCS expiry</div>
+                    <div className="meta-value">{formatDate(passport.cscsExpiry)}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Right to work expiry</div>
+                    <div className="meta-value">
+                      {formatDate(passport.rightToWorkExpiry)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Created</div>
+                    <div className="meta-value">{formatDate(passport.createdAt)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  border: '1px solid #d7e0ec',
+                  borderRadius: 24,
+                  padding: 20,
+                  background: '#fbfdff',
+                  marginTop: 20,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 900,
+                    letterSpacing: 1.6,
+                    textTransform: 'uppercase',
+                    color: '#62779a',
+                    marginBottom: 10,
+                  }}
+                >
+                  Notes
+                </div>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 17,
+                    lineHeight: 1.55,
+                    color: '#08153d',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {passport.notes || 'No notes added.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          className="card"
+          style={{
+            marginBottom: 24,
+          }}
+        >
+          <h2 className="section-title">Qualifications</h2>
+          <p className="section-subtitle">Your saved qualifications and expiry dates.</p>
+
+          <div
+            style={{
+              display: 'grid',
+              gap: 14,
+              marginTop: 24,
+            }}
+          >
+            {passport.qualifications.length === 0 ? (
+              <div className="empty-box">
+                <h3>No qualifications yet</h3>
+                <p>Add them from your edit page.</p>
+              </div>
+            ) : (
+              passport.qualifications.map((qualification) => {
+                const qualificationStatus = getExpiryStatus(qualification.expiry)
+
+                return (
+                  <div
+                    key={qualification.id}
+                    style={{
+                      border: '1px solid #d7e0ec',
+                      borderRadius: 24,
+                      padding: 20,
+                      background: '#fbfdff',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        alignItems: 'center',
+                        marginBottom: 14,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: 22,
+                          color: '#08153d',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {qualification.name || 'Qualification'}
+                      </h3>
+
+                      <span className={getStatusClass(qualificationStatus)}>
+                        {getStatusText(qualificationStatus)}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                        gap: 16,
+                      }}
+                    >
+                      <div>
+                        <div className="meta-label">Card / certificate number</div>
+                        <div className="meta-value">{qualification.number || '—'}</div>
+                      </div>
+
+                      <div>
+                        <div className="meta-label">Expiry date</div>
+                        <div className="meta-value">{formatDate(qualification.expiry)}</div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
         </section>
 
@@ -398,347 +679,6 @@ export default function WorkerPage() {
               }}
             >
               Saved qualifications in your passport
-            </div>
-          </div>
-        </section>
-
-        <section
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr',
-            gap: 24,
-            alignItems: 'start',
-          }}
-        >
-          <div className="card">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: 16,
-                flexWrap: 'wrap',
-                alignItems: 'flex-start',
-                marginBottom: 4,
-              }}
-            >
-              <div style={{ minWidth: 0 }}>
-                <h2 className="section-title">Passport summary</h2>
-                <p className="section-subtitle">
-                  Your main operative information in one place.
-                </p>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  flexWrap: 'wrap',
-                  marginTop: 4,
-                }}
-              >
-                <span className={getStatusClass(cscsStatus)}>
-                  CSCS: {getStatusText(cscsStatus)}
-                </span>
-
-                <span className={getStatusClass(rtwStatus)}>
-                  Right to work: {getStatusText(rtwStatus)}
-                </span>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: 24,
-                alignItems: 'start',
-                marginTop: 24,
-              }}
-            >
-              <div
-                style={{
-                  border: '1px solid #d7e0ec',
-                  borderRadius: 28,
-                  padding: 20,
-                  background: '#f8fbff',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    letterSpacing: 1.4,
-                    textTransform: 'uppercase',
-                    color: '#62779a',
-                    marginBottom: 14,
-                  }}
-                >
-                  CSCS card image
-                </div>
-
-                {passport.photo ? (
-                  <div
-                    style={{
-                      border: '1px solid #d7e0ec',
-                      borderRadius: 22,
-                      background: '#ffffff',
-                      padding: 10,
-                    }}
-                  >
-                    <img
-                      src={passport.photo}
-                      alt={`${passport.fullName} CSCS card`}
-                      style={{
-                        width: '100%',
-                        aspectRatio: '1.58 / 1',
-                        objectFit: 'contain',
-                        borderRadius: 16,
-                        background: '#ffffff',
-                        display: 'block',
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      aspectRatio: '1.58 / 1',
-                      borderRadius: 20,
-                      border: '1px dashed #c7d5e6',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: '#eef3ff',
-                      color: '#16307f',
-                      fontSize: 18,
-                      fontWeight: 800,
-                      textAlign: 'center',
-                      padding: 20,
-                    }}
-                  >
-                    No CSCS card image uploaded
-                  </div>
-                )}
-
-                <p
-                  style={{
-                    margin: '14px 0 0',
-                    color: '#4d648c',
-                    fontSize: 14,
-                    lineHeight: 1.55,
-                  }}
-                >
-                  Use a clear front photo of your CSCS card so site managers can view
-                  it when scanning your profile.
-                </p>
-              </div>
-
-              <div style={{ minWidth: 0 }}>
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: 'clamp(40px, 7vw, 56px)',
-                    lineHeight: 0.98,
-                    color: '#08153d',
-                    letterSpacing: -1,
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {passport.fullName || 'Operative'}
-                </h3>
-
-                <p
-                  style={{
-                    margin: '12px 0 0',
-                    fontSize: 'clamp(18px, 4vw, 22px)',
-                    color: '#4d648c',
-                    lineHeight: 1.4,
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {passport.role || 'No role'} • {passport.company || 'No company'}
-                </p>
-
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 24,
-                    padding: 20,
-                    background: '#fbfdff',
-                    marginTop: 24,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 900,
-                      letterSpacing: 1.6,
-                      textTransform: 'uppercase',
-                      color: '#62779a',
-                      marginBottom: 16,
-                    }}
-                  >
-                    Operative details
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                      gap: 16,
-                    }}
-                  >
-                    <div>
-                      <div className="meta-label">Email</div>
-                      <div className="meta-value">{passport.email || '—'}</div>
-                    </div>
-
-                    <div>
-                      <div className="meta-label">Phone</div>
-                      <div className="meta-value">{passport.phone || '—'}</div>
-                    </div>
-
-                    <div>
-                      <div className="meta-label">CSCS card</div>
-                      <div className="meta-value">{passport.cscsCard || '—'}</div>
-                    </div>
-
-                    <div>
-                      <div className="meta-label">CSCS expiry</div>
-                      <div className="meta-value">{formatDate(passport.cscsExpiry)}</div>
-                    </div>
-
-                    <div>
-                      <div className="meta-label">Right to work expiry</div>
-                      <div className="meta-value">
-                        {formatDate(passport.rightToWorkExpiry)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="meta-label">Created</div>
-                      <div className="meta-value">{formatDate(passport.createdAt)}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 24,
-                    padding: 20,
-                    background: '#fbfdff',
-                    marginTop: 20,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 900,
-                      letterSpacing: 1.6,
-                      textTransform: 'uppercase',
-                      color: '#62779a',
-                      marginBottom: 10,
-                    }}
-                  >
-                    Notes
-                  </div>
-
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 17,
-                      lineHeight: 1.55,
-                      color: '#08153d',
-                      wordBreak: 'break-word',
-                    }}
-                  >
-                    {passport.notes || 'No notes added.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h2 className="section-title">Qualifications</h2>
-            <p className="section-subtitle">
-              Your saved qualifications and expiry dates.
-            </p>
-
-            <div
-              style={{
-                display: 'grid',
-                gap: 14,
-                marginTop: 24,
-              }}
-            >
-              {passport.qualifications.length === 0 ? (
-                <div className="empty-box">
-                  <h3>No qualifications yet</h3>
-                  <p>Add them from your edit page.</p>
-                </div>
-              ) : (
-                passport.qualifications.map((qualification) => {
-                  const qualificationStatus = getExpiryStatus(qualification.expiry)
-
-                  return (
-                    <div
-                      key={qualification.id}
-                      style={{
-                        border: '1px solid #d7e0ec',
-                        borderRadius: 24,
-                        padding: 20,
-                        background: '#fbfdff',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          gap: 16,
-                          alignItems: 'center',
-                          marginBottom: 14,
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontSize: 22,
-                            color: '#08153d',
-                            wordBreak: 'break-word',
-                          }}
-                        >
-                          {qualification.name || 'Qualification'}
-                        </h3>
-
-                        <span className={getStatusClass(qualificationStatus)}>
-                          {getStatusText(qualificationStatus)}
-                        </span>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                          gap: 16,
-                        }}
-                      >
-                        <div>
-                          <div className="meta-label">Card / certificate number</div>
-                          <div className="meta-value">{qualification.number || '—'}</div>
-                        </div>
-
-                        <div>
-                          <div className="meta-label">Expiry date</div>
-                          <div className="meta-value">{formatDate(qualification.expiry)}</div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
             </div>
           </div>
         </section>
