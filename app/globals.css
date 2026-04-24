@@ -325,6 +325,21 @@ a {
   word-break: break-word;
 }
 
+.form-title {
+  margin: 0 0 8px;
+  font-size: 38px;
+  font-weight: 900;
+  word-break: break-word;
+}
+
+.form-subtitle {
+  margin: 0 0 20px;
+  font-size: 18px;
+  color: #4d648c;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -553,6 +568,13 @@ a {
   word-break: break-word;
 }
 
+.back-link {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: #2f4fd0;
+  font-weight: 800;
+}
+
 .pdf-stage {
   position: fixed;
   left: -99999px;
@@ -716,7 +738,6 @@ a {
   font-weight: 700;
 }
 
-/* Auth page */
 .auth-layout {
   min-height: calc(100vh - 48px);
   display: grid;
@@ -868,7 +889,7 @@ a {
 
   .auth-hero {
     padding: 24px;
-    min-height: unset;
+    min-height: auto;
   }
 
   .auth-hero-title {
@@ -907,17 +928,21 @@ a {
 
   .hero {
     gap: 16px;
-    padding: 20px;
+    padding: 18px;
+    min-height: auto;
   }
 
   .hero h1 {
-    font-size: 34px;
+    font-size: 26px;
     max-width: 100%;
+    line-height: 1.1;
+    margin-bottom: 8px;
   }
 
   .hero p {
-    font-size: 15px;
+    font-size: 14px;
     max-width: 100%;
+    line-height: 1.45;
   }
 
   .section-title,
@@ -966,18 +991,18 @@ a {
   .auth-layout {
     min-height: auto;
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 14px;
   }
 
   .auth-hero {
-    padding: 16px;
-    min-height: unset;
-    justify-content: flex-start;
+    padding: 18px;
+    min-height: auto;
     gap: 12px;
+    justify-content: flex-start;
   }
 
   .auth-hero-title {
-    font-size: 24px;
+    font-size: 26px;
     line-height: 1.1;
     margin-bottom: 8px;
     max-width: 100%;
@@ -990,8 +1015,7 @@ a {
   }
 
   .auth-hero-panels {
-    max-width: 100%;
-    gap: 10px;
+    display: none;
   }
 
   .auth-hero-panel {
@@ -999,12 +1023,12 @@ a {
   }
 
   .auth-card {
-    padding: 20px;
+    padding: 18px;
     min-height: unset;
   }
 
   .auth-card-title {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .auth-tabs {
