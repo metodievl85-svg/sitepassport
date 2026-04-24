@@ -148,7 +148,7 @@ function SitePassportLogo() {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        marginBottom: 14,
+        marginBottom: 4,
         maxWidth: '100%',
       }}
     >
@@ -157,7 +157,7 @@ function SitePassportLogo() {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(560px, 100%)',
+          width: 'min(430px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -385,14 +385,21 @@ export default function CompanyPage() {
     return (
       <main className="page-shell">
         <div className="container">
-          <section className="hero">
+          <section
+            className="hero company-hero-compact"
+            style={{
+              padding: '28px 38px',
+              marginBottom: 24,
+              alignItems: 'center',
+            }}
+          >
             <div>
               <SitePassportLogo />
               <h1
                 style={{
                   fontSize: 'clamp(24px, 3vw, 34px)',
                   lineHeight: 1.08,
-                  marginBottom: 12,
+                  marginBottom: 10,
                 }}
               >
                 Loading company dashboard...
@@ -409,10 +416,12 @@ export default function CompanyPage() {
     <main className="page-shell">
       <div className="container">
         <section
-          className="hero"
+          className="hero company-hero-compact"
           style={{
+            padding: '28px 38px',
             marginBottom: 24,
-            alignItems: 'stretch',
+            alignItems: 'center',
+            gap: 28,
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -420,8 +429,9 @@ export default function CompanyPage() {
 
             <h1
               style={{
-                marginBottom: 14,
-                fontSize: 'clamp(24px, 2.4vw, 34px)',
+                marginTop: 8,
+                marginBottom: 10,
+                fontSize: 'clamp(24px, 2.3vw, 32px)',
                 lineHeight: 1.08,
                 fontWeight: 900,
               }}
@@ -429,7 +439,7 @@ export default function CompanyPage() {
               Company dashboard
             </h1>
 
-            <p style={{ maxWidth: 760 }}>
+            <p style={{ maxWidth: 760, marginBottom: 0 }}>
               Manage operatives, review expiry status, scan QR codes, and keep your
               workforce records organised from one responsive control centre.
             </p>
@@ -439,7 +449,7 @@ export default function CompanyPage() {
                 display: 'flex',
                 gap: 12,
                 flexWrap: 'wrap',
-                marginTop: 22,
+                marginTop: 18,
               }}
             >
               {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((item) => (
@@ -448,8 +458,8 @@ export default function CompanyPage() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    minHeight: 42,
-                    padding: '0 16px',
+                    minHeight: 38,
+                    padding: '0 15px',
                     borderRadius: 999,
                     background: 'rgba(255,255,255,0.14)',
                     border: '1px solid rgba(255,255,255,0.16)',
@@ -473,7 +483,6 @@ export default function CompanyPage() {
               padding: 22,
               display: 'grid',
               gap: 14,
-              alignSelf: 'stretch',
             }}
           >
             <div>
@@ -920,6 +929,10 @@ export default function CompanyPage() {
         }
 
         @media (max-width: 700px) {
+          .company-hero-compact {
+            padding: 24px 20px !important;
+          }
+
           .company-search-row {
             grid-template-columns: 1fr !important;
           }
@@ -938,7 +951,7 @@ export default function CompanyPage() {
 
         @media (max-width: 520px) {
           .company-brand-logo img {
-            width: min(360px, 100%) !important;
+            width: min(320px, 100%) !important;
           }
         }
 
