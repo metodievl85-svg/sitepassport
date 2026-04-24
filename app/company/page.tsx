@@ -141,6 +141,14 @@ function getFilterButtonStyle(current: FilterValue, value: FilterValue) {
   }
 }
 
+function SitePassportLogo() {
+  return (
+    <div className="company-logo-brand">
+      <img src="/sitepassport-logo.svg" alt="SitePassport" />
+    </div>
+  )
+}
+
 export default function CompanyPage() {
   const router = useRouter()
 
@@ -362,11 +370,37 @@ export default function CompanyPage() {
         <div className="container">
           <section className="hero">
             <div>
-              <div className="brand">SITEPASSPORT</div>
+              <SitePassportLogo />
               <h1>Loading company dashboard...</h1>
               <p>Please wait while your company workspace is prepared.</p>
             </div>
           </section>
+
+          <style jsx>{`
+            .company-logo-brand {
+              display: inline-flex;
+              align-items: center;
+              width: 100%;
+              max-width: 300px;
+              margin-bottom: 16px;
+              padding: 8px 12px;
+              border-radius: 16px;
+              background: rgba(255, 255, 255, 0.94);
+              box-shadow: 0 10px 28px rgba(9, 21, 75, 0.16);
+            }
+
+            .company-logo-brand img {
+              display: block;
+              width: 100%;
+              height: auto;
+            }
+
+            @media (max-width: 700px) {
+              .company-logo-brand {
+                max-width: 245px;
+              }
+            }
+          `}</style>
         </div>
       </main>
     )
@@ -383,7 +417,7 @@ export default function CompanyPage() {
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="brand">SITEPASSPORT</div>
+            <SitePassportLogo />
 
             <h1 style={{ marginBottom: 14 }}>Company dashboard</h1>
 
@@ -858,6 +892,24 @@ export default function CompanyPage() {
       </div>
 
       <style jsx>{`
+        .company-logo-brand {
+          display: inline-flex;
+          align-items: center;
+          width: 100%;
+          max-width: 300px;
+          margin-bottom: 16px;
+          padding: 8px 12px;
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.94);
+          box-shadow: 0 10px 28px rgba(9, 21, 75, 0.16);
+        }
+
+        .company-logo-brand img {
+          display: block;
+          width: 100%;
+          height: auto;
+        }
+
         .saved-operative-row {
           display: grid;
           grid-template-columns: 100px 1fr auto;
@@ -874,6 +926,10 @@ export default function CompanyPage() {
         }
 
         @media (max-width: 700px) {
+          .company-logo-brand {
+            max-width: 245px;
+          }
+
           .company-search-row {
             grid-template-columns: 1fr !important;
           }
@@ -891,6 +947,10 @@ export default function CompanyPage() {
         }
 
         @media (max-width: 420px) {
+          .company-logo-brand {
+            max-width: 225px;
+          }
+
           .saved-operative-row {
             grid-template-columns: 86px 1fr;
             gap: 12px;
