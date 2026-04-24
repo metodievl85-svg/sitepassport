@@ -153,13 +153,12 @@ function SitePassportLogo() {
       }}
     >
       <img
-        src="/sitepassport-logo.svg"
+        src="/sitepassport-logo.png"
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(520px, 100%)',
+          width: 'min(560px, 100%)',
           height: 'auto',
-          maxHeight: 142,
           objectFit: 'contain',
         }}
       />
@@ -422,7 +421,7 @@ export default function CompanyPage() {
             <h1
               style={{
                 marginBottom: 14,
-                fontSize: 'clamp(26px, 3.2vw, 42px)',
+                fontSize: 'clamp(24px, 2.4vw, 34px)',
                 lineHeight: 1.08,
                 fontWeight: 900,
               }}
@@ -940,7 +939,6 @@ export default function CompanyPage() {
         @media (max-width: 520px) {
           .company-brand-logo img {
             width: min(360px, 100%) !important;
-            max-height: 104px !important;
           }
         }
 
