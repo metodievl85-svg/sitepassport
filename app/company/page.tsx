@@ -632,6 +632,7 @@ export default function CompanyPage() {
           </div>
 
           <div
+            className="company-search-row"
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 160px',
@@ -731,14 +732,7 @@ export default function CompanyPage() {
                       background: '#fbfdff',
                     }}
                   >
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '100px 1fr auto',
-                        gap: 14,
-                        alignItems: 'center',
-                      }}
-                    >
+                    <div className="saved-operative-row">
                       <div>
                         {worker.photo ? (
                           <img
@@ -817,15 +811,7 @@ export default function CompanyPage() {
                         </div>
                       </div>
 
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: 8,
-                          alignItems: 'center',
-                          justifyContent: 'flex-end',
-                          flexWrap: 'wrap',
-                        }}
-                      >
+                      <div className="saved-operative-actions">
                         <Link
                           href={`/scan/${worker.workerId}`}
                           className="btn btn-secondary"
@@ -870,6 +856,52 @@ export default function CompanyPage() {
           )}
         </section>
       </div>
+
+      <style jsx>{`
+        .saved-operative-row {
+          display: grid;
+          grid-template-columns: 100px 1fr auto;
+          gap: 14px;
+          align-items: center;
+        }
+
+        .saved-operative-actions {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          justify-content: flex-end;
+          flex-wrap: wrap;
+        }
+
+        @media (max-width: 700px) {
+          .company-search-row {
+            grid-template-columns: 1fr !important;
+          }
+
+          .saved-operative-row {
+            grid-template-columns: 96px 1fr;
+            align-items: center;
+          }
+
+          .saved-operative-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+            padding-top: 8px;
+          }
+        }
+
+        @media (max-width: 420px) {
+          .saved-operative-row {
+            grid-template-columns: 86px 1fr;
+            gap: 12px;
+          }
+
+          .saved-operative-actions a,
+          .saved-operative-actions button {
+            flex: 0 0 auto;
+          }
+        }
+      `}</style>
     </main>
   )
 }
