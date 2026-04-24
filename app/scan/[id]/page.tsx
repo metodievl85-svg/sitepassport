@@ -157,7 +157,9 @@ export default function PublicWorkerPage() {
         .eq('worker_id', workerId)
         .maybeSingle()
 
-      if (savedError) console.error(savedError)
+      if (savedError) {
+        console.error(savedError)
+      }
 
       setIsSaved(!!savedWorker)
     } catch (error) {
@@ -189,7 +191,9 @@ export default function PublicWorkerPage() {
         .select('*')
         .eq('worker_id', workerId)
 
-      if (qualificationsError) console.error(qualificationsError)
+      if (qualificationsError) {
+        console.error(qualificationsError)
+      }
 
       setWorker(mapWorkerRow(workerRow, qualificationRows ?? []))
     } catch (error) {
@@ -266,325 +270,6 @@ export default function PublicWorkerPage() {
   const cscsStatus = getStatus(worker.cscsExpiry)
   const rightToWorkStatus = getStatus(worker.rightToWorkExpiry)
 
-  const imageAndSummary = (
-    <div style={{ display: 'grid', gap: 24 }}>
-      <div className="profile-photo-card">
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 800,
-            letterSpacing: 1.6,
-            textTransform: 'uppercase',
-            color: '#62779a',
-            marginBottom: 14,
-          }}
-        >
-          CSCS card image
-        </div>
-
-        {worker.photo ? (
-          <div
-            style={{
-              border: '1px solid #d7e0ec',
-              borderRadius: 22,
-              background: '#ffffff',
-              padding: 12,
-            }}
-          >
-            <img
-              src={worker.photo}
-              alt={`${worker.fullName} CSCS card`}
-              className="profile-photo-large"
-              style={{
-                aspectRatio: '1.58 / 1',
-                objectFit: 'contain',
-                background: '#ffffff',
-                borderRadius: 16,
-              }}
-            />
-          </div>
-        ) : (
-          <div
-            className="profile-photo-large-placeholder"
-            style={{
-              aspectRatio: '1.58 / 1',
-              fontSize: 18,
-              lineHeight: 1.4,
-              textAlign: 'center',
-              padding: 24,
-              border: '1px dashed #c7d5e6',
-              background: '#eef3ff',
-            }}
-          >
-            No CSCS card image uploaded
-          </div>
-        )}
-
-        <p
-          style={{
-            margin: '14px 0 0',
-            color: '#4d648c',
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
-          Check that the visible card image matches the operative details and card
-          number shown on this page.
-        </p>
-      </div>
-
-      <div className="card">
-        <h2
-          style={{
-            margin: 0,
-            fontSize: 26,
-            fontWeight: 900,
-            color: '#08153d',
-          }}
-        >
-          Verification summary
-        </h2>
-
-        <p
-          style={{
-            margin: '10px 0 20px',
-            color: '#4d648c',
-            fontSize: 16,
-            lineHeight: 1.55,
-          }}
-        >
-          Use the checks below to confirm the operative details before saving to your
-          company dashboard.
-        </p>
-
-        <div style={{ display: 'grid', gap: 12 }}>
-          <div
-            style={{
-              border: '1px solid #d7e0ec',
-              borderRadius: 18,
-              padding: 16,
-              background: '#fbfdff',
-            }}
-          >
-            <div className="meta-label">CSCS status</div>
-            <div style={{ marginTop: 8 }}>
-              <span className={cscsStatus.className}>{cscsStatus.text}</span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              border: '1px solid #d7e0ec',
-              borderRadius: 18,
-              padding: 16,
-              background: '#fbfdff',
-            }}
-          >
-            <div className="meta-label">Right to work status</div>
-            <div style={{ marginTop: 8 }}>
-              <span className={rightToWorkStatus.className}>
-                {rightToWorkStatus.text}
-              </span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              border: '1px solid #d7e0ec',
-              borderRadius: 18,
-              padding: 16,
-              background: '#fbfdff',
-            }}
-          >
-            <div className="meta-label">Qualifications saved</div>
-            <div
-              style={{
-                marginTop: 8,
-                fontSize: 28,
-                fontWeight: 900,
-                color: '#08153d',
-              }}
-            >
-              {worker.qualifications.length}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const operativeDetails = (
-    <div className="profile-info-card">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 20,
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          marginBottom: 18,
-        }}
-      >
-        <div>
-          <h2 className="profile-name">{worker.fullName}</h2>
-          <p className="profile-role">
-            {worker.role || 'No role'} • {worker.company || 'No company'}
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
-          <div className={rightToWorkStatus.className}>
-            Right to work: {rightToWorkStatus.text}
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          border: '1px solid #d7e0ec',
-          borderRadius: 22,
-          padding: 18,
-          background: '#fbfdff',
-          marginBottom: 24,
-        }}
-      >
-        <div
-          style={{
-            fontSize: 15,
-            fontWeight: 900,
-            letterSpacing: 1.2,
-            textTransform: 'uppercase',
-            color: '#62779a',
-            marginBottom: 12,
-          }}
-        >
-          Operative details
-        </div>
-
-        <div className="profile-meta-grid" style={{ marginTop: 0 }}>
-          <div>
-            <div className="meta-label">Company</div>
-            <div className="meta-value">{worker.company || '—'}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">Role</div>
-            <div className="meta-value">{worker.role || '—'}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">Email</div>
-            <div className="meta-value">{worker.email || '—'}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">Phone</div>
-            <div className="meta-value">{worker.phone || '—'}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">CSCS card</div>
-            <div className="meta-value">{worker.cscsCard || '—'}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">CSCS expiry</div>
-            <div className="meta-value">{formatDate(worker.cscsExpiry)}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">Right to work expiry</div>
-            <div className="meta-value">{formatDate(worker.rightToWorkExpiry)}</div>
-          </div>
-
-          <div>
-            <div className="meta-label">Created</div>
-            <div className="meta-value">{formatDate(worker.createdAt)}</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="notes-box">
-        <div className="notes-title">Qualifications</div>
-
-        {worker.qualifications.length === 0 ? (
-          <p className="notes-text">No qualifications added.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {worker.qualifications.map((qualification) => {
-              const qualificationStatus = getStatus(qualification.expiry)
-
-              return (
-                <div
-                  key={qualification.id}
-                  style={{
-                    background: '#ffffff',
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 18,
-                    padding: 18,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      flexWrap: 'wrap',
-                      marginBottom: 12,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 21,
-                        fontWeight: 900,
-                        color: '#08153d',
-                      }}
-                    >
-                      {qualification.name || 'Qualification'}
-                    </div>
-
-                    <div className={qualificationStatus.className}>
-                      {qualificationStatus.text}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: isMobile
-                        ? '1fr'
-                        : 'repeat(2, minmax(180px, 1fr))',
-                      gap: 14,
-                    }}
-                  >
-                    <div>
-                      <div className="meta-label">Card / certificate number</div>
-                      <div className="meta-value">{qualification.number || '—'}</div>
-                    </div>
-
-                    <div>
-                      <div className="meta-label">Expiry date</div>
-                      <div className="meta-value">
-                        {formatDate(qualification.expiry)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="notes-box">
-        <div className="notes-title">Notes</div>
-        <p className="notes-text">{worker.notes || 'No notes added.'}</p>
-      </div>
-    </div>
-  )
-
   return (
     <main className="page-shell">
       <div className="container" style={{ maxWidth: 1120 }}>
@@ -602,47 +287,6 @@ export default function PublicWorkerPage() {
               Read-only verification page for managers, supervisors, and site access
               checks.
             </p>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: 12,
-                flexWrap: 'wrap',
-                marginTop: 22,
-              }}
-            >
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: 42,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.14)',
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                Public verification page
-              </span>
-
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  minHeight: 42,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.14)',
-                  border: '1px solid rgba(255,255,255,0.14)',
-                  fontSize: 14,
-                  fontWeight: 800,
-                }}
-              >
-                CSCS card image visible
-              </span>
-            </div>
           </div>
 
           {isCompanyUser ? (
@@ -652,7 +296,7 @@ export default function PublicWorkerPage() {
                 flexDirection: 'column',
                 gap: 12,
                 justifyContent: 'center',
-                minWidth: 250,
+                minWidth: isMobile ? '100%' : 250,
               }}
             >
               <button
@@ -678,17 +322,318 @@ export default function PublicWorkerPage() {
             alignItems: 'start',
           }}
         >
-          {isMobile ? (
-            <>
-              {operativeDetails}
-              {imageAndSummary}
-            </>
-          ) : (
-            <>
-              {imageAndSummary}
-              {operativeDetails}
-            </>
-          )}
+          <div style={{ display: 'grid', gap: 24 }}>
+            <div className="profile-photo-card">
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: 1.6,
+                  textTransform: 'uppercase',
+                  color: '#62779a',
+                  marginBottom: 14,
+                }}
+              >
+                CSCS card image
+              </div>
+
+              {worker.photo ? (
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 22,
+                    background: '#ffffff',
+                    padding: 12,
+                  }}
+                >
+                  <img
+                    src={worker.photo}
+                    alt={`${worker.fullName} CSCS card`}
+                    className="profile-photo-large"
+                    style={{
+                      aspectRatio: '1.58 / 1',
+                      objectFit: 'contain',
+                      background: '#ffffff',
+                      borderRadius: 16,
+                    }}
+                  />
+                </div>
+              ) : (
+                <div
+                  className="profile-photo-large-placeholder"
+                  style={{
+                    aspectRatio: '1.58 / 1',
+                    fontSize: 18,
+                    lineHeight: 1.4,
+                    textAlign: 'center',
+                    padding: 24,
+                    border: '1px dashed #c7d5e6',
+                    background: '#eef3ff',
+                  }}
+                >
+                  No CSCS card image uploaded
+                </div>
+              )}
+            </div>
+
+            <div className="card">
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 26,
+                  fontWeight: 900,
+                  color: '#08153d',
+                }}
+              >
+                Verification summary
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 12,
+                  marginTop: 18,
+                }}
+              >
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#fbfdff',
+                  }}
+                >
+                  <div className="meta-label">CSCS status</div>
+                  <div style={{ marginTop: 8 }}>
+                    <span className={cscsStatus.className}>{cscsStatus.text}</span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#fbfdff',
+                  }}
+                >
+                  <div className="meta-label">Right to work status</div>
+                  <div style={{ marginTop: 8 }}>
+                    <span className={rightToWorkStatus.className}>
+                      {rightToWorkStatus.text}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#fbfdff',
+                  }}
+                >
+                  <div className="meta-label">Qualifications saved</div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      color: '#08153d',
+                    }}
+                  >
+                    {worker.qualifications.length}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-info-card">
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 20,
+                alignItems: 'flex-start',
+                flexWrap: 'wrap',
+                marginBottom: 18,
+              }}
+            >
+              <div>
+                <h2 className="profile-name">{worker.fullName}</h2>
+                <p className="profile-role">
+                  {worker.role || 'No role'} • {worker.company || 'No company'}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
+                <div className={rightToWorkStatus.className}>
+                  Right to work: {rightToWorkStatus.text}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: '1px solid #d7e0ec',
+                borderRadius: 22,
+                padding: 18,
+                background: '#fbfdff',
+                marginBottom: 24,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 900,
+                  letterSpacing: 1.2,
+                  textTransform: 'uppercase',
+                  color: '#62779a',
+                  marginBottom: 12,
+                }}
+              >
+                Operative details
+              </div>
+
+              <div className="profile-meta-grid" style={{ marginTop: 0 }}>
+                <div>
+                  <div className="meta-label">Company</div>
+                  <div className="meta-value">{worker.company || '—'}</div>
+                </div>
+
+                <div>
+                  <div className="meta-label">Role</div>
+                  <div className="meta-value">{worker.role || '—'}</div>
+                </div>
+
+                <div>
+                  <div className="meta-label">Email</div>
+                  <div className="meta-value">{worker.email || '—'}</div>
+                </div>
+
+                <div>
+                  <div className="meta-label">Phone</div>
+                  <div className="meta-value">{worker.phone || '—'}</div>
+                </div>
+
+                <div>
+                  <div className="meta-label">CSCS card</div>
+                  <div className="meta-value">{worker.cscsCard || '—'}</div>
+                </div>
+
+                <div>
+                  <div className="meta-label">CSCS expiry</div>
+                  <div className="meta-value">{formatDate(worker.cscsExpiry)}</div>
+                </div>
+
+                <div>
+                  <div className="meta-label">Right to work expiry</div>
+                  <div className="meta-value">
+                    {formatDate(worker.rightToWorkExpiry)}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="meta-label">Created</div>
+                  <div className="meta-value">{formatDate(worker.createdAt)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="notes-box">
+              <div className="notes-title">Qualifications</div>
+
+              {worker.qualifications.length === 0 ? (
+                <p className="notes-text">No qualifications added.</p>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  {worker.qualifications.map((qualification) => {
+                    const qualificationStatus = getStatus(qualification.expiry)
+
+                    return (
+                      <div
+                        key={qualification.id}
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid #d7e0ec',
+                          borderRadius: 18,
+                          padding: 18,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                            marginBottom: 12,
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 21,
+                              fontWeight: 900,
+                              color: '#08153d',
+                            }}
+                          >
+                            {qualification.name || 'Qualification'}
+                          </div>
+
+                          <div className={qualificationStatus.className}>
+                            {qualificationStatus.text}
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: isMobile
+                              ? '1fr'
+                              : 'repeat(2, minmax(180px, 1fr))',
+                            gap: 14,
+                          }}
+                        >
+                          <div>
+                            <div className="meta-label">Card / certificate number</div>
+                            <div className="meta-value">
+                              {qualification.number || '—'}
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="meta-label">Expiry date</div>
+                            <div className="meta-value">
+                              {formatDate(qualification.expiry)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="notes-box">
+              <div className="notes-title">Notes</div>
+              <p className="notes-text">{worker.notes || 'No notes added.'}</p>
+            </div>
+          </div>
         </section>
       </div>
     </main>
