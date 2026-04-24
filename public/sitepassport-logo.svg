@@ -1,0 +1,15 @@
+<svg width="720" height="170" viewBox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="720" height="170" fill="white"/>
+
+  <rect x="24" y="30" width="92" height="92" rx="22" fill="#0B3FD7"/>
+  <path d="M70 45L100 58V82C100 105 88 122 70 132C52 122 40 105 40 82V58L70 45Z" fill="white"/>
+  <rect x="61" y="65" width="8" height="8" fill="#071847"/>
+  <rect x="76" y="65" width="8" height="8" fill="#071847"/>
+  <rect x="61" y="82" width="8" height="8" fill="#071847"/>
+  <path d="M49 88L66 105L95 73" stroke="#0B3FD7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="145" y="78" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="800" fill="#071847">Site</text>
+  <text x="238" y="78" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="800" fill="#0B3FD7">Passport</text>
+
+  <text x="147" y="118" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" letter-spacing="7" fill="#5A6F96">VERIFY. CONFIRM. TRUST.</text>
+</svg>
