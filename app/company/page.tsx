@@ -148,7 +148,7 @@ function SitePassportLogo() {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 0,
         maxWidth: '100%',
       }}
     >
@@ -157,7 +157,7 @@ function SitePassportLogo() {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(430px, 100%)',
+          width: 'min(560px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -388,8 +388,8 @@ export default function CompanyPage() {
           <section
             className="hero company-hero-compact"
             style={{
-              padding: '28px 38px',
-              marginBottom: 24,
+              padding: '22px 34px',
+              marginBottom: 22,
               alignItems: 'center',
             }}
           >
@@ -399,7 +399,8 @@ export default function CompanyPage() {
                 style={{
                   fontSize: 'clamp(24px, 3vw, 34px)',
                   lineHeight: 1.08,
-                  marginBottom: 10,
+                  marginTop: 4,
+                  marginBottom: 8,
                 }}
               >
                 Loading company dashboard...
@@ -418,10 +419,10 @@ export default function CompanyPage() {
         <section
           className="hero company-hero-compact"
           style={{
-            padding: '28px 38px',
+            padding: '22px 34px',
             marginBottom: 24,
             alignItems: 'center',
-            gap: 28,
+            gap: 20,
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -429,10 +430,10 @@ export default function CompanyPage() {
 
             <h1
               style={{
-                marginTop: 8,
-                marginBottom: 10,
-                fontSize: 'clamp(24px, 2.3vw, 32px)',
-                lineHeight: 1.08,
+                marginTop: 4,
+                marginBottom: 8,
+                fontSize: 'clamp(23px, 2.2vw, 31px)',
+                lineHeight: 1.06,
                 fontWeight: 900,
               }}
             >
@@ -449,7 +450,7 @@ export default function CompanyPage() {
                 display: 'flex',
                 gap: 12,
                 flexWrap: 'wrap',
-                marginTop: 18,
+                marginTop: 16,
               }}
             >
               {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((item) => (
@@ -458,7 +459,7 @@ export default function CompanyPage() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    minHeight: 38,
+                    minHeight: 36,
                     padding: '0 15px',
                     borderRadius: 999,
                     background: 'rgba(255,255,255,0.14)',
@@ -930,7 +931,7 @@ export default function CompanyPage() {
 
         @media (max-width: 700px) {
           .company-hero-compact {
-            padding: 24px 20px !important;
+            padding: 22px 20px !important;
           }
 
           .company-search-row {
@@ -951,7 +952,7 @@ export default function CompanyPage() {
 
         @media (max-width: 520px) {
           .company-brand-logo img {
-            width: min(320px, 100%) !important;
+            width: min(360px, 100%) !important;
           }
         }
 
