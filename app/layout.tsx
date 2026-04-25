@@ -13,8 +13,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        
+      <body
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+        }}
+      >
         {/* MAIN CONTENT */}
         <div style={{ flex: 1 }}>
           {children}
@@ -34,17 +39,23 @@ export default function RootLayout({
             SITEPASSPORT
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '10px' }}>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/cookies">Cookies</Link>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '20px',
+              marginBottom: '10px',
+            }}
+          >
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms & Conditions</Link>
+            <Link href="/cookies">Cookie Policy</Link>
           </div>
 
           <div style={{ color: '#666' }}>
             © {new Date().getFullYear()} SitePassport. All rights reserved.
           </div>
         </footer>
-
       </body>
     </html>
   )
