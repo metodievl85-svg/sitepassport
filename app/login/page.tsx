@@ -10,13 +10,20 @@ type Role = 'worker' | 'company'
 
 function SitePassportLogo({ dark = false }: { dark?: boolean }) {
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%' }}>
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        maxWidth: '100%',
+      }}
+    >
       <img
         src="/sitepassport-logo.png"
         alt="SitePassport"
         style={{
           display: 'block',
-          width: dark ? 'min(300px, 100%)' : 'min(420px, 100%)',
+          width: dark ? 'min(300px, 100%)' : 'min(520px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -352,7 +359,7 @@ export default function LoginPage() {
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
-              gap: isMobile ? 12 : 16,
+              gap: isMobile ? 10 : 12,
             }}
           >
             <div
@@ -392,12 +399,12 @@ export default function LoginPage() {
               <div
                 style={{
                   width: '100%',
-                  maxWidth: 560,
+                  maxWidth: 460,
                   marginTop: 4,
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.14)',
                   borderRadius: 20,
-                  padding: 14,
+                  padding: 12,
                   textAlign: 'center',
                 }}
               >
