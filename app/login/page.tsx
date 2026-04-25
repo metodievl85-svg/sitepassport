@@ -8,6 +8,23 @@ import { supabase } from '../lib/supabase'
 type Mode = 'login' | 'signup' | 'forgot'
 type Role = 'worker' | 'company'
 
+function SitePassportLogo({ dark = false }: { dark?: boolean }) {
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', maxWidth: '100%' }}>
+      <img
+        src="/sitepassport-logo.png"
+        alt="SitePassport"
+        style={{
+          display: 'block',
+          width: dark ? 'min(320px, 100%)' : 'min(360px, 100%)',
+          height: 'auto',
+          objectFit: 'contain',
+        }}
+      />
+    </div>
+  )
+}
+
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
@@ -295,9 +312,10 @@ export default function LoginPage() {
                 textAlign: 'center',
               }}
             >
-              <div className="brand" style={{ color: '#16307f' }}>
-                SITEPASSPORT
+              <div style={{ marginBottom: 18 }}>
+                <SitePassportLogo dark />
               </div>
+
               <h1 className="section-title">Loading SitePassport</h1>
               <p className="section-subtitle" style={{ marginBottom: 0 }}>
                 Please wait a moment.
@@ -334,15 +352,8 @@ export default function LoginPage() {
             }}
           >
             <div style={{ minWidth: 0, width: '100%' }}>
-              <div
-                className="brand"
-                style={{
-                  marginBottom: isMobile ? 10 : 12,
-                  fontSize: isMobile ? 14 : 18,
-                  letterSpacing: isMobile ? 3 : 4,
-                }}
-              >
-                SITEPASSPORT
+              <div style={{ marginBottom: isMobile ? 10 : 12 }}>
+                <SitePassportLogo />
               </div>
 
               <h1
