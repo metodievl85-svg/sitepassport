@@ -174,17 +174,28 @@ export default function PublicWorkerPage() {
     try {
       setIsLoading(true)
 
-      const { data, error } = await supabase.rpc('get_public_worker_profile', {
-        p_worker_id: workerId,
-      })
+      const { data: workerRow, error: workerError } = await supabase
+        .from('workers')
+        .select('*')
+        .eq('id', workerId)
+        .single()
 
-      if (error || !data || !data.worker) {
-        console.error(error)
+      if (workerError || !workerRow) {
+        console.error(workerError)
         setWorker(null)
         return
       }
 
-      setWorker(mapWorkerRow(data.worker, data.qualifications ?? []))
+      const { data: qualificationRows, error: qualificationsError } = await supabase
+        .from('qualifications')
+        .select('*')
+        .eq('worker_id', workerId)
+
+      if (qualificationsError) {
+        console.error(qualificationsError)
+      }
+
+      setWorker(mapWorkerRow(workerRow, qualificationRows ?? []))
     } catch (error) {
       console.error(error)
       setWorker(null)
@@ -262,13 +273,7 @@ export default function PublicWorkerPage() {
   return (
     <main className="page-shell">
       <div className="container" style={{ maxWidth: 1120 }}>
-        <section
-          className="hero"
-          style={{
-            marginBottom: 24,
-            alignItems: 'stretch',
-          }}
-        >
+        <section className="hero" style={{ marginBottom: 24, alignItems: 'stretch' }}>
           <div>
             <div className="brand">SITEPASSPORT</div>
             <h1>Operative verification</h1>
@@ -366,46 +371,19 @@ export default function PublicWorkerPage() {
             </div>
 
             <div className="card">
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 26,
-                  fontWeight: 900,
-                  color: '#08153d',
-                }}
-              >
+              <h2 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: '#08153d' }}>
                 Verification summary
               </h2>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gap: 12,
-                  marginTop: 18,
-                }}
-              >
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 18,
-                    padding: 16,
-                    background: '#fbfdff',
-                  }}
-                >
+              <div style={{ display: 'grid', gap: 12, marginTop: 18 }}>
+                <div style={{ border: '1px solid #d7e0ec', borderRadius: 18, padding: 16, background: '#fbfdff' }}>
                   <div className="meta-label">CSCS status</div>
                   <div style={{ marginTop: 8 }}>
                     <span className={cscsStatus.className}>{cscsStatus.text}</span>
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 18,
-                    padding: 16,
-                    background: '#fbfdff',
-                  }}
-                >
+                <div style={{ border: '1px solid #d7e0ec', borderRadius: 18, padding: 16, background: '#fbfdff' }}>
                   <div className="meta-label">Right to work status</div>
                   <div style={{ marginTop: 8 }}>
                     <span className={rightToWorkStatus.className}>
@@ -414,23 +392,9 @@ export default function PublicWorkerPage() {
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 18,
-                    padding: 16,
-                    background: '#fbfdff',
-                  }}
-                >
+                <div style={{ border: '1px solid #d7e0ec', borderRadius: 18, padding: 16, background: '#fbfdff' }}>
                   <div className="meta-label">Qualifications saved</div>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      fontSize: 28,
-                      fontWeight: 900,
-                      color: '#08153d',
-                    }}
-                  >
+                  <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, color: '#08153d' }}>
                     {worker.qualifications.length}
                   </div>
                 </div>
@@ -456,13 +420,7 @@ export default function PublicWorkerPage() {
                 </p>
               </div>
 
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 10,
-                  flexWrap: 'wrap',
-                }}
-              >
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
                 <div className={rightToWorkStatus.className}>
                   Right to work: {rightToWorkStatus.text}
@@ -525,9 +483,7 @@ export default function PublicWorkerPage() {
 
                 <div>
                   <div className="meta-label">Right to work expiry</div>
-                  <div className="meta-value">
-                    {formatDate(worker.rightToWorkExpiry)}
-                  </div>
+                  <div className="meta-value">{formatDate(worker.rightToWorkExpiry)}</div>
                 </div>
 
                 <div>
@@ -543,13 +499,7 @@ export default function PublicWorkerPage() {
               {worker.qualifications.length === 0 ? (
                 <p className="notes-text">No qualifications added.</p>
               ) : (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                  }}
-                >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {worker.qualifications.map((qualification) => {
                     const qualificationStatus = getStatus(qualification.expiry)
 
@@ -573,13 +523,7 @@ export default function PublicWorkerPage() {
                             alignItems: 'center',
                           }}
                         >
-                          <div
-                            style={{
-                              fontSize: 21,
-                              fontWeight: 900,
-                              color: '#08153d',
-                            }}
-                          >
+                          <div style={{ fontSize: 21, fontWeight: 900, color: '#08153d' }}>
                             {qualification.name || 'Qualification'}
                           </div>
 
@@ -599,16 +543,12 @@ export default function PublicWorkerPage() {
                         >
                           <div>
                             <div className="meta-label">Card / certificate number</div>
-                            <div className="meta-value">
-                              {qualification.number || '—'}
-                            </div>
+                            <div className="meta-value">{qualification.number || '—'}</div>
                           </div>
 
                           <div>
                             <div className="meta-label">Expiry date</div>
-                            <div className="meta-value">
-                              {formatDate(qualification.expiry)}
-                            </div>
+                            <div className="meta-value">{formatDate(qualification.expiry)}</div>
                           </div>
                         </div>
                       </div>
