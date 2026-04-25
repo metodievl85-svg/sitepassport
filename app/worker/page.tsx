@@ -30,6 +30,30 @@ type Worker = {
   qualifications: Qualification[]
 }
 
+function SitePassportLogo() {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        marginBottom: 8,
+        maxWidth: '100%',
+      }}
+    >
+      <img
+        src="/sitepassport-logo.png"
+        alt="SitePassport"
+        style={{
+          display: 'block',
+          width: 'min(380px, 100%)',
+          height: 'auto',
+          objectFit: 'contain',
+        }}
+      />
+    </div>
+  )
+}
+
 function formatDate(value: string) {
   if (!value) return '—'
   const date = new Date(value)
@@ -218,7 +242,7 @@ export default function WorkerPage() {
         <div className="container">
           <section className="hero">
             <div>
-              <div className="brand">SITEPASSPORT</div>
+              <SitePassportLogo />
               <h1>My Passport</h1>
               <p>Your operative account is active and ready to set up.</p>
               <p
@@ -267,7 +291,7 @@ export default function WorkerPage() {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div className="brand">SITEPASSPORT</div>
+            <SitePassportLogo />
             <h1>My Passport</h1>
             <p>Your personal operative passport, ready for site checks and sharing.</p>
             <p
@@ -297,12 +321,7 @@ export default function WorkerPage() {
           </div>
         </section>
 
-        <section
-          className="card"
-          style={{
-            marginBottom: 24,
-          }}
-        >
+        <section className="card" style={{ marginBottom: 24 }}>
           <div
             style={{
               display: 'flex',
@@ -320,13 +339,7 @@ export default function WorkerPage() {
               </p>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap',
-              }}
-            >
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <span className={getStatusClass(cscsStatus)}>
                 CSCS: {getStatusText(cscsStatus)}
               </span>
@@ -538,22 +551,11 @@ export default function WorkerPage() {
           </div>
         </section>
 
-        <section
-          className="card"
-          style={{
-            marginBottom: 24,
-          }}
-        >
+        <section className="card" style={{ marginBottom: 24 }}>
           <h2 className="section-title">Qualifications</h2>
           <p className="section-subtitle">Your saved qualifications and expiry dates.</p>
 
-          <div
-            style={{
-              display: 'grid',
-              gap: 14,
-              marginTop: 24,
-            }}
-          >
+          <div style={{ display: 'grid', gap: 14, marginTop: 24 }}>
             {passport.qualifications.length === 0 ? (
               <div className="empty-box">
                 <h3>No qualifications yet</h3>
