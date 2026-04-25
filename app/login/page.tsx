@@ -23,7 +23,7 @@ function SitePassportLogo({ dark = false }: { dark?: boolean }) {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: dark ? 'min(260px, 100%)' : 'min(420px, 100%)',
+          width: dark ? 'min(240px, 100%)' : 'min(300px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -344,7 +344,7 @@ export default function LoginPage() {
             gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr)',
             gap: isMobile ? 14 : 18,
             alignItems: 'start',
-            maxWidth: isMobile ? 760 : 1120,
+            maxWidth: isMobile ? 760 : 920,
             margin: '0 auto',
           }}
         >
@@ -353,13 +353,13 @@ export default function LoginPage() {
             style={{
               marginBottom: 0,
               minHeight: 'unset',
-              padding: isMobile ? 18 : 24,
+              padding: isMobile ? 16 : 20,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
-              gap: isMobile ? 8 : 10,
+              gap: isMobile ? 8 : 8,
             }}
           >
             <div
@@ -374,9 +374,9 @@ export default function LoginPage() {
 
             <h1
               style={{
-                fontSize: isMobile ? 27 : 48,
-                lineHeight: isMobile ? 1.08 : 1.02,
-                maxWidth: 900,
+                fontSize: isMobile ? 26 : 38,
+                lineHeight: isMobile ? 1.08 : 1.04,
+                maxWidth: 760,
                 margin: 0,
               }}
             >
@@ -385,9 +385,9 @@ export default function LoginPage() {
 
             <p
               style={{
-                fontSize: isMobile ? 15 : 18,
-                lineHeight: isMobile ? 1.45 : 1.42,
-                maxWidth: 720,
+                fontSize: isMobile ? 14 : 16,
+                lineHeight: isMobile ? 1.45 : 1.38,
+                maxWidth: 640,
                 margin: 0,
               }}
             >
@@ -399,31 +399,31 @@ export default function LoginPage() {
               <div
                 style={{
                   width: '100%',
-                  maxWidth: 430,
+                  maxWidth: 380,
                   marginTop: 4,
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.14)',
-                  borderRadius: 18,
+                  borderRadius: 16,
                   padding: 10,
                   textAlign: 'center',
                 }}
               >
                 <div
                   style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 800,
-                    letterSpacing: 1.2,
+                    letterSpacing: 1.1,
                     textTransform: 'uppercase',
-                    marginBottom: 5,
+                    marginBottom: 4,
                   }}
                 >
                   Construction workforce passport system
                 </div>
                 <div
                   style={{
-                    fontSize: 14,
+                    fontSize: 13,
                     color: 'rgba(255,255,255,0.9)',
-                    lineHeight: 1.35,
+                    lineHeight: 1.3,
                   }}
                 >
                   Built for operatives, supervisors, and companies working on real
