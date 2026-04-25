@@ -23,7 +23,7 @@ function SitePassportLogo({ dark = false }: { dark?: boolean }) {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: dark ? 'min(300px, 100%)' : 'min(520px, 100%)',
+          width: dark ? 'min(260px, 100%)' : 'min(420px, 100%)'
           height: 'auto',
           objectFit: 'contain',
         }}
