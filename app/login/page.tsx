@@ -353,13 +353,13 @@ export default function LoginPage() {
             style={{
               marginBottom: 0,
               minHeight: 'unset',
-              padding: isMobile ? 20 : 30,
+              padding: isMobile ? 18 : 24,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               textAlign: 'center',
-              gap: isMobile ? 10 : 12,
+              gap: isMobile ? 8 : 10,
             }}
           >
             <div
@@ -374,9 +374,9 @@ export default function LoginPage() {
 
             <h1
               style={{
-                fontSize: isMobile ? 28 : 56,
+                fontSize: isMobile ? 27 : 48,
                 lineHeight: isMobile ? 1.08 : 1.02,
-                maxWidth: 920,
+                maxWidth: 900,
                 margin: 0,
               }}
             >
@@ -385,9 +385,9 @@ export default function LoginPage() {
 
             <p
               style={{
-                fontSize: isMobile ? 15 : 20,
-                lineHeight: isMobile ? 1.45 : 1.45,
-                maxWidth: 760,
+                fontSize: isMobile ? 15 : 18,
+                lineHeight: isMobile ? 1.45 : 1.42,
+                maxWidth: 720,
                 margin: 0,
               }}
             >
@@ -399,31 +399,31 @@ export default function LoginPage() {
               <div
                 style={{
                   width: '100%',
-                  maxWidth: 460,
+                  maxWidth: 430,
                   marginTop: 4,
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.14)',
-                  borderRadius: 20,
-                  padding: 12,
+                  borderRadius: 18,
+                  padding: 10,
                   textAlign: 'center',
                 }}
               >
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: 800,
-                    letterSpacing: 1.3,
+                    letterSpacing: 1.2,
                     textTransform: 'uppercase',
-                    marginBottom: 6,
+                    marginBottom: 5,
                   }}
                 >
                   Construction workforce passport system
                 </div>
                 <div
                   style={{
-                    fontSize: 15,
+                    fontSize: 14,
                     color: 'rgba(255,255,255,0.9)',
-                    lineHeight: 1.4,
+                    lineHeight: 1.35,
                   }}
                 >
                   Built for operatives, supervisors, and companies working on real
