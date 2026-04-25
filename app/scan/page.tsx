@@ -1,326 +1,374 @@
 'use client'
 
-import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FormEvent, useEffect, useRef, useState } from 'react'
-import { supabase } from '../lib/supabase'
-
-type CameraDevice = {
-  id: string
-  label: string
-}
+import { Html5Qrcode } from 'html5-qrcode'
 
 export default function ScanPage() {
   const router = useRouter()
 
-  const scannerRef = useRef<any>(null)
-  const scanningLockedRef = useRef(false)
-  const mountedRef = useRef(true)
+  const scannerRef = useRef<Html5Qrcode | null>(null)
+  const isStartingRef = useRef(false)
+  const hasScannedRef = useRef(false)
 
   const [status, setStatus] = useState('Starting camera...')
-  const [hasError, setHasError] = useState(false)
-  const [manualCode, setManualCode] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [hasSuccess, setHasSuccess] = useState(false)
-  const [cameraDevices, setCameraDevices] = useState<CameraDevice[]>([])
-  const [currentCameraIndex, setCurrentCameraIndex] = useState(0)
+  const [error, setError] = useState('')
+  const [isScanning, setIsScanning] = useState(false)
 
-  useEffect(() => {
-    mountedRef.current = true
-    void startScanner()
+  const readerId = 'sitepassport-qr-reader'
 
-    return () => {
-      mountedRef.current = false
-      void stopScanner(true)
-    }
-  }, [])
-
-  async function logScan(workerId: string) {
+  const stopScanner = async () => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session?.user) return
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('id', session.user.id)
-        .single()
-
-      if (profileError || !profile || profile.role !== 'company') {
-        return
+      if (scannerRef.current && isScanning) {
+        await scannerRef.current.stop()
+        await scannerRef.current.clear()
       }
-
-      const { error: insertError } = await supabase.from('scan_logs').insert({
-        company_id: profile.id,
-        worker_id: workerId,
-      })
-
-      if (insertError) {
-        console.error('Scan log insert failed:', insertError)
-      }
-    } catch (error) {
-      console.error('Scan log failed:', error)
-    }
-  }
-
-  async function startScanner(selectedDeviceId?: string) {
-    try {
-      setHasError(false)
-      setHasSuccess(false)
-      setIsProcessing(false)
-      setStatus('Opening camera...')
-
-      const { Html5Qrcode } = await import('html5-qrcode')
-      const devices = await Html5Qrcode.getCameras()
-
-      const mapped: CameraDevice[] = devices.map((device: any, index: number) => ({
-        id: device.id,
-        label: device.label || `Camera ${index + 1}`,
-      }))
-
-      if (!mountedRef.current) return
-
-      setCameraDevices(mapped)
-
-      if (!mapped.length) {
-        setHasError(true)
-        setStatus('No camera found.')
-        return
-      }
-
-      const detectedIndex = selectedDeviceId
-        ? mapped.findIndex((device) => device.id === selectedDeviceId)
-        : mapped.findIndex((device) => /back|rear|environment/i.test(device.label))
-
-      const finalIndex = detectedIndex >= 0 ? detectedIndex : 0
-      setCurrentCameraIndex(finalIndex)
-
-      await stopScanner(true)
-
-      if (!mountedRef.current) return
-
-      const scanner = new Html5Qrcode('sitepassport-qr-reader')
-      scannerRef.current = scanner
-      scanningLockedRef.current = false
-
-      setStatus('Point camera at operative QR code')
-
-      await scanner.start(
-        { deviceId: { exact: mapped[finalIndex].id } },
-        {
-          fps: 10,
-          qrbox: { width: 260, height: 260 },
-        },
-        async (decodedText: string) => {
-          if (!decodedText || scanningLockedRef.current) return
-
-          scanningLockedRef.current = true
-          setIsProcessing(true)
-          setHasSuccess(true)
-          setHasError(false)
-          setStatus('Operative detected. Opening passport...')
-
-          const workerId = extractWorkerId(decodedText)
-
-          if (!workerId) {
-            scanningLockedRef.current = false
-            setIsProcessing(false)
-            setHasSuccess(false)
-            setHasError(true)
-            setStatus('QR not recognised')
-            return
-          }
-
-          await logScan(workerId)
-          await stopScanner(true)
-
-          if (!mountedRef.current) return
-
-          window.setTimeout(() => {
-            router.push(`/scan/${workerId}`)
-          }, 700)
-        },
-        () => {
-          // ignore scan noise while camera is active
-        }
-      )
-    } catch (error) {
-      console.error(error)
-
-      if (!mountedRef.current) return
-
-      setHasError(true)
-      setHasSuccess(false)
-      setIsProcessing(false)
-      setStatus('Camera could not start.')
-    }
-  }
-
-  async function stopScanner(silent = false) {
-    try {
-      const scanner = scannerRef.current
-      if (!scanner) return
-
-      const state = scanner.getState?.()
-
-      if (state === 1 || state === 2) {
-        await scanner.stop()
-      }
-
-      await scanner.clear()
-      scannerRef.current = null
-    } catch (error) {
-      if (!silent) {
-        console.error(error)
-      }
-    }
-  }
-
-  function extractWorkerId(value: string) {
-    const trimmed = value.trim()
-
-    if (!trimmed) return null
-
-    if (/^[0-9a-f-]{36}$/i.test(trimmed)) {
-      return trimmed
-    }
-
-    try {
-      const url = new URL(trimmed)
-      const parts = url.pathname.split('/').filter(Boolean)
-      return parts[parts.length - 1] || null
     } catch {
-      return null
+      // Scanner may already be stopped
+    } finally {
+      scannerRef.current = null
+      setIsScanning(false)
+      isStartingRef.current = false
     }
   }
 
-  function handleManualOpen(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  const handleQrResult = async (decodedText: string) => {
+    if (hasScannedRef.current) return
 
-    if (isProcessing) return
+    hasScannedRef.current = true
+    setStatus('QR code found. Opening operative passport...')
 
-    const workerId = extractWorkerId(manualCode)
+    await stopScanner()
 
-    if (!workerId) {
-      alert('Enter valid operative ID or link')
+    try {
+      const url = new URL(decodedText)
+
+      if (url.pathname.startsWith('/scan/')) {
+        router.push(url.pathname)
+        return
+      }
+    } catch {
+      // Not a full URL, check below
+    }
+
+    if (decodedText.startsWith('/scan/')) {
+      router.push(decodedText)
       return
     }
 
-    router.push(`/scan/${workerId}`)
+    if (decodedText.includes('/scan/')) {
+      const workerId = decodedText.split('/scan/')[1]?.split('?')[0]?.split('#')[0]
+
+      if (workerId) {
+        router.push(`/scan/${workerId}`)
+        return
+      }
+    }
+
+    setError('This QR code is not a valid SitePassport QR code.')
+    setStatus('Ready to scan again.')
+    hasScannedRef.current = false
   }
 
-  async function handleRestart() {
-    if (isProcessing) return
+  const startScanner = async () => {
+    if (isStartingRef.current || isScanning) return
 
-    scanningLockedRef.current = false
-    await startScanner(cameraDevices[currentCameraIndex]?.id)
+    setError('')
+    setStatus('Starting camera...')
+    isStartingRef.current = true
+    hasScannedRef.current = false
+
+    try {
+      const scanner = new Html5Qrcode(readerId)
+      scannerRef.current = scanner
+
+      await scanner.start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minSize = Math.min(viewfinderWidth, viewfinderHeight)
+            const size = Math.floor(minSize * 0.78)
+
+            return {
+              width: size,
+              height: size,
+            }
+          },
+          aspectRatio: 1.0,
+          disableFlip: false,
+        },
+        handleQrResult,
+        () => {
+          // Ignore scan misses
+        }
+      )
+
+      setIsScanning(true)
+      setStatus('Point the camera at an operative QR code.')
+    } catch (err: any) {
+      console.error(err)
+
+      setError(
+        err?.message ||
+          'Camera failed to start. Please allow camera permission and try again.'
+      )
+      setStatus('Camera not running.')
+      setIsScanning(false)
+    } finally {
+      isStartingRef.current = false
+    }
   }
 
-  async function handleSwitch() {
-    if (cameraDevices.length < 2 || isProcessing) return
+  useEffect(() => {
+    startScanner()
 
-    const nextIndex = (currentCameraIndex + 1) % cameraDevices.length
-    await startScanner(cameraDevices[nextIndex].id)
-  }
+    return () => {
+      stopScanner()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
-    <main className="page-shell">
-      <div className="container" style={{ maxWidth: 1100 }}>
-        <section className="hero" style={{ marginBottom: 24 }}>
-          <div className="brand">SITEPASSPORT</div>
-          <h1>Scan operative QR code</h1>
-        </section>
+    <main className="scan-page">
+      <section className="scan-card">
+        <div className="scan-header">
+          <p className="brand-label">SITEPASSPORT</p>
+          <h1>Scan QR</h1>
+          <p>
+            Scan an operative QR code to open their public SitePassport profile.
+          </p>
+        </div>
 
-        <section className="card" style={{ padding: 24 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.9fr', gap: 24 }}>
-            <div>
-              <div
-                style={{
-                  position: 'relative',
-                  borderRadius: 28,
-                  overflow: 'hidden',
-                  border: '1px solid #d7e0ec',
-                }}
-              >
-                <div id="sitepassport-qr-reader" style={{ minHeight: 420 }} />
+        <div className="scanner-frame">
+          <div id={readerId} className="scanner-reader" />
+        </div>
 
-                {hasSuccess && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background: 'rgba(22,163,74,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: '#fff',
-                        padding: '14px 18px',
-                        borderRadius: 18,
-                        fontWeight: 800,
-                      }}
-                    >
-                      ✓ Operative detected
-                    </div>
-                  </div>
-                )}
-              </div>
+        <div className="scan-status">
+          <p>{status}</p>
+          {error && <p className="scan-error">{error}</p>}
+        </div>
 
-              <div style={{ marginTop: 16 }} className="section-subtitle">
-                {status}
-              </div>
+        <div className="scan-actions">
+          <button
+            type="button"
+            className="hero-action"
+            onClick={startScanner}
+            disabled={isScanning || isStartingRef.current}
+          >
+            Start camera
+          </button>
 
-              {hasError && (
-                <div style={{ marginTop: 8, color: '#b42318', fontWeight: 700 }}>
-                  Scanner error. Check camera permission or QR format.
-                </div>
-              )}
-            </div>
+          <button
+            type="button"
+            className="hero-action secondary"
+            onClick={stopScanner}
+          >
+            Stop camera
+          </button>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <form
-                onSubmit={handleManualOpen}
-                style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
-              >
-                <input
-                  value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
-                  placeholder="Paste operative ID"
-                  className="input"
-                />
+          <button
+            type="button"
+            className="hero-action secondary"
+            onClick={() => router.push('/company')}
+          >
+            Back to dashboard
+          </button>
+        </div>
+      </section>
 
-                <button type="submit" className="btn btn-primary" disabled={isProcessing}>
-                  {isProcessing ? 'Processing...' : 'Open operative'}
-                </button>
-              </form>
+      <style jsx global>{`
+        .scan-page {
+          min-height: 100vh;
+          padding: 18px;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          background: #f4f6fb;
+        }
 
-              <button className="btn btn-secondary" onClick={handleRestart} disabled={isProcessing}>
-                Restart scanner
-              </button>
+        .scan-card {
+          width: 100%;
+          max-width: 560px;
+          background: #ffffff;
+          border-radius: 24px;
+          padding: 18px;
+          box-shadow: 0 18px 45px rgba(16, 24, 40, 0.12);
+        }
 
-              {cameraDevices.length > 1 && (
-                <button
-                  className="btn btn-secondary"
-                  onClick={handleSwitch}
-                  disabled={isProcessing}
-                >
-                  Switch camera
-                </button>
-              )}
+        .scan-header {
+          background: linear-gradient(135deg, #16286d, #2f4fd0);
+          color: white;
+          border-radius: 20px;
+          padding: 22px;
+          margin-bottom: 16px;
+        }
 
-              <Link href="/company" className="btn btn-secondary">
-                Back to company dashboard
-              </Link>
-            </div>
-          </div>
-        </section>
-      </div>
+        .scan-header .brand-label {
+          margin: 0 0 10px;
+          font-size: 13px;
+          font-weight: 800;
+          letter-spacing: 0.14em;
+        }
+
+        .scan-header h1 {
+          margin: 0;
+          font-size: 28px;
+          line-height: 1.1;
+        }
+
+        .scan-header p {
+          margin: 10px 0 0;
+          color: rgba(255, 255, 255, 0.86);
+          font-size: 15px;
+          line-height: 1.5;
+        }
+
+        .scanner-frame {
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          background: #0f172a;
+          border-radius: 22px;
+          overflow: hidden;
+          position: relative;
+          border: 1px solid rgba(15, 23, 42, 0.12);
+        }
+
+        .scanner-reader {
+          width: 100% !important;
+          height: 100% !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+          border: none !important;
+        }
+
+        .scanner-reader > div {
+          width: 100% !important;
+          height: 100% !important;
+          border: none !important;
+        }
+
+        .scanner-reader video {
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+          border-radius: 22px !important;
+        }
+
+        .scanner-reader canvas {
+          width: 100% !important;
+          height: 100% !important;
+        }
+
+        .scanner-reader img {
+          display: none !important;
+        }
+
+        .scanner-reader button,
+        .scanner-reader select,
+        .scanner-reader input {
+          display: none !important;
+        }
+
+        .scanner-reader #qr-shaded-region {
+          border-width: 40px !important;
+        }
+
+        .scan-status {
+          margin-top: 14px;
+          padding: 14px 16px;
+          border-radius: 16px;
+          background: #f8fafc;
+          border: 1px solid #e5e7eb;
+        }
+
+        .scan-status p {
+          margin: 0;
+          font-size: 15px;
+          color: #1f2937;
+          line-height: 1.45;
+        }
+
+        .scan-error {
+          margin-top: 8px !important;
+          color: #b42318 !important;
+          font-weight: 700;
+        }
+
+        .scan-actions {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-top: 14px;
+        }
+
+        .hero-action {
+          border: none;
+          border-radius: 999px;
+          padding: 13px 18px;
+          background: #2f4fd0;
+          color: #ffffff;
+          font-size: 15px;
+          font-weight: 800;
+          cursor: pointer;
+          text-align: center;
+        }
+
+        .hero-action:disabled {
+          opacity: 0.55;
+          cursor: not-allowed;
+        }
+
+        .hero-action.secondary {
+          background: #eef2ff;
+          color: #16286d;
+        }
+
+        @media (max-width: 640px) {
+          .scan-page {
+            padding: 10px;
+            align-items: flex-start;
+          }
+
+          .scan-card {
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: none;
+          }
+
+          .scan-header {
+            padding: 18px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+          }
+
+          .scan-header h1 {
+            font-size: 25px;
+          }
+
+          .scan-header p {
+            font-size: 14px;
+          }
+
+          .scanner-frame {
+            border-radius: 18px;
+          }
+
+          .scanner-reader video {
+            border-radius: 18px !important;
+          }
+
+          .scan-status {
+            margin-top: 12px;
+            padding: 12px 14px;
+          }
+
+          .hero-action {
+            width: 100%;
+            padding: 14px 16px;
+          }
+        }
+      `}</style>
     </main>
   )
 }
