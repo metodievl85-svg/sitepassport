@@ -16,7 +16,7 @@ function SitePassportLogo({ dark = false }: { dark?: boolean }) {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: dark ? 'min(320px, 100%)' : 'min(360px, 100%)',
+          width: dark ? 'min(300px, 100%)' : 'min(300px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -312,7 +312,7 @@ export default function LoginPage() {
                 textAlign: 'center',
               }}
             >
-              <div style={{ marginBottom: 18 }}>
+              <div style={{ marginBottom: 16 }}>
                 <SitePassportLogo dark />
               </div>
 
@@ -346,22 +346,22 @@ export default function LoginPage() {
             style={{
               marginBottom: 0,
               minHeight: 'unset',
-              padding: isMobile ? 18 : 22,
+              padding: isMobile ? 16 : 18,
               alignItems: 'flex-start',
-              gap: isMobile ? 10 : 14,
+              gap: isMobile ? 8 : 10,
             }}
           >
             <div style={{ minWidth: 0, width: '100%' }}>
-              <div style={{ marginBottom: isMobile ? 10 : 12 }}>
+              <div style={{ marginBottom: isMobile ? 8 : 8 }}>
                 <SitePassportLogo />
               </div>
 
               <h1
                 style={{
-                  fontSize: isMobile ? 24 : 40,
+                  fontSize: isMobile ? 24 : 38,
                   lineHeight: isMobile ? 1.08 : 1.02,
                   maxWidth: '100%',
-                  marginBottom: isMobile ? 8 : 10,
+                  marginBottom: isMobile ? 8 : 8,
                 }}
               >
                 Digital operative passports for real site use
@@ -369,8 +369,8 @@ export default function LoginPage() {
 
               <p
                 style={{
-                  fontSize: isMobile ? 14 : 18,
-                  lineHeight: isMobile ? 1.45 : 1.5,
+                  fontSize: isMobile ? 14 : 17,
+                  lineHeight: isMobile ? 1.45 : 1.45,
                   maxWidth: '100%',
                   marginBottom: 0,
                 }}
@@ -387,7 +387,7 @@ export default function LoginPage() {
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.14)',
                   borderRadius: 20,
-                  padding: 16,
+                  padding: 14,
                 }}
               >
                 <div
@@ -405,7 +405,7 @@ export default function LoginPage() {
                   style={{
                     fontSize: 16,
                     color: 'rgba(255,255,255,0.9)',
-                    lineHeight: 1.45,
+                    lineHeight: 1.4,
                   }}
                 >
                   Built for operatives, supervisors, and companies working on real
