@@ -174,28 +174,17 @@ export default function PublicWorkerPage() {
     try {
       setIsLoading(true)
 
-      const { data: workerRow, error: workerError } = await supabase
-        .from('workers')
-        .select('*')
-        .eq('id', workerId)
-        .single()
+      const { data, error } = await supabase.rpc('get_public_worker_profile', {
+        p_worker_id: workerId,
+      })
 
-      if (workerError || !workerRow) {
-        console.error(workerError)
+      if (error || !data || !data.worker) {
+        console.error(error)
         setWorker(null)
         return
       }
 
-      const { data: qualificationRows, error: qualificationsError } = await supabase
-        .from('qualifications')
-        .select('*')
-        .eq('worker_id', workerId)
-
-      if (qualificationsError) {
-        console.error(qualificationsError)
-      }
-
-      setWorker(mapWorkerRow(workerRow, qualificationRows ?? []))
+      setWorker(mapWorkerRow(data.worker, data.qualifications ?? []))
     } catch (error) {
       console.error(error)
       setWorker(null)
