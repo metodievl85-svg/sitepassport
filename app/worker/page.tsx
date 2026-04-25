@@ -37,7 +37,7 @@ function SitePassportLogo() {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 6,
         maxWidth: '100%',
       }}
     >
@@ -46,7 +46,7 @@ function SitePassportLogo() {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(360px, 100%)',
+          width: 'min(340px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -248,7 +248,7 @@ export default function WorkerPage() {
               <p>Your operative account is active and ready to set up.</p>
               <p
                 style={{
-                  marginTop: 10,
+                  marginTop: 8,
                   color: '#d7e4ff',
                   fontWeight: 700,
                   wordBreak: 'break-word',
@@ -291,7 +291,7 @@ export default function WorkerPage() {
             <p>Your personal operative passport, ready for site checks and sharing.</p>
             <p
               style={{
-                marginTop: 10,
+                marginTop: 8,
                 color: '#d7e4ff',
                 fontWeight: 700,
                 wordBreak: 'break-word',
@@ -683,15 +683,19 @@ export default function WorkerPage() {
 
       <style jsx>{`
         .worker-hero {
-          margin-bottom: 24px;
+          margin-bottom: 22px;
           align-items: center !important;
-          padding: 24px 38px !important;
-          gap: 24px;
+          padding: 20px 30px !important;
+          gap: 18px;
         }
 
         .worker-hero h1 {
-          margin-top: 6px;
-          margin-bottom: 8px;
+          margin-top: 4px;
+          margin-bottom: 6px;
+        }
+
+        .worker-hero p {
+          margin-bottom: 0;
         }
 
         .worker-hero-actions {
@@ -699,22 +703,25 @@ export default function WorkerPage() {
           flex-direction: row;
           align-items: center;
           justify-content: flex-end;
-          gap: 12px;
-          flex-wrap: wrap;
-          min-width: 0;
+          gap: 10px;
+          flex-wrap: nowrap;
+          min-width: max-content;
         }
 
         .worker-hero-actions :global(.btn) {
           white-space: nowrap;
+          flex: 0 0 auto;
         }
 
         @media (max-width: 900px) {
           .worker-hero {
-            padding: 22px 24px !important;
+            padding: 20px 22px !important;
           }
 
           .worker-hero-actions {
             justify-content: flex-start;
+            flex-wrap: wrap;
+            min-width: 0;
           }
         }
 
@@ -724,7 +731,7 @@ export default function WorkerPage() {
           }
 
           .worker-hero {
-            padding: 20px !important;
+            padding: 18px !important;
           }
 
           .worker-hero-actions {
