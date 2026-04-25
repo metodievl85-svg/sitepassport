@@ -10,13 +10,13 @@ type Role = 'worker' | 'company'
 
 function SitePassportLogo({ dark = false }: { dark?: boolean }) {
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', maxWidth: '100%' }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', maxWidth: '100%' }}>
       <img
         src="/sitepassport-logo.png"
         alt="SitePassport"
         style={{
           display: 'block',
-          width: dark ? 'min(300px, 100%)' : 'min(300px, 100%)',
+          width: dark ? 'min(300px, 100%)' : 'min(420px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -337,7 +337,7 @@ export default function LoginPage() {
             gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr)',
             gap: isMobile ? 14 : 18,
             alignItems: 'start',
-            maxWidth: isMobile ? 760 : 820,
+            maxWidth: isMobile ? 760 : 1120,
             margin: '0 auto',
           }}
         >
@@ -346,48 +346,59 @@ export default function LoginPage() {
             style={{
               marginBottom: 0,
               minHeight: 'unset',
-              padding: isMobile ? 16 : 18,
-              alignItems: 'flex-start',
-              gap: isMobile ? 8 : 10,
+              padding: isMobile ? 20 : 30,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              gap: isMobile ? 12 : 16,
             }}
           >
-            <div style={{ minWidth: 0, width: '100%' }}>
-              <div style={{ marginBottom: isMobile ? 8 : 8 }}>
-                <SitePassportLogo />
-              </div>
-
-              <h1
-                style={{
-                  fontSize: isMobile ? 24 : 38,
-                  lineHeight: isMobile ? 1.08 : 1.02,
-                  maxWidth: '100%',
-                  marginBottom: isMobile ? 8 : 8,
-                }}
-              >
-                Digital operative passports for real site use
-              </h1>
-
-              <p
-                style={{
-                  fontSize: isMobile ? 14 : 17,
-                  lineHeight: isMobile ? 1.45 : 1.45,
-                  maxWidth: '100%',
-                  marginBottom: 0,
-                }}
-              >
-                Store operative details, CSCS card image, qualifications, expiry dates,
-                QR code, and passport summary in one secure place for fast site checks.
-              </p>
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <SitePassportLogo />
             </div>
+
+            <h1
+              style={{
+                fontSize: isMobile ? 28 : 56,
+                lineHeight: isMobile ? 1.08 : 1.02,
+                maxWidth: 920,
+                margin: 0,
+              }}
+            >
+              Digital operative passports for real site use
+            </h1>
+
+            <p
+              style={{
+                fontSize: isMobile ? 15 : 20,
+                lineHeight: isMobile ? 1.45 : 1.45,
+                maxWidth: 760,
+                margin: 0,
+              }}
+            >
+              Store operative details, CSCS card image, qualifications, expiry dates,
+              QR code, and passport summary in one secure place for fast site checks.
+            </p>
 
             {!isMobile ? (
               <div
                 style={{
                   width: '100%',
+                  maxWidth: 560,
+                  marginTop: 4,
                   background: 'rgba(255,255,255,0.12)',
                   border: '1px solid rgba(255,255,255,0.14)',
                   borderRadius: 20,
                   padding: 14,
+                  textAlign: 'center',
                 }}
               >
                 <div
@@ -403,7 +414,7 @@ export default function LoginPage() {
                 </div>
                 <div
                   style={{
-                    fontSize: 16,
+                    fontSize: 15,
                     color: 'rgba(255,255,255,0.9)',
                     lineHeight: 1.4,
                   }}
