@@ -157,7 +157,7 @@ function SitePassportLogo() {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(560px, 100%)',
+          width: 'min(430px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -388,7 +388,7 @@ export default function CompanyPage() {
           <section
             className="hero company-hero-compact"
             style={{
-              padding: '22px 34px',
+              padding: '20px 32px',
               marginBottom: 22,
               alignItems: 'center',
             }}
@@ -419,8 +419,8 @@ export default function CompanyPage() {
         <section
           className="hero company-hero-compact"
           style={{
-            padding: '22px 34px',
-            marginBottom: 24,
+            padding: '20px 32px',
+            marginBottom: 22,
             alignItems: 'center',
             gap: 20,
           }}
@@ -432,7 +432,7 @@ export default function CompanyPage() {
               style={{
                 marginTop: 4,
                 marginBottom: 8,
-                fontSize: 'clamp(23px, 2.2vw, 31px)',
+                fontSize: 'clamp(24px, 2.3vw, 32px)',
                 lineHeight: 1.06,
                 fontWeight: 900,
               }}
@@ -450,7 +450,7 @@ export default function CompanyPage() {
                 display: 'flex',
                 gap: 12,
                 flexWrap: 'wrap',
-                marginTop: 16,
+                marginTop: 14,
               }}
             >
               {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((item) => (
@@ -459,7 +459,7 @@ export default function CompanyPage() {
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    minHeight: 36,
+                    minHeight: 34,
                     padding: '0 15px',
                     borderRadius: 999,
                     background: 'rgba(255,255,255,0.14)',
@@ -481,9 +481,9 @@ export default function CompanyPage() {
               background: 'rgba(255,255,255,0.12)',
               border: '1px solid rgba(255,255,255,0.14)',
               borderRadius: 24,
-              padding: 22,
+              padding: 20,
               display: 'grid',
-              gap: 14,
+              gap: 12,
             }}
           >
             <div>
@@ -931,7 +931,7 @@ export default function CompanyPage() {
 
         @media (max-width: 700px) {
           .company-hero-compact {
-            padding: 22px 20px !important;
+            padding: 18px 20px !important;
           }
 
           .company-search-row {
@@ -952,7 +952,7 @@ export default function CompanyPage() {
 
         @media (max-width: 520px) {
           .company-brand-logo img {
-            width: min(360px, 100%) !important;
+            width: min(320px, 100%) !important;
           }
         }
 
