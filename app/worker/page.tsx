@@ -685,7 +685,7 @@ export default function WorkerPage() {
         .worker-hero {
           margin-bottom: 22px;
           align-items: center !important;
-          padding: 20px 30px !important;
+          padding: 16px 28px !important;
           gap: 18px;
         }
 
