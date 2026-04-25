@@ -33,6 +33,7 @@ type Worker = {
 function SitePassportLogo() {
   return (
     <div
+      className="worker-brand-logo"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -45,7 +46,7 @@ function SitePassportLogo() {
         alt="SitePassport"
         style={{
           display: 'block',
-          width: 'min(380px, 100%)',
+          width: 'min(360px, 100%)',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -240,8 +241,8 @@ export default function WorkerPage() {
     return (
       <main className="page-shell">
         <div className="container">
-          <section className="hero">
-            <div>
+          <section className="hero worker-hero">
+            <div style={{ minWidth: 0 }}>
               <SitePassportLogo />
               <h1>My Passport</h1>
               <p>Your operative account is active and ready to set up.</p>
@@ -257,7 +258,7 @@ export default function WorkerPage() {
               </p>
             </div>
 
-            <div className="hero-actions">
+            <div className="worker-hero-actions">
               <button className="btn btn-outline" type="button" onClick={handleLogout}>
                 Logout
               </button>
@@ -283,13 +284,7 @@ export default function WorkerPage() {
   return (
     <main className="page-shell">
       <div className="container">
-        <section
-          className="hero"
-          style={{
-            marginBottom: 24,
-            alignItems: 'stretch',
-          }}
-        >
+        <section className="hero worker-hero">
           <div style={{ minWidth: 0 }}>
             <SitePassportLogo />
             <h1>My Passport</h1>
@@ -306,7 +301,7 @@ export default function WorkerPage() {
             </p>
           </div>
 
-          <div className="hero-actions">
+          <div className="worker-hero-actions">
             <Link href="/worker/edit" className="btn btn-secondary">
               Edit my passport
             </Link>
@@ -685,6 +680,62 @@ export default function WorkerPage() {
           </div>
         </section>
       </div>
+
+      <style jsx>{`
+        .worker-hero {
+          margin-bottom: 24px;
+          align-items: center !important;
+          padding: 24px 38px !important;
+          gap: 24px;
+        }
+
+        .worker-hero h1 {
+          margin-top: 6px;
+          margin-bottom: 8px;
+        }
+
+        .worker-hero-actions {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 12px;
+          flex-wrap: wrap;
+          min-width: 0;
+        }
+
+        .worker-hero-actions :global(.btn) {
+          white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+          .worker-hero {
+            padding: 22px 24px !important;
+          }
+
+          .worker-hero-actions {
+            justify-content: flex-start;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .worker-brand-logo img {
+            width: min(300px, 100%) !important;
+          }
+
+          .worker-hero {
+            padding: 20px !important;
+          }
+
+          .worker-hero-actions {
+            width: 100%;
+          }
+
+          .worker-hero-actions :global(.btn) {
+            width: 100%;
+          }
+        }
+      `}</style>
     </main>
   )
 }
