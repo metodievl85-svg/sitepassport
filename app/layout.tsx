@@ -1,9 +1,17 @@
 import './globals.css'
 import Link from 'next/link'
+import PWARegister from './pwa-register'
 
 export const metadata = {
   title: 'SitePassport',
   description: 'Digital construction worker passport',
+  manifest: '/manifest.json',
+  themeColor: '#16286d',
+  appleWebApp: {
+    capable: true,
+    title: 'SitePassport',
+    statusBarStyle: 'default',
+  },
 }
 
 export default function RootLayout({
@@ -20,12 +28,10 @@ export default function RootLayout({
           minHeight: '100vh',
         }}
       >
-        {/* MAIN CONTENT */}
-        <div style={{ flex: 1 }}>
-          {children}
-        </div>
+        <PWARegister />
 
-        {/* FOOTER */}
+        <div style={{ flex: 1 }}>{children}</div>
+
         <footer
           style={{
             borderTop: '1px solid #e5e5e5',
@@ -45,6 +51,7 @@ export default function RootLayout({
               justifyContent: 'center',
               gap: '20px',
               marginBottom: '10px',
+              flexWrap: 'wrap',
             }}
           >
             <Link href="/privacy">Privacy Policy</Link>
