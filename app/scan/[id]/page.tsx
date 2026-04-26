@@ -66,6 +66,19 @@ function getStatus(dateString: string) {
   return { text: 'Valid', className: 'status status-valid' }
 }
 
+function getSelfDeclaredStyle() {
+  return {
+    background: '#eef3ff',
+    color: '#243caa',
+    border: '1px solid #cdd9ff',
+    borderRadius: 999,
+    padding: '6px 10px',
+    fontSize: 12,
+    fontWeight: 800,
+    lineHeight: 1.1,
+  }
+}
+
 function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Worker {
   return {
     id: worker.id,
@@ -376,14 +389,43 @@ export default function PublicWorkerPage() {
               </h2>
 
               <div style={{ display: 'grid', gap: 12, marginTop: 18 }}>
-                <div style={{ border: '1px solid #d7e0ec', borderRadius: 18, padding: 16, background: '#fbfdff' }}>
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#fbfdff',
+                  }}
+                >
                   <div className="meta-label">CSCS status</div>
-                  <div style={{ marginTop: 8 }}>
+
+                  <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <span className={cscsStatus.className}>{cscsStatus.text}</span>
+                    <span style={getSelfDeclaredStyle()}>Self-declared</span>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 13,
+                      color: '#5a6f96',
+                      fontWeight: 600,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    CSCS details are self-declared and not yet verified with official
+                    CSCS systems.
                   </div>
                 </div>
 
-                <div style={{ border: '1px solid #d7e0ec', borderRadius: 18, padding: 16, background: '#fbfdff' }}>
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#fbfdff',
+                  }}
+                >
                   <div className="meta-label">Right to work status</div>
                   <div style={{ marginTop: 8 }}>
                     <span className={rightToWorkStatus.className}>
@@ -392,7 +434,14 @@ export default function PublicWorkerPage() {
                   </div>
                 </div>
 
-                <div style={{ border: '1px solid #d7e0ec', borderRadius: 18, padding: 16, background: '#fbfdff' }}>
+                <div
+                  style={{
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: '#fbfdff',
+                  }}
+                >
                   <div className="meta-label">Qualifications saved</div>
                   <div style={{ marginTop: 8, fontSize: 28, fontWeight: 900, color: '#08153d' }}>
                     {worker.qualifications.length}
@@ -422,6 +471,9 @@ export default function PublicWorkerPage() {
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
+
+                <div style={getSelfDeclaredStyle()}>Self-declared</div>
+
                 <div className={rightToWorkStatus.className}>
                   Right to work: {rightToWorkStatus.text}
                 </div>

@@ -102,6 +102,19 @@ function getStatus(dateString: string) {
   }
 }
 
+function getSelfDeclaredBadgeStyle() {
+  return {
+    background: '#eef3ff',
+    color: '#243caa',
+    border: '1px solid #cdd9ff',
+    borderRadius: 999,
+    padding: '6px 10px',
+    fontSize: 12,
+    fontWeight: 800,
+    lineHeight: 1.1,
+  }
+}
+
 function isWorkerActive(worker: SavedWorkerCard) {
   const cscsStatus = getStatus(worker.cscsExpiry)
   const rightToWorkStatus = getStatus(worker.rightToWorkExpiry)
@@ -533,112 +546,37 @@ export default function CompanyPage() {
             marginBottom: 24,
           }}
         >
-          <div
-            style={{
-              background: '#fbfdff',
-              border: '1px solid #d7e1ef',
-              borderRadius: 22,
-              padding: 18,
-            }}
-          >
+          <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Saved operatives</div>
-            <div
-              style={{
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#09154b',
-                lineHeight: 1,
-                marginTop: 8,
-              }}
-            >
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#09154b', lineHeight: 1, marginTop: 8 }}>
               {savedWorkers.length}
             </div>
           </div>
 
-          <div
-            style={{
-              background: '#fbfdff',
-              border: '1px solid #d7e1ef',
-              borderRadius: 22,
-              padding: 18,
-            }}
-          >
+          <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Scans today</div>
-            <div
-              style={{
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#09154b',
-                lineHeight: 1,
-                marginTop: 8,
-              }}
-            >
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#09154b', lineHeight: 1, marginTop: 8 }}>
               {scansToday}
             </div>
           </div>
 
-          <div
-            style={{
-              background: '#fbfdff',
-              border: '1px solid #d7e1ef',
-              borderRadius: 22,
-              padding: 18,
-            }}
-          >
+          <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Active</div>
-            <div
-              style={{
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#167342',
-                lineHeight: 1,
-                marginTop: 8,
-              }}
-            >
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#167342', lineHeight: 1, marginTop: 8 }}>
               {activeWorkers}
             </div>
           </div>
 
-          <div
-            style={{
-              background: '#fff8ea',
-              border: '1px solid #efd6ac',
-              borderRadius: 22,
-              padding: 18,
-            }}
-          >
+          <div style={{ background: '#fff8ea', border: '1px solid #efd6ac', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Expiring soon</div>
-            <div
-              style={{
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#9b5d00',
-                lineHeight: 1,
-                marginTop: 8,
-              }}
-            >
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#9b5d00', lineHeight: 1, marginTop: 8 }}>
               {expiringSoonCount}
             </div>
           </div>
 
-          <div
-            style={{
-              background: '#fff1f1',
-              border: '1px solid #efc1c1',
-              borderRadius: 22,
-              padding: 18,
-            }}
-          >
+          <div style={{ background: '#fff1f1', border: '1px solid #efc1c1', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Expired</div>
-            <div
-              style={{
-                fontSize: 34,
-                fontWeight: 900,
-                color: '#b42318',
-                lineHeight: 1,
-                marginTop: 8,
-              }}
-            >
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#b42318', lineHeight: 1, marginTop: 8 }}>
               {expiredCount}
             </div>
           </div>
@@ -656,24 +594,11 @@ export default function CompanyPage() {
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 34,
-                  fontWeight: 900,
-                  color: '#09154b',
-                }}
-              >
+              <h2 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: '#09154b' }}>
                 Saved operatives
               </h2>
 
-              <p
-                style={{
-                  marginTop: 10,
-                  fontSize: 16,
-                  color: '#5a6f96',
-                }}
-              >
+              <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96' }}>
                 Search, filter and manage your workforce
               </p>
             </div>
@@ -721,14 +646,7 @@ export default function CompanyPage() {
             </select>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              gap: 10,
-              flexWrap: 'wrap',
-              marginBottom: 20,
-            }}
-          >
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
             <button style={getFilterButtonStyle(filter, 'all')} onClick={() => setFilter('all')}>
               All
             </button>
@@ -737,30 +655,17 @@ export default function CompanyPage() {
               Valid
             </button>
 
-            <button
-              style={getFilterButtonStyle(filter, 'expiring')}
-              onClick={() => setFilter('expiring')}
-            >
+            <button style={getFilterButtonStyle(filter, 'expiring')} onClick={() => setFilter('expiring')}>
               Soon
             </button>
 
-            <button
-              style={getFilterButtonStyle(filter, 'expired')}
-              onClick={() => setFilter('expired')}
-            >
+            <button style={getFilterButtonStyle(filter, 'expired')} onClick={() => setFilter('expired')}>
               Expired
             </button>
           </div>
 
           {savedWorkers.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 40,
-                border: '2px dashed #d7e1ef',
-                borderRadius: 20,
-              }}
-            >
+            <div style={{ textAlign: 'center', padding: 40, border: '2px dashed #d7e1ef', borderRadius: 20 }}>
               <h3>No operatives yet</h3>
               <Link href="/scan" className="btn btn-primary">
                 Scan first
@@ -814,23 +719,11 @@ export default function CompanyPage() {
                       </div>
 
                       <div style={{ minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            color: '#09154b',
-                          }}
-                        >
+                        <div style={{ fontSize: 20, fontWeight: 900, color: '#09154b' }}>
                           {worker.fullName || 'Operative'}
                         </div>
 
-                        <div
-                          style={{
-                            fontSize: 14,
-                            color: '#5a6f96',
-                            marginBottom: 6,
-                          }}
-                        >
+                        <div style={{ fontSize: 14, color: '#5a6f96', marginBottom: 6 }}>
                           {worker.role} • {worker.company}
                         </div>
 
@@ -845,7 +738,11 @@ export default function CompanyPage() {
                               fontWeight: 800,
                             }}
                           >
-                            CSCS
+                            CSCS: {cscsStatus.text}
+                          </span>
+
+                          <span style={getSelfDeclaredBadgeStyle()}>
+                            Self-declared
                           </span>
 
                           <span
@@ -858,7 +755,7 @@ export default function CompanyPage() {
                               fontWeight: 800,
                             }}
                           >
-                            RTW
+                            RTW: {rtwStatus.text}
                           </span>
                         </div>
                       </div>
