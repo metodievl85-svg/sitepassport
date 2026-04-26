@@ -26,6 +26,7 @@ type Worker = {
   notes: string
   photo: string
   createdAt: string
+  cscsVerificationStatus: string
   qualifications: Qualification[]
 }
 
@@ -66,16 +67,75 @@ function getStatus(dateString: string) {
   return { text: 'Valid', className: 'status status-valid' }
 }
 
-function getSelfDeclaredStyle() {
+function getVerificationStatus(status: string) {
+  if (status === 'verified') {
+    return {
+      text: 'Verified',
+      warning:
+        'CSCS details have been marked as verified in SitePassport. Official CSCS system integration is not connected yet.',
+      style: {
+        background: '#ecfdf3',
+        color: '#027a48',
+        border: '1px solid #abefc6',
+        borderRadius: 999,
+        padding: '6px 10px',
+        fontSize: 12,
+        fontWeight: 800,
+        lineHeight: 1.1,
+      },
+    }
+  }
+
+  if (status === 'pending') {
+    return {
+      text: 'Pending verification',
+      warning:
+        'CSCS details are waiting for verification. They should not be treated as officially verified yet.',
+      style: {
+        background: '#fff7e6',
+        color: '#9a5b00',
+        border: '1px solid #ffd591',
+        borderRadius: 999,
+        padding: '6px 10px',
+        fontSize: 12,
+        fontWeight: 800,
+        lineHeight: 1.1,
+      },
+    }
+  }
+
+  if (status === 'failed') {
+    return {
+      text: 'Not verified',
+      warning:
+        'CSCS details could not be verified. Managers should check the card manually before allowing site access.',
+      style: {
+        background: '#fff1f0',
+        color: '#b42318',
+        border: '1px solid #ffccc7',
+        borderRadius: 999,
+        padding: '6px 10px',
+        fontSize: 12,
+        fontWeight: 800,
+        lineHeight: 1.1,
+      },
+    }
+  }
+
   return {
-    background: '#eef3ff',
-    color: '#243caa',
-    border: '1px solid #cdd9ff',
-    borderRadius: 999,
-    padding: '6px 10px',
-    fontSize: 12,
-    fontWeight: 800,
-    lineHeight: 1.1,
+    text: 'Self-declared',
+    warning:
+      'CSCS details are self-declared and not yet verified with official CSCS systems.',
+    style: {
+      background: '#eef3ff',
+      color: '#243caa',
+      border: '1px solid #cdd9ff',
+      borderRadius: 999,
+      padding: '6px 10px',
+      fontSize: 12,
+      fontWeight: 800,
+      lineHeight: 1.1,
+    },
   }
 }
 
@@ -93,6 +153,7 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
     notes: worker.notes ?? '',
     photo: worker.photo ?? '',
     createdAt: worker.created_at ?? '',
+    cscsVerificationStatus: worker.cscs_verification_status ?? 'self_declared',
     qualifications: Array.isArray(qualifications)
       ? qualifications.map((q) => ({
           id: q.id,
@@ -282,6 +343,7 @@ export default function PublicWorkerPage() {
 
   const cscsStatus = getStatus(worker.cscsExpiry)
   const rightToWorkStatus = getStatus(worker.rightToWorkExpiry)
+  const cscsVerificationStatus = getVerificationStatus(worker.cscsVerificationStatus)
 
   return (
     <main className="page-shell">
@@ -401,7 +463,9 @@ export default function PublicWorkerPage() {
 
                   <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <span className={cscsStatus.className}>{cscsStatus.text}</span>
-                    <span style={getSelfDeclaredStyle()}>Self-declared</span>
+                    <span style={cscsVerificationStatus.style}>
+                      {cscsVerificationStatus.text}
+                    </span>
                   </div>
 
                   <div
@@ -413,8 +477,7 @@ export default function PublicWorkerPage() {
                       lineHeight: 1.4,
                     }}
                   >
-                    CSCS details are self-declared and not yet verified with official
-                    CSCS systems.
+                    {cscsVerificationStatus.warning}
                   </div>
                 </div>
 
@@ -472,7 +535,9 @@ export default function PublicWorkerPage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
 
-                <div style={getSelfDeclaredStyle()}>Self-declared</div>
+                <div style={cscsVerificationStatus.style}>
+                  {cscsVerificationStatus.text}
+                </div>
 
                 <div className={rightToWorkStatus.className}>
                   Right to work: {rightToWorkStatus.text}

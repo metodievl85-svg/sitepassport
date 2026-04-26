@@ -20,6 +20,7 @@ type WorkerRow = {
   photo: string | null
   cscs_expiry: string | null
   right_to_work_expiry: string | null
+  cscs_verification_status: string | null
 }
 
 type ScanLogRow = {
@@ -39,6 +40,7 @@ type SavedWorkerCard = {
   photo: string
   cscsExpiry: string
   rightToWorkExpiry: string
+  cscsVerificationStatus: string
 }
 
 type FilterValue = 'all' | 'valid' | 'expiring' | 'expired'
@@ -102,16 +104,39 @@ function getStatus(dateString: string) {
   }
 }
 
-function getSelfDeclaredBadgeStyle() {
+function getVerificationBadgeStyle(status: string) {
+  if (status === 'verified') {
+    return {
+      text: 'Verified',
+      background: '#ecfdf3',
+      color: '#027a48',
+      border: '1px solid #abefc6',
+    }
+  }
+
+  if (status === 'pending') {
+    return {
+      text: 'Pending',
+      background: '#fff7e6',
+      color: '#9a5b00',
+      border: '1px solid #ffd591',
+    }
+  }
+
+  if (status === 'failed') {
+    return {
+      text: 'Not verified',
+      background: '#fff1f0',
+      color: '#b42318',
+      border: '1px solid #ffccc7',
+    }
+  }
+
   return {
+    text: 'Self-declared',
     background: '#eef3ff',
     color: '#243caa',
     border: '1px solid #cdd9ff',
-    borderRadius: 999,
-    padding: '6px 10px',
-    fontSize: 12,
-    fontWeight: 800,
-    lineHeight: 1.1,
   }
 }
 
@@ -248,7 +273,9 @@ export default function CompanyPage() {
 
           const { data: workerRows, error: workersError } = await supabase
             .from('workers')
-            .select('id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry')
+            .select(
+              'id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status'
+            )
             .in('id', workerIds)
 
           if (workersError) {
@@ -275,6 +302,8 @@ export default function CompanyPage() {
                   photo: worker.photo ?? '',
                   cscsExpiry: worker.cscs_expiry ?? '',
                   rightToWorkExpiry: worker.right_to_work_expiry ?? '',
+                  cscsVerificationStatus:
+                    worker.cscs_verification_status ?? 'self_declared',
                 }
               })
               .filter(Boolean) as SavedWorkerCard[]
@@ -678,6 +707,9 @@ export default function CompanyPage() {
               {filteredWorkers.map((worker) => {
                 const cscsStatus = getStatus(worker.cscsExpiry)
                 const rtwStatus = getStatus(worker.rightToWorkExpiry)
+                const verificationBadge = getVerificationBadgeStyle(
+                  worker.cscsVerificationStatus
+                )
 
                 return (
                   <div
@@ -741,8 +773,19 @@ export default function CompanyPage() {
                             CSCS: {cscsStatus.text}
                           </span>
 
-                          <span style={getSelfDeclaredBadgeStyle()}>
-                            Self-declared
+                          <span
+                            style={{
+                              background: verificationBadge.background,
+                              color: verificationBadge.color,
+                              border: verificationBadge.border,
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 12,
+                              fontWeight: 800,
+                              lineHeight: 1.1,
+                            }}
+                          >
+                            {verificationBadge.text}
                           </span>
 
                           <span
