@@ -46,19 +46,6 @@ type SavedWorkerCard = {
 type FilterValue = 'all' | 'valid' | 'expiring' | 'expired'
 type SortValue = 'newest' | 'oldest'
 
-function formatDate(value: string) {
-  if (!value) return '—'
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
-
 function getStatus(dateString: string) {
   if (!dateString) {
     return {
@@ -104,19 +91,19 @@ function getStatus(dateString: string) {
   }
 }
 
-function getVerificationBadgeStyle(status: string) {
+function getCscsBadgeStyle(status: string) {
   if (status === 'verified') {
     return {
-      text: 'Verified',
-      background: '#ecfdf3',
-      color: '#027a48',
-      border: '1px solid #abefc6',
+      text: 'CSCS: SitePassport checked',
+      background: '#eef3ff',
+      color: '#243caa',
+      border: '1px solid #cdd9ff',
     }
   }
 
   if (status === 'pending') {
     return {
-      text: 'Pending',
+      text: 'CSCS: Pending review',
       background: '#fff7e6',
       color: '#9a5b00',
       border: '1px solid #ffd591',
@@ -125,7 +112,7 @@ function getVerificationBadgeStyle(status: string) {
 
   if (status === 'failed') {
     return {
-      text: 'Not verified',
+      text: 'CSCS: Not verified',
       background: '#fff1f0',
       color: '#b42318',
       border: '1px solid #ffccc7',
@@ -133,7 +120,7 @@ function getVerificationBadgeStyle(status: string) {
   }
 
   return {
-    text: 'Self-declared',
+    text: 'CSCS: Self-declared',
     background: '#eef3ff',
     color: '#243caa',
     border: '1px solid #cdd9ff',
@@ -283,6 +270,7 @@ export default function CompanyPage() {
             setSavedWorkers([])
           } else {
             const workerMap = new Map<string, WorkerRow>()
+
             ;((workerRows || []) as WorkerRow[]).forEach((worker) => {
               workerMap.set(worker.id, worker)
             })
@@ -705,11 +693,8 @@ export default function CompanyPage() {
           ) : (
             <div style={{ display: 'grid', gap: 14 }}>
               {filteredWorkers.map((worker) => {
-                const cscsStatus = getStatus(worker.cscsExpiry)
                 const rtwStatus = getStatus(worker.rightToWorkExpiry)
-                const verificationBadge = getVerificationBadgeStyle(
-                  worker.cscsVerificationStatus
-                )
+                const cscsBadge = getCscsBadgeStyle(worker.cscsVerificationStatus)
 
                 return (
                   <div
@@ -762,22 +747,9 @@ export default function CompanyPage() {
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           <span
                             style={{
-                              background: cscsStatus.bg,
-                              color: cscsStatus.color,
-                              borderRadius: 999,
-                              padding: '6px 10px',
-                              fontSize: 12,
-                              fontWeight: 800,
-                            }}
-                          >
-                            CSCS: {cscsStatus.text}
-                          </span>
-
-                          <span
-                            style={{
-                              background: verificationBadge.background,
-                              color: verificationBadge.color,
-                              border: verificationBadge.border,
+                              background: cscsBadge.background,
+                              color: cscsBadge.color,
+                              border: cscsBadge.border,
                               borderRadius: 999,
                               padding: '6px 10px',
                               fontSize: 12,
@@ -785,7 +757,7 @@ export default function CompanyPage() {
                               lineHeight: 1.1,
                             }}
                           >
-                            {verificationBadge.text}
+                            {cscsBadge.text}
                           </span>
 
                           <span
