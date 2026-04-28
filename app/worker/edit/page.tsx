@@ -319,14 +319,16 @@ export default function EditWorkerPassportPage() {
                     borderRadius: 28,
                     background: '#fbfdff',
                     padding: 22,
+                    overflow: 'hidden',
                   }}
                 >
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                       gap: 24,
                       alignItems: 'start',
+                      width: '100%',
                     }}
                   >
                     <div
@@ -336,6 +338,7 @@ export default function EditWorkerPassportPage() {
                         background: '#ffffff',
                         padding: 14,
                         minWidth: 0,
+                        width: '100%',
                       }}
                     >
                       {form.photo ? (
@@ -344,6 +347,7 @@ export default function EditWorkerPassportPage() {
                           alt="CSCS card preview"
                           style={{
                             width: '100%',
+                            maxWidth: '100%',
                             aspectRatio: '1.58 / 1',
                             objectFit: 'cover',
                             display: 'block',
@@ -356,6 +360,7 @@ export default function EditWorkerPassportPage() {
                         <div
                           style={{
                             width: '100%',
+                            maxWidth: '100%',
                             aspectRatio: '1.58 / 1',
                             borderRadius: 16,
                             border: '1px dashed #c7d5e6',
@@ -376,7 +381,15 @@ export default function EditWorkerPassportPage() {
                       )}
                     </div>
 
-                    <div style={{ minWidth: 0 }}>
+                    <div
+                      style={{
+                        minWidth: 0,
+                        width: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                      }}
+                    >
                       <input
                         id="cscs-card-image-upload"
                         type="file"
@@ -412,6 +425,8 @@ export default function EditWorkerPassportPage() {
                           color: '#4d648c',
                           fontSize: 18,
                           lineHeight: 1.65,
+                          wordBreak: 'normal',
+                          overflowWrap: 'break-word',
                         }}
                       >
                         Upload a clear front photo of your CSCS card.
@@ -553,7 +568,7 @@ export default function EditWorkerPassportPage() {
                       <div
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: '1fr 1fr 1fr',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                           gap: 12,
                           marginBottom: 12,
                         }}
