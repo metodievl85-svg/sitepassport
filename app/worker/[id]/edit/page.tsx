@@ -45,7 +45,9 @@ function createEmptyQualification(): Qualification {
 
 function getInitials(name: string) {
   if (!name.trim()) return 'SP'
+
   const parts = name.trim().split(' ')
+
   return parts
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
@@ -78,17 +80,18 @@ function mapWorkerToForm(worker: any, qualifications: any[] | null | undefined):
     notes: worker.notes ?? '',
     photo: worker.photo ?? '',
     createdAt: worker.created_at ?? '',
-    qualifications: Array.isArray(qualifications) && qualifications.length > 0
-      ? qualifications.map((q) =>
-          normalizeQualification({
-            id: q.id,
-            worker_id: q.worker_id,
-            name: q.name,
-            number: q.number,
-            expiry: q.expiry,
-          })
-        )
-      : [createEmptyQualification()],
+    qualifications:
+      Array.isArray(qualifications) && qualifications.length > 0
+        ? qualifications.map((q) =>
+            normalizeQualification({
+              id: q.id,
+              worker_id: q.worker_id,
+              name: q.name,
+              number: q.number,
+              expiry: q.expiry,
+            })
+          )
+        : [createEmptyQualification()],
   }
 }
 
@@ -141,7 +144,9 @@ export default function EditWorkerPage() {
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     if (!form) return
+
     const { name, value } = e.target
+
     setForm({
       ...form,
       [name]: value,
@@ -150,22 +155,28 @@ export default function EditWorkerPage() {
 
   function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
     if (!form) return
+
     const file = e.target.files?.[0]
+
     if (!file) return
 
     const reader = new FileReader()
+
     reader.onload = () => {
       const result = typeof reader.result === 'string' ? reader.result : ''
+
       setForm({
         ...form,
         photo: result,
       })
     }
+
     reader.readAsDataURL(file)
   }
 
   function removePhoto() {
     if (!form) return
+
     setForm({
       ...form,
       photo: '',
@@ -174,6 +185,7 @@ export default function EditWorkerPage() {
 
   function handleQualificationNameChange(id: string, value: string) {
     if (!form) return
+
     setForm({
       ...form,
       qualifications: form.qualifications.map((q) =>
@@ -184,6 +196,7 @@ export default function EditWorkerPage() {
 
   function handleQualificationNumberChange(id: string, value: string) {
     if (!form) return
+
     setForm({
       ...form,
       qualifications: form.qualifications.map((q) =>
@@ -194,6 +207,7 @@ export default function EditWorkerPage() {
 
   function handleQualificationExpiryChange(id: string, value: string) {
     if (!form) return
+
     setForm({
       ...form,
       qualifications: form.qualifications.map((q) =>
@@ -204,6 +218,7 @@ export default function EditWorkerPage() {
 
   function addQualificationRow() {
     if (!form) return
+
     setForm({
       ...form,
       qualifications: [...form.qualifications, createEmptyQualification()],
@@ -212,6 +227,7 @@ export default function EditWorkerPage() {
 
   function removeQualificationRow(id: string) {
     if (!form) return
+
     setForm({
       ...form,
       qualifications:
@@ -223,6 +239,7 @@ export default function EditWorkerPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+
     if (!form) return
 
     if (!form.fullName.trim()) {
@@ -334,13 +351,13 @@ export default function EditWorkerPage() {
           <form onSubmit={handleSubmit}>
             <div className="form-grid-1" style={{ marginBottom: 20 }}>
               <div className="field">
-                <label>Operative photo</label>
+                <label>CSCS card image</label>
 
                 <div className="photo-upload-box">
                   {form.photo ? (
                     <img
                       src={form.photo}
-                      alt={form.fullName}
+                      alt={form.fullName || 'CSCS card image'}
                       className="photo-preview"
                     />
                   ) : (
@@ -349,12 +366,35 @@ export default function EditWorkerPage() {
                     </div>
                   )}
 
-                  <div>
+                  <div style={{ width: '100%' }}>
                     <input
+                      id="worker-photo-upload"
                       type="file"
                       accept="image/*"
                       onChange={handlePhotoChange}
+                      style={{
+                        position: 'absolute',
+                        width: 1,
+                        height: 1,
+                        padding: 0,
+                        margin: -1,
+                        overflow: 'hidden',
+                        clip: 'rect(0, 0, 0, 0)',
+                        whiteSpace: 'nowrap',
+                        border: 0,
+                      }}
                     />
+
+                    <label
+                      htmlFor="worker-photo-upload"
+                      className="btn btn-secondary"
+                      style={{
+                        width: '100%',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Change CSCS Card Image
+                    </label>
 
                     <div className="form-actions" style={{ marginTop: 12 }}>
                       <button
