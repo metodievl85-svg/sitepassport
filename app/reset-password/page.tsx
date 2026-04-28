@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -17,35 +18,60 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     async function handleRecovery() {
       try {
+        setError('')
+        setReady(false)
+
         const hash = window.location.hash
+        const code = searchParams.get('code')
 
-        if (!hash || !hash.includes('access_token')) {
-          setError('This password reset link is invalid or has expired.')
+        if (code) {
+          const { error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code)
+
+          if (exchangeError) {
+            setError(exchangeError.message)
+            return
+          }
+
+          setReady(true)
           return
         }
 
-        const params = new URLSearchParams(hash.replace('#', ''))
+        if (hash && hash.includes('access_token')) {
+          const params = new URLSearchParams(hash.replace('#', ''))
 
-        const access_token = params.get('access_token')
-        const refresh_token = params.get('refresh_token')
+          const accessToken = params.get('access_token')
+          const refreshToken = params.get('refresh_token')
 
-        if (!access_token || !refresh_token) {
-          setError('This password reset link is invalid or incomplete.')
+          if (!accessToken || !refreshToken) {
+            setError('This password reset link is invalid or incomplete.')
+            return
+          }
+
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (sessionError) {
+            setError(sessionError.message)
+            return
+          }
+
+          setReady(true)
           return
         }
 
-        // Set session from reset link
-        const { error } = await supabase.auth.setSession({
-          access_token,
-          refresh_token,
-        })
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
 
-        if (error) {
-          setError(error.message)
+        if (session) {
+          setReady(true)
           return
         }
 
-        setReady(true)
+        setError('This password reset link is invalid or has expired.')
       } catch (err) {
         console.error(err)
         setError('Failed to prepare password reset.')
@@ -53,7 +79,7 @@ export default function ResetPasswordPage() {
     }
 
     handleRecovery()
-  }, [])
+  }, [searchParams])
 
   async function handleReset() {
     setError('')
@@ -72,20 +98,22 @@ export default function ResetPasswordPage() {
     try {
       setLoading(true)
 
-      const { error } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         password,
       })
 
-      if (error) {
-        setError(error.message)
+      if (updateError) {
+        setError(updateError.message)
         return
       }
+
+      await supabase.auth.signOut()
 
       setMessage('Password updated successfully. Redirecting to login...')
 
       setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+        router.replace('/login')
+      }, 1800)
     } catch (err) {
       console.error(err)
       setError('Something went wrong.')
@@ -109,9 +137,7 @@ export default function ResetPasswordPage() {
           </section>
 
           <section className="card auth-card">
-            <h2 className="section-title auth-card-title">
-              Set new password
-            </h2>
+            <h2 className="section-title auth-card-title">Set new password</h2>
 
             {!ready && !error && (
               <p className="section-subtitle">Preparing password reset...</p>
@@ -157,6 +183,7 @@ export default function ResetPasswordPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
 
@@ -166,11 +193,13 @@ export default function ResetPasswordPage() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    autoComplete="new-password"
                   />
                 </div>
 
                 <div className="form-actions">
                   <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={handleReset}
                     disabled={loading}
