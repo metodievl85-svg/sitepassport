@@ -143,6 +143,7 @@ export default function WorkerPage() {
   const [loading, setLoading] = useState(true)
   const [accountEmail, setAccountEmail] = useState('')
   const [passport, setPassport] = useState<Worker | null>(null)
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -214,6 +215,57 @@ export default function WorkerPage() {
     router.replace('/login')
   }
 
+  async function handleDeleteAccount() {
+    const firstConfirm = window.confirm(
+      'Are you sure you want to delete your SitePassport account? This cannot be undone.'
+    )
+
+    if (!firstConfirm) return
+
+    const finalConfirm = window.confirm(
+      'Final warning: this will permanently delete your passport, qualifications, saved company records, profile, and login account.'
+    )
+
+    if (!finalConfirm) return
+
+    try {
+      setDeletingAccount(true)
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        alert('Your session has expired. Please log in again.')
+        await supabase.auth.signOut()
+        router.replace('/login')
+        return
+      }
+
+      const response = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
+
+      const result = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        alert(result?.error || 'Could not delete account.')
+        setDeletingAccount(false)
+        return
+      }
+
+      await supabase.auth.signOut()
+      router.replace('/login')
+    } catch (error) {
+      console.error('delete account error:', error)
+      alert('Unexpected error while deleting account.')
+      setDeletingAccount(false)
+    }
+  }
+
   const cscsStatus = useMemo(() => {
     if (!passport) return 'valid'
     return getExpiryStatus(passport.cscsExpiry)
@@ -223,6 +275,64 @@ export default function WorkerPage() {
     if (!passport) return 'valid'
     return getExpiryStatus(passport.rightToWorkExpiry)
   }, [passport])
+
+  function DeleteAccountCard() {
+    return (
+      <section
+        className="card"
+        style={{
+          marginBottom: 24,
+          border: '1px solid #efc1c1',
+          background: '#fff7f7',
+        }}
+      >
+        <h2
+          style={{
+            margin: 0,
+            fontSize: 28,
+            fontWeight: 900,
+            color: '#b42318',
+          }}
+        >
+          Delete account
+        </h2>
+
+        <p
+          style={{
+            margin: '12px 0 0',
+            fontSize: 17,
+            lineHeight: 1.55,
+            color: '#7a271a',
+            maxWidth: 820,
+          }}
+        >
+          This permanently deletes your SitePassport account, operative passport,
+          qualifications, saved company records connected to your passport, and login
+          account. This action cannot be undone.
+        </p>
+
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          disabled={deletingAccount}
+          style={{
+            marginTop: 18,
+            minHeight: 52,
+            border: '1px solid #d92d20',
+            borderRadius: 18,
+            padding: '14px 22px',
+            background: '#d92d20',
+            color: '#ffffff',
+            fontWeight: 900,
+            cursor: deletingAccount ? 'not-allowed' : 'pointer',
+            opacity: deletingAccount ? 0.65 : 1,
+          }}
+        >
+          {deletingAccount ? 'Deleting account...' : 'Delete my account'}
+        </button>
+      </section>
+    )
+  }
 
   if (loading) {
     return (
@@ -265,7 +375,7 @@ export default function WorkerPage() {
             </div>
           </section>
 
-          <section className="card">
+          <section className="card" style={{ marginBottom: 24 }}>
             <h2 className="section-title">No passport yet</h2>
             <p className="section-subtitle">
               Create your operative passport to add your details, qualifications, CSCS
@@ -276,6 +386,8 @@ export default function WorkerPage() {
               Create my passport
             </Link>
           </section>
+
+          <DeleteAccountCard />
         </div>
       </main>
     )
@@ -679,6 +791,8 @@ export default function WorkerPage() {
             </div>
           </div>
         </section>
+
+        <DeleteAccountCard />
       </div>
 
       <style jsx>{`
