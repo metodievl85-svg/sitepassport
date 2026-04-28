@@ -156,6 +156,8 @@ export default function EditWorkerPassportPage() {
       }))
     }
     reader.readAsDataURL(file)
+
+    e.target.value = ''
   }
 
   function handleQualificationChange(
@@ -322,7 +324,7 @@ export default function EditWorkerPassportPage() {
                   <div
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '340px minmax(0, 1fr)',
+                      gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)',
                       gap: 24,
                       alignItems: 'start',
                     }}
@@ -333,6 +335,7 @@ export default function EditWorkerPassportPage() {
                         borderRadius: 22,
                         background: '#ffffff',
                         padding: 14,
+                        minWidth: 0,
                       }}
                     >
                       {form.photo ? (
@@ -373,12 +376,35 @@ export default function EditWorkerPassportPage() {
                       )}
                     </div>
 
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <input
+                        id="cscs-card-image-upload"
                         type="file"
                         accept="image/*"
                         onChange={handlePhotoChange}
+                        style={{
+                          position: 'absolute',
+                          width: 1,
+                          height: 1,
+                          padding: 0,
+                          margin: -1,
+                          overflow: 'hidden',
+                          clip: 'rect(0, 0, 0, 0)',
+                          whiteSpace: 'nowrap',
+                          border: 0,
+                        }}
                       />
+
+                      <label
+                        htmlFor="cscs-card-image-upload"
+                        className="btn btn-secondary"
+                        style={{
+                          width: '100%',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Change CSCS Card Image
+                      </label>
 
                       <p
                         style={{
