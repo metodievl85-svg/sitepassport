@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -22,6 +21,9 @@ export default function ResetPasswordPage() {
         setReady(false)
 
         const hash = window.location.hash
+        const search = window.location.search
+        const searchParams = new URLSearchParams(search)
+
         const code = searchParams.get('code')
 
         if (code) {
@@ -38,10 +40,10 @@ export default function ResetPasswordPage() {
         }
 
         if (hash && hash.includes('access_token')) {
-          const params = new URLSearchParams(hash.replace('#', ''))
+          const hashParams = new URLSearchParams(hash.replace('#', ''))
 
-          const accessToken = params.get('access_token')
-          const refreshToken = params.get('refresh_token')
+          const accessToken = hashParams.get('access_token')
+          const refreshToken = hashParams.get('refresh_token')
 
           if (!accessToken || !refreshToken) {
             setError('This password reset link is invalid or incomplete.')
@@ -79,7 +81,7 @@ export default function ResetPasswordPage() {
     }
 
     handleRecovery()
-  }, [searchParams])
+  }, [])
 
   async function handleReset() {
     setError('')
