@@ -110,6 +110,10 @@ export default function PrivacyPolicyPage() {
         <br />
         <strong>info@sitepassportapp.co.uk</strong>
       </p>
+
+      <p style={{ marginTop: '20px', fontSize: '14px', color: '#666' }}>
+        SitePassport is registered with the Information Commissioner’s Office (ICO) under registration number: ZC135297.
+      </p>
     </main>
   )
 }
