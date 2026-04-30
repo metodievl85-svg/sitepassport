@@ -25,6 +25,7 @@ type Worker = {
   cscsExpiry: string
   rightToWorkExpiry: string
   notes: string
+  medicalInfo: string
   photo: string
   createdAt: string
   qualifications: Qualification[]
@@ -121,6 +122,7 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
     cscsExpiry: worker.cscs_expiry ?? '',
     rightToWorkExpiry: worker.right_to_work_expiry ?? '',
     notes: worker.notes ?? '',
+    medicalInfo: worker.medical_info ?? '',
     photo: worker.photo ?? '',
     createdAt: worker.created_at ?? '',
     qualifications: Array.isArray(qualifications)
@@ -652,6 +654,41 @@ export default function WorkerPage() {
                   }}
                 >
                   {passport.notes || 'No notes added.'}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  border: '1px solid #fecaca',
+                  borderRadius: 24,
+                  padding: 20,
+                  background: '#fff7f7',
+                  marginTop: 20,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 900,
+                    letterSpacing: 1.6,
+                    textTransform: 'uppercase',
+                    color: '#b42318',
+                    marginBottom: 10,
+                  }}
+                >
+                  Medical information
+                </div>
+
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 17,
+                    lineHeight: 1.55,
+                    color: '#7a271a',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {passport.medicalInfo || 'No medical information provided.'}
                 </p>
               </div>
             </div>
