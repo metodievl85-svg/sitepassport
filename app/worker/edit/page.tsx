@@ -40,6 +40,7 @@ export default function EditWorkerPassportPage() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const cameraStreamRef = useRef<MediaStream | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -156,27 +157,42 @@ export default function EditWorkerPassportPage() {
   async function startCamera() {
     try {
       setCameraError('')
+      setCameraOpen(true)
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError('Camera is not supported on this device. Please use upload instead.')
+        setCameraOpen(false)
         return
       }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
         },
         audio: false,
       })
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play()
-      }
+      cameraStreamRef.current = stream
 
-      setCameraOpen(true)
+      setTimeout(() => {
+        const video = videoRef.current
+
+        if (!video) {
+          setCameraError('Camera preview could not start. Please try again.')
+          return
+        }
+
+        video.srcObject = stream
+        video.muted = true
+        video.playsInline = true
+
+        video.onloadedmetadata = () => {
+          video.play().catch((error) => {
+            console.error('video play error:', error)
+            setCameraError('Camera opened but preview could not play. Please try again.')
+          })
+        }
+      }, 250)
     } catch (error) {
       console.error('camera error:', error)
       setCameraError('Could not open camera. Please allow camera permission or use upload.')
@@ -185,10 +201,9 @@ export default function EditWorkerPassportPage() {
   }
 
   function stopCamera() {
-    const stream = videoRef.current?.srcObject as MediaStream | null
-
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop())
+      cameraStreamRef.current = null
     }
 
     if (videoRef.current) {
@@ -452,16 +467,6 @@ export default function EditWorkerPassportPage() {
                               height: '100%',
                               objectFit: 'cover',
                               display: 'block',
-                            }}
-                          />
-
-                          <div
-                            style={{
-                              position: 'absolute',
-                              inset: 0,
-                              background:
-                                'linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22))',
-                              pointerEvents: 'none',
                             }}
                           />
 
