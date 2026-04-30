@@ -47,6 +47,7 @@ export default function EditWorkerPassportPage() {
   const [workerId, setWorkerId] = useState('')
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
+  const [photoCaptured, setPhotoCaptured] = useState(false)
 
   const [form, setForm] = useState({
     fullName: '',
@@ -157,13 +158,15 @@ export default function EditWorkerPassportPage() {
   async function startCamera() {
     try {
       setCameraError('')
-      setCameraOpen(true)
+      setPhotoCaptured(false)
 
       if (!navigator.mediaDevices?.getUserMedia) {
         setCameraError('Camera is not supported on this device. Please use upload instead.')
         setCameraOpen(false)
         return
       }
+
+      setCameraOpen(true)
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -219,7 +222,10 @@ export default function EditWorkerPassportPage() {
     const video = videoRef.current
     const canvas = canvasRef.current
 
-    if (!video || !canvas) return
+    if (!video || !canvas) {
+      setCameraError('Camera is not ready. Please try again.')
+      return
+    }
 
     const videoWidth = video.videoWidth
     const videoHeight = video.videoHeight
@@ -236,7 +242,10 @@ export default function EditWorkerPassportPage() {
     canvas.height = outputHeight
 
     const context = canvas.getContext('2d')
-    if (!context) return
+    if (!context) {
+      setCameraError('Could not capture photo. Please use upload instead.')
+      return
+    }
 
     const cropWidth = videoWidth * 0.86
     const cropHeight = cropWidth / 1.58
@@ -249,8 +258,8 @@ export default function EditWorkerPassportPage() {
       sourceCropWidth = sourceCropHeight * 1.58
     }
 
-    const sourceX = (videoWidth - sourceCropWidth) / 2
-    const sourceY = (videoHeight - sourceCropHeight) / 2
+    const sourceX = Math.max(0, (videoWidth - sourceCropWidth) / 2)
+    const sourceY = Math.max(0, (videoHeight - sourceCropHeight) / 2)
 
     context.drawImage(
       video,
@@ -271,6 +280,8 @@ export default function EditWorkerPassportPage() {
       photo: image,
     }))
 
+    setPhotoCaptured(true)
+    setCameraError('')
     stopCamera()
   }
 
@@ -279,6 +290,7 @@ export default function EditWorkerPassportPage() {
     if (!file) return
 
     stopCamera()
+    setPhotoCaptured(false)
 
     const reader = new FileReader()
     reader.onload = () => {
@@ -287,6 +299,7 @@ export default function EditWorkerPassportPage() {
         ...prev,
         photo: result,
       }))
+      setPhotoCaptured(true)
     }
     reader.readAsDataURL(file)
 
@@ -541,7 +554,7 @@ export default function EditWorkerPassportPage() {
                             width: '100%',
                             maxWidth: '100%',
                             aspectRatio: '1.58 / 1',
-                            objectFit: 'cover',
+                            objectFit: 'contain',
                             display: 'block',
                             borderRadius: 16,
                             border: '1px solid #d7e0ec',
@@ -585,17 +598,37 @@ export default function EditWorkerPassportPage() {
                       }}
                     >
                       {!cameraOpen ? (
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          onClick={startCamera}
-                          style={{
-                            width: '100%',
-                            marginBottom: 12,
-                          }}
-                        >
-                          Take CSCS Card Photo
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={startCamera}
+                            style={{
+                              width: '100%',
+                              marginBottom: 12,
+                            }}
+                          >
+                            {form.photo ? 'Retake CSCS Card Photo' : 'Take CSCS Card Photo'}
+                          </button>
+
+                          {photoCaptured && form.photo ? (
+                            <div
+                              style={{
+                                border: '1px solid #9dd7b5',
+                                background: '#ecfdf3',
+                                color: '#027a48',
+                                borderRadius: 16,
+                                padding: '12px 14px',
+                                fontSize: 16,
+                                fontWeight: 900,
+                                lineHeight: 1.45,
+                                marginBottom: 12,
+                              }}
+                            >
+                              Photo captured. Now press Save changes at the bottom.
+                            </div>
+                          ) : null}
+                        </>
                       ) : (
                         <div
                           style={{
