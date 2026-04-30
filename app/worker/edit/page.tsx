@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
@@ -38,9 +38,15 @@ function createEmptyQualification(): Qualification {
 export default function EditWorkerPassportPage() {
   const router = useRouter()
 
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [workerId, setWorkerId] = useState('')
+  const [cameraOpen, setCameraOpen] = useState(false)
+  const [cameraError, setCameraError] = useState('')
+
   const [form, setForm] = useState({
     fullName: '',
     role: '',
@@ -134,6 +140,10 @@ export default function EditWorkerPassportPage() {
     }
 
     load()
+
+    return () => {
+      stopCamera()
+    }
   }, [router])
 
   function handleChange(
@@ -143,9 +153,88 @@ export default function EditWorkerPassportPage() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  async function startCamera() {
+    try {
+      setCameraError('')
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError('Camera is not supported on this device. Please use upload instead.')
+        return
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      })
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+      }
+
+      setCameraOpen(true)
+    } catch (error) {
+      console.error('camera error:', error)
+      setCameraError('Could not open camera. Please allow camera permission or use upload.')
+      setCameraOpen(false)
+    }
+  }
+
+  function stopCamera() {
+    const stream = videoRef.current?.srcObject as MediaStream | null
+
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop())
+    }
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+
+    setCameraOpen(false)
+  }
+
+  function capturePhoto() {
+    const video = videoRef.current
+    const canvas = canvasRef.current
+
+    if (!video || !canvas) return
+
+    const videoWidth = video.videoWidth
+    const videoHeight = video.videoHeight
+
+    if (!videoWidth || !videoHeight) {
+      setCameraError('Camera is still loading. Please try again.')
+      return
+    }
+
+    canvas.width = videoWidth
+    canvas.height = videoHeight
+
+    const context = canvas.getContext('2d')
+    if (!context) return
+
+    context.drawImage(video, 0, 0, videoWidth, videoHeight)
+
+    const image = canvas.toDataURL('image/jpeg', 0.9)
+
+    setForm((prev) => ({
+      ...prev,
+      photo: image,
+    }))
+
+    stopCamera()
+  }
+
   function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+
+    stopCamera()
 
     const reader = new FileReader()
     reader.onload = () => {
@@ -341,7 +430,76 @@ export default function EditWorkerPassportPage() {
                         width: '100%',
                       }}
                     >
-                      {form.photo ? (
+                      {cameraOpen ? (
+                        <div
+                          style={{
+                            position: 'relative',
+                            width: '100%',
+                            aspectRatio: '1.58 / 1',
+                            borderRadius: 16,
+                            overflow: 'hidden',
+                            background: '#08153d',
+                            border: '1px solid #d7e0ec',
+                          }}
+                        >
+                          <video
+                            ref={videoRef}
+                            playsInline
+                            muted
+                            autoPlay
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+
+                          <div
+                            style={{
+                              position: 'absolute',
+                              inset: 0,
+                              background:
+                                'linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22))',
+                              pointerEvents: 'none',
+                            }}
+                          />
+
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: '50%',
+                              top: '50%',
+                              transform: 'translate(-50%, -50%)',
+                              width: '86%',
+                              aspectRatio: '1.58 / 1',
+                              border: '3px solid #ffffff',
+                              borderRadius: 14,
+                              boxShadow: '0 0 0 999px rgba(0,0,0,0.22)',
+                              pointerEvents: 'none',
+                            }}
+                          />
+
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: 12,
+                              right: 12,
+                              top: 12,
+                              background: 'rgba(8, 21, 61, 0.78)',
+                              color: '#ffffff',
+                              borderRadius: 14,
+                              padding: '10px 12px',
+                              fontSize: 14,
+                              fontWeight: 800,
+                              lineHeight: 1.35,
+                              textAlign: 'center',
+                            }}
+                          >
+                            Place your CSCS card inside the white rectangle
+                          </div>
+                        </div>
+                      ) : form.photo ? (
                         <img
                           src={form.photo}
                           alt="CSCS card preview"
@@ -379,6 +537,8 @@ export default function EditWorkerPassportPage() {
                           No CSCS card image
                         </div>
                       )}
+
+                      <canvas ref={canvasRef} style={{ display: 'none' }} />
                     </div>
 
                     <div
@@ -390,6 +550,45 @@ export default function EditWorkerPassportPage() {
                         alignItems: 'stretch',
                       }}
                     >
+                      {!cameraOpen ? (
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={startCamera}
+                          style={{
+                            width: '100%',
+                            marginBottom: 12,
+                          }}
+                        >
+                          Take CSCS Card Photo
+                        </button>
+                      ) : (
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: 10,
+                            marginBottom: 12,
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={capturePhoto}
+                          >
+                            Capture
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            onClick={stopCamera}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+
                       <input
                         id="cscs-card-image-upload"
                         type="file"
@@ -416,8 +615,22 @@ export default function EditWorkerPassportPage() {
                           cursor: 'pointer',
                         }}
                       >
-                        Change CSCS Card Image
+                        Upload CSCS Card Image
                       </label>
+
+                      {cameraError ? (
+                        <p
+                          style={{
+                            margin: '14px 0 0',
+                            color: '#b42318',
+                            fontSize: 16,
+                            lineHeight: 1.5,
+                            fontWeight: 800,
+                          }}
+                        >
+                          {cameraError}
+                        </p>
+                      ) : null}
 
                       <p
                         style={{
@@ -429,9 +642,10 @@ export default function EditWorkerPassportPage() {
                           overflowWrap: 'break-word',
                         }}
                       >
-                        Upload a clear front photo of your CSCS card.
+                        Take a clear front photo of your CSCS card.
                         <br />
-                        Make sure the card number, name, and expiry date are visible.
+                        Keep the card inside the white rectangle and make sure the
+                        card number, name, and expiry date are visible.
                       </p>
                     </div>
                   </div>
