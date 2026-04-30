@@ -59,6 +59,7 @@ export default function EditWorkerPassportPage() {
     cscsExpiry: '',
     rightToWorkExpiry: '',
     notes: '',
+    medicalInfo: '',
     photo: '',
     qualifications: [createEmptyQualification()] as Qualification[],
   })
@@ -134,6 +135,7 @@ export default function EditWorkerPassportPage() {
         cscsExpiry: workerRow.cscs_expiry ?? '',
         rightToWorkExpiry: workerRow.right_to_work_expiry ?? '',
         notes: workerRow.notes ?? '',
+        medicalInfo: workerRow.medical_info ?? '',
         photo: workerRow.photo ?? '',
         qualifications: mappedQualifications,
       })
@@ -366,6 +368,7 @@ export default function EditWorkerPassportPage() {
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
           notes: form.notes.trim(),
+          medical_info: form.medicalInfo.trim(),
           photo: form.photo,
         })
         .eq('id', workerId)
@@ -927,6 +930,29 @@ export default function EditWorkerPassportPage() {
                   onChange={handleChange}
                   placeholder="Extra notes..."
                 />
+              </div>
+            </div>
+
+            <div className="form-grid-1" style={{ marginTop: 18 }}>
+              <div className="field">
+                <label>Medical information (optional)</label>
+                <textarea
+                  name="medicalInfo"
+                  value={form.medicalInfo}
+                  onChange={handleChange}
+                  placeholder="E.g. allergies, medical conditions, medication, emergency notes..."
+                />
+
+                <p
+                  style={{
+                    margin: '8px 0 0',
+                    color: '#4d648c',
+                    fontSize: 14,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Optional. This can help site managers in case of an emergency.
+                </p>
               </div>
             </div>
 
