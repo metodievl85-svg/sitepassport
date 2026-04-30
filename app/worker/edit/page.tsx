@@ -168,6 +168,8 @@ export default function EditWorkerPassportPage() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
         },
         audio: false,
       })
@@ -227,15 +229,42 @@ export default function EditWorkerPassportPage() {
       return
     }
 
-    canvas.width = videoWidth
-    canvas.height = videoHeight
+    const outputWidth = 1200
+    const outputHeight = Math.round(outputWidth / 1.58)
+
+    canvas.width = outputWidth
+    canvas.height = outputHeight
 
     const context = canvas.getContext('2d')
     if (!context) return
 
-    context.drawImage(video, 0, 0, videoWidth, videoHeight)
+    const cropWidth = videoWidth * 0.86
+    const cropHeight = cropWidth / 1.58
 
-    const image = canvas.toDataURL('image/jpeg', 0.9)
+    let sourceCropWidth = cropWidth
+    let sourceCropHeight = cropHeight
+
+    if (sourceCropHeight > videoHeight * 0.82) {
+      sourceCropHeight = videoHeight * 0.82
+      sourceCropWidth = sourceCropHeight * 1.58
+    }
+
+    const sourceX = (videoWidth - sourceCropWidth) / 2
+    const sourceY = (videoHeight - sourceCropHeight) / 2
+
+    context.drawImage(
+      video,
+      sourceX,
+      sourceY,
+      sourceCropWidth,
+      sourceCropHeight,
+      0,
+      0,
+      outputWidth,
+      outputHeight
+    )
+
+    const image = canvas.toDataURL('image/jpeg', 0.92)
 
     setForm((prev) => ({
       ...prev,
@@ -649,8 +678,8 @@ export default function EditWorkerPassportPage() {
                       >
                         Take a clear front photo of your CSCS card.
                         <br />
-                        Keep the card inside the white rectangle and make sure the
-                        card number, name, and expiry date are visible.
+                        Only the area inside the white rectangle will be saved.
+                        Make sure the card number, name, and expiry date are visible.
                       </p>
                     </div>
                   </div>
