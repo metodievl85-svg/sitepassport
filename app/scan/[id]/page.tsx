@@ -24,6 +24,7 @@ type Worker = {
   cscsExpiry: string
   rightToWorkExpiry: string
   notes: string
+  medicalInfo: string
   photo: string
   createdAt: string
   cscsVerificationStatus: string
@@ -151,6 +152,7 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
     cscsExpiry: worker.cscs_expiry ?? '',
     rightToWorkExpiry: worker.right_to_work_expiry ?? '',
     notes: worker.notes ?? '',
+    medicalInfo: worker.medical_info ?? '',
     photo: worker.photo ?? '',
     createdAt: worker.created_at ?? '',
     cscsVerificationStatus: worker.cscs_verification_status ?? 'self_declared',
@@ -609,6 +611,44 @@ export default function PublicWorkerPage() {
                 </div>
               </div>
             </div>
+
+            {worker.medicalInfo ? (
+              <div
+                style={{
+                  border: '1px solid #fecaca',
+                  borderRadius: 22,
+                  padding: 18,
+                  background: '#fff7f7',
+                  marginBottom: 24,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 900,
+                    letterSpacing: 1.2,
+                    textTransform: 'uppercase',
+                    color: '#b42318',
+                    marginBottom: 10,
+                  }}
+                >
+                  Medical information
+                </div>
+
+                <p
+                  style={{
+                    margin: 0,
+                    color: '#7a271a',
+                    fontSize: 16,
+                    lineHeight: 1.55,
+                    fontWeight: 700,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {worker.medicalInfo}
+                </p>
+              </div>
+            ) : null}
 
             <div className="notes-box">
               <div className="notes-title">Qualifications</div>
