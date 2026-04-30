@@ -32,7 +32,10 @@ export default function PrivacyPolicyPage() {
         <li>Company saved worker records</li>
         <li>Login/account information handled through Supabase authentication</li>
       </ul>
-
+<p>
+  Medical information provided by operatives is optional and collected only for safety purposes on construction sites.
+  This information is visible only to authorised company users (such as site managers) and is not shared publicly.
+</p>
       <h2>3. How we use your data</h2>
       <p>We use your data to:</p>
       <ul>
