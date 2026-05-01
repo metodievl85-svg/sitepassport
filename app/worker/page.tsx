@@ -31,14 +31,6 @@ type Worker = {
   qualifications: Qualification[]
 }
 
-type AttendanceStatus = 'IN' | 'OUT'
-
-type LastAttendance = {
-  status: AttendanceStatus
-  site_id: string | null
-  company_id: string
-}
-
 function SitePassportLogo() {
   return (
     <div
@@ -155,11 +147,6 @@ export default function WorkerPage() {
   const [passport, setPassport] = useState<Worker | null>(null)
   const [deletingAccount, setDeletingAccount] = useState(false)
 
-  const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>('OUT')
-  const [lastSiteId, setLastSiteId] = useState<string | null>(null)
-  const [lastCompanyId, setLastCompanyId] = useState<string | null>(null)
-  const [savingAttendance, setSavingAttendance] = useState(false)
-
   useEffect(() => {
     async function load() {
       const {
@@ -221,58 +208,11 @@ export default function WorkerPage() {
       const mappedPassport = mapWorkerRow(workerRow, qualificationsRows ?? [])
       setPassport(mappedPassport)
 
-      const { data: lastAttendance, error: attendanceError } = await supabase
-        .from('site_attendance')
-        .select('status, site_id, company_id')
-        .eq('worker_id', workerRow.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-
-      if (attendanceError) {
-        console.error('attendance load error:', attendanceError)
-      }
-
-      if (lastAttendance) {
-        const attendance = lastAttendance as LastAttendance
-        setAttendanceStatus(attendance.status === 'IN' ? 'IN' : 'OUT')
-        setLastSiteId(attendance.site_id)
-        setLastCompanyId(attendance.company_id)
-      }
-
       setLoading(false)
     }
 
     void load()
   }, [router])
-
-  async function handleAttendance(nextStatus: AttendanceStatus) {
-    if (!passport || !lastSiteId || !lastCompanyId) {
-      alert('Please scan the site QR code first.')
-      return
-    }
-
-    try {
-      setSavingAttendance(true)
-
-      const { error } = await supabase.from('site_attendance').insert({
-        company_id: lastCompanyId,
-        worker_id: passport.id,
-        site_id: lastSiteId,
-        status: nextStatus,
-      })
-
-      if (error) {
-        console.error('attendance save error:', error)
-        alert('Could not update attendance. Please try again.')
-        return
-      }
-
-      setAttendanceStatus(nextStatus)
-    } finally {
-      setSavingAttendance(false)
-    }
-  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -486,24 +426,9 @@ export default function WorkerPage() {
               Open QR & PDF
             </Link>
 
-            <button
-              className="btn btn-outline"
-              type="button"
-              disabled={savingAttendance}
-              onClick={() =>
-                handleAttendance(attendanceStatus === 'IN' ? 'OUT' : 'IN')
-              }
-              style={{
-                opacity: savingAttendance ? 0.65 : 1,
-                cursor: savingAttendance ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {savingAttendance
-                ? 'Saving...'
-                : attendanceStatus === 'IN'
-                  ? 'Sign OUT'
-                  : 'Sign IN'}
-            </button>
+            <Link href="/worker/site-scan" className="btn btn-outline">
+              Scan site QR
+            </Link>
 
             <button className="btn btn-outline" type="button" onClick={handleLogout}>
               Logout
