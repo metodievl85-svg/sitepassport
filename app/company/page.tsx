@@ -230,6 +230,12 @@ export default function CompanyPage() {
 
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState('')
+  const [companyId, setCompanyId] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [companyNameDraft, setCompanyNameDraft] = useState('')
+  const [savingCompanyName, setSavingCompanyName] = useState(false)
+  const [companyNameMessage, setCompanyNameMessage] = useState('')
+
   const [savedWorkers, setSavedWorkers] = useState<SavedWorkerCard[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<FilterValue>('all')
@@ -243,11 +249,11 @@ export default function CompanyPage() {
     void loadCompanyDashboard()
   }, [])
 
-  async function getOrCreateCompanySite(companyId: string) {
+  async function getOrCreateCompanySite(currentCompanyId: string) {
     const { data: existingSite, error: existingError } = await supabase
       .from('company_sites')
       .select('id, company_id, site_name, site_qr_token, created_at')
-      .eq('company_id', companyId)
+      .eq('company_id', currentCompanyId)
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle()
@@ -264,7 +270,7 @@ export default function CompanyPage() {
     const { data: newSite, error: createError } = await supabase
       .from('company_sites')
       .insert({
-        company_id: companyId,
+        company_id: currentCompanyId,
         site_name: 'Main site',
       })
       .select('id, company_id, site_name, site_qr_token, created_at')
@@ -295,7 +301,7 @@ export default function CompanyPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, role')
+        .select('id, role, company_name')
         .eq('id', session.user.id)
         .single()
 
@@ -309,9 +315,14 @@ export default function CompanyPage() {
         return
       }
 
-      const companyId = profile.id
+      const currentCompanyId = profile.id
+      const profileCompanyName = profile.company_name || ''
 
-      const site = await getOrCreateCompanySite(companyId)
+      setCompanyId(currentCompanyId)
+      setCompanyName(profileCompanyName)
+      setCompanyNameDraft(profileCompanyName)
+
+      const site = await getOrCreateCompanySite(currentCompanyId)
 
       if (site && typeof window !== 'undefined') {
         setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
@@ -328,7 +339,7 @@ export default function CompanyPage() {
       const { data: attendanceRows, error: attendanceError } = await supabase
         .from('site_attendance')
         .select('id, company_id, worker_id, site_id, status, created_at')
-        .eq('company_id', companyId)
+        .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false })
 
       if (attendanceError) {
@@ -347,7 +358,7 @@ export default function CompanyPage() {
       const { data: savedRows, error: savedError } = await supabase
         .from('saved_workers')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false })
 
       if (savedError) {
@@ -417,7 +428,7 @@ export default function CompanyPage() {
       const { data: scanRows, error: scanError } = await supabase
         .from('scan_logs')
         .select('id, company_id, worker_id, scanned_at')
-        .eq('company_id', companyId)
+        .eq('company_id', currentCompanyId)
         .gte('scanned_at', todayStart.toISOString())
         .lt('scanned_at', tomorrowStart.toISOString())
         .order('scanned_at', { ascending: false })
@@ -433,6 +444,42 @@ export default function CompanyPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSaveCompanyName() {
+    const cleanName = companyNameDraft.trim()
+
+    if (!companyId) {
+      setCompanyNameMessage('Could not identify company account.')
+      return
+    }
+
+    if (!cleanName) {
+      setCompanyNameMessage('Please enter a company name.')
+      return
+    }
+
+    try {
+      setSavingCompanyName(true)
+      setCompanyNameMessage('')
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ company_name: cleanName })
+        .eq('id', companyId)
+
+      if (error) {
+        console.error(error)
+        setCompanyNameMessage('Could not save company name.')
+        return
+      }
+
+      setCompanyName(cleanName)
+      setCompanyNameDraft(cleanName)
+      setCompanyNameMessage('Company name saved.')
+    } finally {
+      setSavingCompanyName(false)
     }
   }
 
@@ -751,13 +798,85 @@ export default function CompanyPage() {
           </div>
         </section>
 
-        <section
-          className="card"
-          style={{
-            marginBottom: 24,
-            padding: 18,
-          }}
-        >
+        <section className="card" style={{ marginBottom: 24, padding: 18 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gap: 16,
+              alignItems: 'center',
+            }}
+            className="company-settings-row"
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#09154b' }}>
+                Company name
+              </h2>
+
+              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#5a6f96', lineHeight: 1.45 }}>
+                This name will appear on your printable site QR poster.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <input
+                value={companyNameDraft}
+                onChange={(event) => setCompanyNameDraft(event.target.value)}
+                placeholder="Enter company name"
+                style={{
+                  minHeight: 50,
+                  minWidth: 260,
+                  borderRadius: 14,
+                  border: '1px solid #d7e1ef',
+                  padding: '0 14px',
+                  fontSize: 15,
+                  fontWeight: 800,
+                }}
+              />
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleSaveCompanyName}
+                disabled={savingCompanyName}
+                style={{
+                  opacity: savingCompanyName ? 0.65 : 1,
+                  cursor: savingCompanyName ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {savingCompanyName ? 'Saving...' : 'Save name'}
+              </button>
+            </div>
+          </div>
+
+          {companyNameMessage ? (
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 14,
+                fontWeight: 800,
+                color: companyNameMessage.includes('saved') ? '#167342' : '#b42318',
+              }}
+            >
+              {companyNameMessage}
+            </div>
+          ) : null}
+
+          {companyName ? (
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 14,
+                color: '#5a6f96',
+                fontWeight: 800,
+              }}
+            >
+              Current saved name: {companyName}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="card" style={{ marginBottom: 24, padding: 18 }}>
           <div
             style={{
               display: 'flex',
@@ -768,25 +887,11 @@ export default function CompanyPage() {
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: 24,
-                  fontWeight: 900,
-                  color: '#09154b',
-                }}
-              >
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#09154b' }}>
                 Site QR link
               </h2>
 
-              <p
-                style={{
-                  margin: '8px 0 0',
-                  fontSize: 15,
-                  color: '#5a6f96',
-                  lineHeight: 1.45,
-                }}
-              >
+              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#5a6f96', lineHeight: 1.45 }}>
                 Permanent site sign-in link. Print the QR once and place it on site.
               </p>
             </div>
@@ -1084,6 +1189,12 @@ export default function CompanyPage() {
           align-items: center;
           justify-content: flex-end;
           flex-wrap: wrap;
+        }
+
+        @media (max-width: 900px) {
+          .company-settings-row {
+            grid-template-columns: 1fr !important;
+          }
         }
 
         @media (max-width: 700px) {

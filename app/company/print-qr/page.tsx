@@ -21,10 +21,10 @@ function SitePassportLogo() {
       alt="SitePassport"
       style={{
         display: 'block',
-        width: 'min(280px, 100%)',
+        width: 'min(260px, 100%)',
         height: 'auto',
         objectFit: 'contain',
-        margin: '0 auto 12px',
+        margin: '0 auto 10px',
       }}
     />
   )
@@ -36,6 +36,7 @@ export default function PrintSiteQrPage() {
   const [loading, setLoading] = useState(true)
   const [site, setSite] = useState<CompanySiteRow | null>(null)
   const [siteLink, setSiteLink] = useState('')
+  const [companyName, setCompanyName] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function PrintSiteQrPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, role')
+        .select('id, role, company_name')
         .eq('id', session.user.id)
         .single()
 
@@ -106,6 +107,8 @@ export default function PrintSiteQrPage() {
         router.push('/worker')
         return
       }
+
+      setCompanyName(profile.company_name || 'Company name')
 
       const currentSite = await getOrCreateCompanySite(profile.id)
 
@@ -177,6 +180,8 @@ export default function PrintSiteQrPage() {
 
         <div className="poster-label">SitePassport site attendance</div>
 
+        <div className="company-name">{companyName || 'Company name'}</div>
+
         <h1>Scan to sign IN / OUT</h1>
 
         <p className="poster-subtitle">
@@ -225,7 +230,7 @@ export default function PrintSiteQrPage() {
           margin: 0 auto;
           background: #ffffff;
           border-radius: 24px;
-          padding: 34px 38px;
+          padding: 28px 38px;
           text-align: center;
           border: 1px solid #d7e1ef;
           box-shadow: 0 20px 50px rgba(9, 21, 75, 0.14);
@@ -235,7 +240,7 @@ export default function PrintSiteQrPage() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 30px;
+          min-height: 28px;
           padding: 0 14px;
           border-radius: 999px;
           background: #eef3ff;
@@ -244,29 +249,40 @@ export default function PrintSiteQrPage() {
           font-weight: 900;
           letter-spacing: 1.3px;
           text-transform: uppercase;
-          margin-bottom: 16px;
+          margin-bottom: 12px;
+        }
+
+        .company-name {
+          margin: 0 auto 12px;
+          color: #09154b;
+          font-size: clamp(26px, 4vw, 42px);
+          line-height: 1.05;
+          font-weight: 900;
+          letter-spacing: -1px;
+          max-width: 760px;
+          word-break: break-word;
         }
 
         h1 {
           margin: 0;
           color: #09154b;
-          font-size: clamp(34px, 5vw, 52px);
+          font-size: clamp(32px, 5vw, 48px);
           line-height: 0.98;
           font-weight: 900;
           letter-spacing: -1.5px;
         }
 
         .poster-subtitle {
-          margin: 16px auto 0;
+          margin: 14px auto 0;
           max-width: 640px;
           color: #4d648c;
-          font-size: 20px;
+          font-size: 19px;
           line-height: 1.35;
           font-weight: 700;
         }
 
         .qr-box {
-          margin: 28px auto 18px;
+          margin: 24px auto 16px;
           width: fit-content;
           padding: 18px;
           border-radius: 24px;
@@ -275,18 +291,18 @@ export default function PrintSiteQrPage() {
         }
 
         .site-name {
-          margin-top: 12px;
+          margin-top: 10px;
           color: #09154b;
-          font-size: 28px;
+          font-size: 26px;
           font-weight: 900;
         }
 
         .site-link {
-          margin: 14px auto 0;
+          margin: 12px auto 0;
           max-width: 720px;
           border: 1px solid #d7e1ef;
           border-radius: 16px;
-          padding: 12px 14px;
+          padding: 10px 14px;
           background: #f8fbff;
           color: #09154b;
           font-size: 13px;
@@ -295,13 +311,13 @@ export default function PrintSiteQrPage() {
         }
 
         .instructions {
-          margin: 26px auto 0;
+          margin: 22px auto 0;
           max-width: 700px;
           display: grid;
-          gap: 10px;
+          gap: 9px;
           text-align: left;
           color: #09154b;
-          font-size: 18px;
+          font-size: 17px;
           line-height: 1.35;
           font-weight: 700;
         }
@@ -309,7 +325,7 @@ export default function PrintSiteQrPage() {
         .instructions div {
           border: 1px solid #d7e1ef;
           border-radius: 16px;
-          padding: 12px 14px;
+          padding: 11px 14px;
           background: #fbfdff;
         }
 
@@ -358,64 +374,70 @@ export default function PrintSiteQrPage() {
           }
 
           .print-sheet :global(img) {
-            width: 220px !important;
-            margin-bottom: 8px !important;
+            width: 210px !important;
+            margin-bottom: 6px !important;
           }
 
           .poster-label {
-            min-height: 24px;
+            min-height: 22px;
             padding: 0 10px;
             font-size: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+          }
+
+          .company-name {
+            font-size: 30px;
+            line-height: 1.02;
+            margin-bottom: 8px;
           }
 
           h1 {
-            font-size: 38px;
+            font-size: 34px;
             line-height: 0.95;
             letter-spacing: -1px;
           }
 
           .poster-subtitle {
-            margin-top: 10px;
-            font-size: 15px;
+            margin-top: 8px;
+            font-size: 14px;
             line-height: 1.25;
             max-width: 560px;
           }
 
           .qr-box {
-            margin: 18px auto 12px;
-            padding: 12px;
+            margin: 14px auto 10px;
+            padding: 10px;
             border-radius: 18px;
           }
 
           .qr-box :global(canvas) {
-            width: 255px !important;
-            height: 255px !important;
+            width: 245px !important;
+            height: 245px !important;
           }
 
           .site-name {
-            margin-top: 8px;
-            font-size: 22px;
+            margin-top: 6px;
+            font-size: 20px;
           }
 
           .site-link {
-            margin-top: 10px;
+            margin-top: 8px;
             max-width: 620px;
-            padding: 8px 10px;
-            font-size: 10px;
+            padding: 7px 10px;
+            font-size: 9px;
             border-radius: 12px;
           }
 
           .instructions {
-            margin-top: 16px;
+            margin-top: 12px;
             max-width: 620px;
-            gap: 7px;
-            font-size: 14px;
-            line-height: 1.25;
+            gap: 6px;
+            font-size: 13px;
+            line-height: 1.2;
           }
 
           .instructions div {
-            padding: 8px 10px;
+            padding: 7px 10px;
             border-radius: 12px;
           }
         }
