@@ -150,7 +150,12 @@ export default function SiteAttendancePage() {
       }
 
       setStatus(nextStatus)
-      setMessage(nextStatus === 'IN' ? 'You are now signed in on site.' : 'You are now signed out.')
+
+      if (nextStatus === 'IN') {
+        setMessage('You are now signed in on site.')
+      } else {
+        setMessage('You are now signed out.')
+      }
     } finally {
       setSaving(false)
     }
@@ -197,7 +202,11 @@ export default function SiteAttendancePage() {
               <h2 className="section-title">Attendance unavailable</h2>
               <p className="section-subtitle">{message}</p>
 
-              <button type="button" className="btn btn-primary" onClick={() => router.replace('/worker')}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => router.replace('/worker')}
+              >
                 Back to my passport
               </button>
             </>
@@ -259,39 +268,44 @@ export default function SiteAttendancePage() {
                 </div>
               )}
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                  gap: 14,
-                }}
-              >
+              {status === 'IN' ? (
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  disabled={saving || status === 'IN'}
-                  onClick={() => handleAttendance('IN')}
-                  style={{
-                    opacity: saving || status === 'IN' ? 0.65 : 1,
-                    cursor: saving || status === 'IN' ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {saving ? 'Saving...' : 'Sign IN'}
-                </button>
-
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  disabled={saving || status === 'OUT'}
+                  disabled={saving}
                   onClick={() => handleAttendance('OUT')}
                   style={{
-                    opacity: saving || status === 'OUT' ? 0.65 : 1,
-                    cursor: saving || status === 'OUT' ? 'not-allowed' : 'pointer',
+                    width: '100%',
+                    minHeight: 58,
+                    border: '1px solid #b42318',
+                    borderRadius: 18,
+                    background: '#b42318',
+                    color: '#ffffff',
+                    fontSize: 18,
+                    fontWeight: 900,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.65 : 1,
                   }}
                 >
                   {saving ? 'Saving...' : 'Sign OUT'}
                 </button>
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => handleAttendance('IN')}
+                  className="btn btn-primary"
+                  style={{
+                    width: '100%',
+                    minHeight: 58,
+                    fontSize: 18,
+                    fontWeight: 900,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.65 : 1,
+                  }}
+                >
+                  {saving ? 'Saving...' : 'Sign IN'}
+                </button>
+              )}
             </>
           )}
         </section>
