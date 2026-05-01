@@ -21,10 +21,10 @@ function SitePassportLogo() {
       alt="SitePassport"
       style={{
         display: 'block',
-        width: 'min(360px, 100%)',
+        width: 'min(280px, 100%)',
         height: 'auto',
         objectFit: 'contain',
-        margin: '0 auto 18px',
+        margin: '0 auto 12px',
       }}
     />
   )
@@ -180,12 +180,11 @@ export default function PrintSiteQrPage() {
         <h1>Scan to sign IN / OUT</h1>
 
         <p className="poster-subtitle">
-          Use your phone to scan this QR code when you arrive on site and when you
-          leave.
+          Scan this QR code when you arrive on site and when you leave.
         </p>
 
         <div className="qr-box">
-          <QRCodeCanvas value={siteLink} size={360} includeMargin />
+          <QRCodeCanvas value={siteLink} size={300} includeMargin />
         </div>
 
         <div className="site-name">{site.site_name || 'Main site'}</div>
@@ -209,12 +208,12 @@ export default function PrintSiteQrPage() {
         .print-page-shell {
           min-height: 100vh;
           background: #eef3ff;
-          padding: 28px;
+          padding: 24px;
         }
 
         .print-actions {
-          max-width: 900px;
-          margin: 0 auto 20px;
+          max-width: 820px;
+          margin: 0 auto 18px;
           display: flex;
           justify-content: flex-end;
           gap: 12px;
@@ -222,12 +221,11 @@ export default function PrintSiteQrPage() {
         }
 
         .print-sheet {
-          width: min(900px, 100%);
-          min-height: 1120px;
+          width: min(820px, 100%);
           margin: 0 auto;
           background: #ffffff;
-          border-radius: 28px;
-          padding: 54px;
+          border-radius: 24px;
+          padding: 34px 38px;
           text-align: center;
           border: 1px solid #d7e1ef;
           box-shadow: 0 20px 50px rgba(9, 21, 75, 0.14);
@@ -237,102 +235,188 @@ export default function PrintSiteQrPage() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 38px;
-          padding: 0 18px;
+          min-height: 30px;
+          padding: 0 14px;
           border-radius: 999px;
           background: #eef3ff;
           color: #243caa;
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 900;
-          letter-spacing: 1.5px;
+          letter-spacing: 1.3px;
           text-transform: uppercase;
-          margin-bottom: 26px;
+          margin-bottom: 16px;
         }
 
         h1 {
           margin: 0;
           color: #09154b;
-          font-size: clamp(42px, 6vw, 72px);
-          line-height: 0.95;
+          font-size: clamp(34px, 5vw, 52px);
+          line-height: 0.98;
           font-weight: 900;
-          letter-spacing: -2px;
+          letter-spacing: -1.5px;
         }
 
         .poster-subtitle {
-          margin: 24px auto 0;
-          max-width: 700px;
+          margin: 16px auto 0;
+          max-width: 640px;
           color: #4d648c;
-          font-size: 24px;
-          line-height: 1.4;
+          font-size: 20px;
+          line-height: 1.35;
           font-weight: 700;
         }
 
         .qr-box {
-          margin: 42px auto 28px;
+          margin: 28px auto 18px;
           width: fit-content;
-          padding: 24px;
-          border-radius: 28px;
+          padding: 18px;
+          border-radius: 24px;
           background: #ffffff;
           border: 2px solid #09154b;
         }
 
         .site-name {
-          margin-top: 18px;
+          margin-top: 12px;
           color: #09154b;
-          font-size: 32px;
+          font-size: 28px;
           font-weight: 900;
         }
 
         .site-link {
-          margin: 18px auto 0;
-          max-width: 760px;
+          margin: 14px auto 0;
+          max-width: 720px;
           border: 1px solid #d7e1ef;
-          border-radius: 18px;
-          padding: 14px 18px;
+          border-radius: 16px;
+          padding: 12px 14px;
           background: #f8fbff;
           color: #09154b;
-          font-size: 15px;
+          font-size: 13px;
           font-weight: 800;
           word-break: break-all;
         }
 
         .instructions {
-          margin: 42px auto 0;
-          max-width: 720px;
+          margin: 26px auto 0;
+          max-width: 700px;
           display: grid;
-          gap: 14px;
+          gap: 10px;
           text-align: left;
           color: #09154b;
-          font-size: 22px;
-          line-height: 1.4;
+          font-size: 18px;
+          line-height: 1.35;
           font-weight: 700;
         }
 
         .instructions div {
           border: 1px solid #d7e1ef;
-          border-radius: 18px;
-          padding: 16px 18px;
+          border-radius: 16px;
+          padding: 12px 14px;
           background: #fbfdff;
         }
 
+        @page {
+          size: A4 portrait;
+          margin: 10mm;
+        }
+
         @media print {
+          html,
+          body {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            overflow: hidden !important;
+          }
+
           .no-print {
             display: none !important;
           }
 
           .print-page-shell {
-            background: #ffffff;
-            padding: 0;
+            width: 100%;
+            min-height: auto;
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
 
           .print-sheet {
             width: 100%;
-            min-height: 100vh;
-            margin: 0;
-            border: none;
-            border-radius: 0;
-            box-shadow: none;
-            padding: 34px;
+            max-width: none;
+            height: auto;
+            min-height: auto;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #ffffff !important;
+            page-break-after: avoid;
+            page-break-before: avoid;
+            page-break-inside: avoid;
+          }
+
+          .print-sheet :global(img) {
+            width: 220px !important;
+            margin-bottom: 8px !important;
+          }
+
+          .poster-label {
+            min-height: 24px;
+            padding: 0 10px;
+            font-size: 10px;
+            margin-bottom: 10px;
+          }
+
+          h1 {
+            font-size: 38px;
+            line-height: 0.95;
+            letter-spacing: -1px;
+          }
+
+          .poster-subtitle {
+            margin-top: 10px;
+            font-size: 15px;
+            line-height: 1.25;
+            max-width: 560px;
+          }
+
+          .qr-box {
+            margin: 18px auto 12px;
+            padding: 12px;
+            border-radius: 18px;
+          }
+
+          .qr-box :global(canvas) {
+            width: 255px !important;
+            height: 255px !important;
+          }
+
+          .site-name {
+            margin-top: 8px;
+            font-size: 22px;
+          }
+
+          .site-link {
+            margin-top: 10px;
+            max-width: 620px;
+            padding: 8px 10px;
+            font-size: 10px;
+            border-radius: 12px;
+          }
+
+          .instructions {
+            margin-top: 16px;
+            max-width: 620px;
+            gap: 7px;
+            font-size: 14px;
+            line-height: 1.25;
+          }
+
+          .instructions div {
+            padding: 8px 10px;
+            border-radius: 12px;
           }
         }
       `}</style>
