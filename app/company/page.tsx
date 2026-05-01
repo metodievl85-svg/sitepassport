@@ -494,9 +494,17 @@ export default function CompanyPage() {
   const scansToday = realScansToday || fallbackScansToday
   const activeWorkers = realActiveWorkersToday || fallbackActiveWorkers
 
-  const onSiteCount = useMemo(() => {
-    return savedWorkers.filter((worker) => worker.siteStatus === 'IN').length
+  const onSiteWorkers = useMemo(() => {
+    return savedWorkers
+      .filter((worker) => worker.siteStatus === 'IN')
+      .sort((a, b) => {
+        const aTime = new Date(a.lastAttendanceAt).getTime()
+        const bTime = new Date(b.lastAttendanceAt).getTime()
+        return bTime - aTime
+      })
   }, [savedWorkers])
+
+  const onSiteCount = onSiteWorkers.length
 
   const expiringSoonCount = useMemo(() => {
     return savedWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expiring').length
@@ -800,6 +808,100 @@ export default function CompanyPage() {
           </div>
         </section>
 
+        <section className="card" style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: 16,
+              flexWrap: 'wrap',
+              marginBottom: 20,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: '#09154b' }}>
+                Who is on site now
+              </h2>
+
+              <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96', lineHeight: 1.55 }}>
+                Live view of operatives currently signed in using the site QR code.
+              </p>
+            </div>
+
+            <button type="button" className="btn btn-secondary" onClick={() => void loadCompanyDashboard()}>
+              Refresh
+            </button>
+          </div>
+
+          {onSiteWorkers.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: 34,
+                border: '2px dashed #d7e1ef',
+                borderRadius: 20,
+                background: '#fbfdff',
+              }}
+            >
+              <h3 style={{ margin: 0, color: '#09154b', fontSize: 24, fontWeight: 900 }}>
+                No operatives currently on site
+              </h3>
+              <p style={{ margin: '10px 0 0', color: '#5a6f96', fontSize: 16 }}>
+                When a worker scans the site QR and signs in, they will appear here.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 12 }}>
+              {onSiteWorkers.map((worker) => (
+                <div
+                  key={worker.savedId}
+                  style={{
+                    border: '1px solid #b7e4c7',
+                    borderRadius: 20,
+                    padding: 16,
+                    background: '#ecfdf3',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr auto',
+                    gap: 14,
+                    alignItems: 'center',
+                  }}
+                  className="on-site-worker-row"
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: '#09154b' }}>
+                      🟢 {worker.fullName || 'Operative'}
+                    </div>
+
+                    <div style={{ fontSize: 14, color: '#315f45', marginTop: 4, fontWeight: 800 }}>
+                      {worker.role || 'No role'} • {worker.company || 'No company'}
+                    </div>
+
+                    <div style={{ fontSize: 13, color: '#315f45', marginTop: 8, fontWeight: 800 }}>
+                      Signed in: {formatDateTime(worker.lastAttendanceAt)}
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/scan/${worker.workerId}`}
+                    className="btn btn-secondary"
+                    style={{
+                      minHeight: 40,
+                      padding: '0 14px',
+                      borderRadius: 12,
+                      fontSize: 14,
+                      fontWeight: 900,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    View passport
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <section className="card">
           <div
             style={{
@@ -1072,6 +1174,10 @@ export default function CompanyPage() {
 
         @media (max-width: 800px) {
           .site-qr-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .on-site-worker-row {
             grid-template-columns: 1fr !important;
           }
         }
