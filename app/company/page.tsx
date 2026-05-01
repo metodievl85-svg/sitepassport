@@ -462,40 +462,40 @@ export default function CompanyPage() {
     }
   }
 
- async function handleCopySiteLink() {
-  if (!siteLink) return
+  async function handleCopySiteLink() {
+    if (!siteLink) return
 
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(siteLink)
-      alert('Site sign in link copied.')
-      return
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(siteLink)
+        alert('Site sign in link copied.')
+        return
+      }
+    } catch (err) {
+      console.warn('Clipboard API failed, using fallback.')
     }
-  } catch (err) {
-    console.warn('Clipboard API failed, using fallback.')
+
+    try {
+      const textArea = document.createElement('textarea')
+      textArea.value = siteLink
+      textArea.style.position = 'fixed'
+      textArea.style.left = '-999999px'
+      textArea.style.top = '-999999px'
+      document.body.appendChild(textArea)
+
+      textArea.focus()
+      textArea.select()
+
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+
+      alert('Site sign in link copied.')
+    } catch (err) {
+      console.error('Fallback failed:', err)
+      alert('Copy failed. Copy manually:\n\n' + siteLink)
+    }
   }
 
-  // fallback (works everywhere)
-  try {
-    const textArea = document.createElement('textarea')
-    textArea.value = siteLink
-    textArea.style.position = 'fixed'
-    textArea.style.left = '-999999px'
-    textArea.style.top = '-999999px'
-    document.body.appendChild(textArea)
-
-    textArea.focus()
-    textArea.select()
-
-    document.execCommand('copy')
-    document.body.removeChild(textArea)
-
-    alert('Site sign in link copied.')
-  } catch (err) {
-    console.error('Fallback failed:', err)
-    alert('Copy failed. Copy manually:\n\n' + siteLink)
-  }
-}
   const fallbackScansToday = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -795,6 +795,10 @@ export default function CompanyPage() {
               <button type="button" className="btn btn-secondary" onClick={handleCopySiteLink}>
                 Copy site link
               </button>
+
+              <Link href="/company/print-qr" className="btn btn-primary">
+                Print site QR
+              </Link>
 
               {siteLink && (
                 <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-outline">
