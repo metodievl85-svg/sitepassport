@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 
 type SavedWorkerRow = {
@@ -30,6 +31,23 @@ type ScanLogRow = {
   scanned_at: string
 }
 
+type CompanySiteRow = {
+  id: string
+  company_id: string
+  site_name: string
+  site_qr_token: string
+  created_at: string
+}
+
+type SiteAttendanceRow = {
+  id: string
+  company_id: string
+  worker_id: string
+  site_id: string | null
+  status: 'IN' | 'OUT'
+  created_at: string
+}
+
 type SavedWorkerCard = {
   savedId: string
   savedAt: string
@@ -41,6 +59,8 @@ type SavedWorkerCard = {
   cscsExpiry: string
   rightToWorkExpiry: string
   cscsVerificationStatus: string
+  siteStatus: 'IN' | 'OUT'
+  lastAttendanceAt: string
 }
 
 type FilterValue = 'all' | 'valid' | 'expiring' | 'expired'
@@ -89,6 +109,21 @@ function getStatus(dateString: string) {
     bg: '#e8f5ec',
     color: '#1f7a3e',
   }
+}
+
+function formatDateTime(value: string) {
+  if (!value) return '—'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return date.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function getCscsBadgeStyle(status: string) {
@@ -203,10 +238,47 @@ export default function CompanyPage() {
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [realScansToday, setRealScansToday] = useState(0)
   const [realActiveWorkersToday, setRealActiveWorkersToday] = useState(0)
+  const [companySite, setCompanySite] = useState<CompanySiteRow | null>(null)
+  const [siteLink, setSiteLink] = useState('')
 
   useEffect(() => {
     void loadCompanyDashboard()
   }, [])
+
+  async function getOrCreateCompanySite(companyId: string) {
+    const { data: existingSite, error: existingError } = await supabase
+      .from('company_sites')
+      .select('id, company_id, site_name, site_qr_token, created_at')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingError) {
+      console.error(existingError)
+      return null
+    }
+
+    if (existingSite) {
+      return existingSite as CompanySiteRow
+    }
+
+    const { data: newSite, error: createError } = await supabase
+      .from('company_sites')
+      .insert({
+        company_id: companyId,
+        site_name: 'Main site',
+      })
+      .select('id, company_id, site_name, site_qr_token, created_at')
+      .single()
+
+    if (createError) {
+      console.error(createError)
+      return null
+    }
+
+    return newSite as CompanySiteRow
+  }
 
   async function loadCompanyDashboard() {
     try {
@@ -240,6 +312,40 @@ export default function CompanyPage() {
       }
 
       const companyId = profile.id
+
+      const site = await getOrCreateCompanySite(companyId)
+      setCompanySite(site)
+
+      if (site && typeof window !== 'undefined') {
+        setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
+      }
+
+      const attendanceByWorker = new Map<
+        string,
+        {
+          status: 'IN' | 'OUT'
+          created_at: string
+        }
+      >()
+
+      const { data: attendanceRows, error: attendanceError } = await supabase
+        .from('site_attendance')
+        .select('id, company_id, worker_id, site_id, status, created_at')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+
+      if (attendanceError) {
+        console.error(attendanceError)
+      } else {
+        ;((attendanceRows || []) as SiteAttendanceRow[]).forEach((attendance) => {
+          if (!attendanceByWorker.has(attendance.worker_id)) {
+            attendanceByWorker.set(attendance.worker_id, {
+              status: attendance.status,
+              created_at: attendance.created_at,
+            })
+          }
+        })
+      }
 
       const { data: savedRows, error: savedError } = await supabase
         .from('saved_workers')
@@ -280,6 +386,8 @@ export default function CompanyPage() {
                 const worker = workerMap.get(savedItem.worker_id)
                 if (!worker) return null
 
+                const attendance = attendanceByWorker.get(worker.id)
+
                 return {
                   savedId: savedItem.id,
                   savedAt: savedItem.created_at,
@@ -292,6 +400,8 @@ export default function CompanyPage() {
                   rightToWorkExpiry: worker.right_to_work_expiry ?? '',
                   cscsVerificationStatus:
                     worker.cscs_verification_status ?? 'self_declared',
+                  siteStatus: attendance?.status ?? 'OUT',
+                  lastAttendanceAt: attendance?.created_at ?? '',
                 }
               })
               .filter(Boolean) as SavedWorkerCard[]
@@ -355,6 +465,17 @@ export default function CompanyPage() {
     }
   }
 
+  async function handleCopySiteLink() {
+    if (!siteLink) return
+
+    try {
+      await navigator.clipboard.writeText(siteLink)
+      alert('Site sign in link copied.')
+    } catch {
+      alert(siteLink)
+    }
+  }
+
   const fallbackScansToday = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -372,6 +493,10 @@ export default function CompanyPage() {
 
   const scansToday = realScansToday || fallbackScansToday
   const activeWorkers = realActiveWorkersToday || fallbackActiveWorkers
+
+  const onSiteCount = useMemo(() => {
+    return savedWorkers.filter((worker) => worker.siteStatus === 'IN').length
+  }, [savedWorkers])
 
   const expiringSoonCount = useMemo(() => {
     return savedWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expiring').length
@@ -577,6 +702,13 @@ export default function CompanyPage() {
             </div>
           </div>
 
+          <div style={{ background: '#ecfdf3', border: '1px solid #b7e4c7', borderRadius: 22, padding: 18 }}>
+            <div className="meta-label">On site now</div>
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#167342', lineHeight: 1, marginTop: 8 }}>
+              {onSiteCount}
+            </div>
+          </div>
+
           <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Active</div>
             <div style={{ fontSize: 34, fontWeight: 900, color: '#167342', lineHeight: 1, marginTop: 8 }}>
@@ -595,6 +727,75 @@ export default function CompanyPage() {
             <div className="meta-label">Expired</div>
             <div style={{ fontSize: 34, fontWeight: 900, color: '#b42318', lineHeight: 1, marginTop: 8 }}>
               {expiredCount}
+            </div>
+          </div>
+        </section>
+
+        <section className="card" style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) 240px',
+              gap: 24,
+              alignItems: 'center',
+            }}
+            className="site-qr-grid"
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: '#09154b' }}>
+                Site sign in QR
+              </h2>
+
+              <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96', lineHeight: 1.55 }}>
+                Print this QR code and place it on site. Operatives scan it with their phone
+                to sign in when they arrive and sign out when they leave.
+              </p>
+
+              <div
+                style={{
+                  marginTop: 16,
+                  border: '1px solid #d7e1ef',
+                  borderRadius: 18,
+                  padding: 14,
+                  background: '#f8fbff',
+                  wordBreak: 'break-all',
+                  color: '#09154b',
+                  fontWeight: 800,
+                  fontSize: 14,
+                }}
+              >
+                {siteLink || 'Creating site link...'}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 16 }}>
+                <button type="button" className="btn btn-primary" onClick={handleCopySiteLink}>
+                  Copy site link
+                </button>
+
+                {siteLink && (
+                  <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                    Open site page
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: '1px solid #d7e1ef',
+                borderRadius: 24,
+                padding: 18,
+                background: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {siteLink ? (
+                <QRCodeCanvas value={siteLink} size={190} includeMargin />
+              ) : (
+                <div style={{ color: '#5a6f96', fontWeight: 800 }}>Loading QR...</div>
+              )}
             </div>
           </div>
         </section>
@@ -695,6 +896,7 @@ export default function CompanyPage() {
               {filteredWorkers.map((worker) => {
                 const rtwStatus = getStatus(worker.rightToWorkExpiry)
                 const cscsBadge = getCscsBadgeStyle(worker.cscsVerificationStatus)
+                const isOnSite = worker.siteStatus === 'IN'
 
                 return (
                   <div
@@ -747,6 +949,20 @@ export default function CompanyPage() {
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           <span
                             style={{
+                              background: isOnSite ? '#ecfdf3' : '#fff1f1',
+                              color: isOnSite ? '#167342' : '#b42318',
+                              border: isOnSite ? '1px solid #b7e4c7' : '1px solid #efc1c1',
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 12,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {isOnSite ? '🟢 On site' : '🔴 Not on site'}
+                          </span>
+
+                          <span
+                            style={{
                               background: cscsBadge.background,
                               color: cscsBadge.color,
                               border: cscsBadge.border,
@@ -773,6 +989,19 @@ export default function CompanyPage() {
                             RTW: {rtwStatus.text}
                           </span>
                         </div>
+
+                        {worker.lastAttendanceAt && (
+                          <div
+                            style={{
+                              marginTop: 8,
+                              fontSize: 12,
+                              color: '#5a6f96',
+                              fontWeight: 700,
+                            }}
+                          >
+                            Last attendance: {formatDateTime(worker.lastAttendanceAt)}
+                          </div>
+                        )}
                       </div>
 
                       <div className="saved-operative-actions">
@@ -839,6 +1068,12 @@ export default function CompanyPage() {
           align-items: center;
           justify-content: flex-end;
           flex-wrap: wrap;
+        }
+
+        @media (max-width: 800px) {
+          .site-qr-grid {
+            grid-template-columns: 1fr !important;
+          }
         }
 
         @media (max-width: 700px) {
