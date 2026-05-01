@@ -462,17 +462,40 @@ export default function CompanyPage() {
     }
   }
 
-  async function handleCopySiteLink() {
-    if (!siteLink) return
+ async function handleCopySiteLink() {
+  if (!siteLink) return
 
-    try {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(siteLink)
       alert('Site sign in link copied.')
-    } catch {
-      alert(siteLink)
+      return
     }
+  } catch (err) {
+    console.warn('Clipboard API failed, using fallback.')
   }
 
+  // fallback (works everywhere)
+  try {
+    const textArea = document.createElement('textarea')
+    textArea.value = siteLink
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-999999px'
+    textArea.style.top = '-999999px'
+    document.body.appendChild(textArea)
+
+    textArea.focus()
+    textArea.select()
+
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+
+    alert('Site sign in link copied.')
+  } catch (err) {
+    console.error('Fallback failed:', err)
+    alert('Copy failed. Copy manually:\n\n' + siteLink)
+  }
+}
   const fallbackScansToday = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
