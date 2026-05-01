@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 
 type SavedWorkerRow = {
@@ -238,7 +237,6 @@ export default function CompanyPage() {
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [realScansToday, setRealScansToday] = useState(0)
   const [realActiveWorkersToday, setRealActiveWorkersToday] = useState(0)
-  const [companySite, setCompanySite] = useState<CompanySiteRow | null>(null)
   const [siteLink, setSiteLink] = useState('')
 
   useEffect(() => {
@@ -314,7 +312,6 @@ export default function CompanyPage() {
       const companyId = profile.id
 
       const site = await getOrCreateCompanySite(companyId)
-      setCompanySite(site)
 
       if (site && typeof window !== 'undefined') {
         setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
@@ -494,17 +491,9 @@ export default function CompanyPage() {
   const scansToday = realScansToday || fallbackScansToday
   const activeWorkers = realActiveWorkersToday || fallbackActiveWorkers
 
-  const onSiteWorkers = useMemo(() => {
-    return savedWorkers
-      .filter((worker) => worker.siteStatus === 'IN')
-      .sort((a, b) => {
-        const aTime = new Date(a.lastAttendanceAt).getTime()
-        const bTime = new Date(b.lastAttendanceAt).getTime()
-        return bTime - aTime
-      })
+  const onSiteCount = useMemo(() => {
+    return savedWorkers.filter((worker) => worker.siteStatus === 'IN').length
   }, [savedWorkers])
-
-  const onSiteCount = onSiteWorkers.length
 
   const expiringSoonCount = useMemo(() => {
     return savedWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expiring').length
@@ -739,167 +728,58 @@ export default function CompanyPage() {
           </div>
         </section>
 
-        <section className="card" style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) 240px',
-              gap: 24,
-              alignItems: 'center',
-            }}
-            className="site-qr-grid"
-          >
-            <div style={{ minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: '#09154b' }}>
-                Site sign in QR
-              </h2>
-
-              <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96', lineHeight: 1.55 }}>
-                Print this QR code and place it on site. Operatives scan it with their phone
-                to sign in when they arrive and sign out when they leave.
-              </p>
-
-              <div
-                style={{
-                  marginTop: 16,
-                  border: '1px solid #d7e1ef',
-                  borderRadius: 18,
-                  padding: 14,
-                  background: '#f8fbff',
-                  wordBreak: 'break-all',
-                  color: '#09154b',
-                  fontWeight: 800,
-                  fontSize: 14,
-                }}
-              >
-                {siteLink || 'Creating site link...'}
-              </div>
-
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 16 }}>
-                <button type="button" className="btn btn-primary" onClick={handleCopySiteLink}>
-                  Copy site link
-                </button>
-
-                {siteLink && (
-                  <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-secondary">
-                    Open site page
-                  </a>
-                )}
-              </div>
-            </div>
-
-            <div
-              style={{
-                border: '1px solid #d7e1ef',
-                borderRadius: 24,
-                padding: 18,
-                background: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {siteLink ? (
-                <QRCodeCanvas value={siteLink} size={190} includeMargin />
-              ) : (
-                <div style={{ color: '#5a6f96', fontWeight: 800 }}>Loading QR...</div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section className="card" style={{ marginBottom: 24 }}>
+        <section
+          className="card"
+          style={{
+            marginBottom: 24,
+            padding: 18,
+          }}
+        >
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               gap: 16,
               flexWrap: 'wrap',
-              marginBottom: 20,
             }}
           >
             <div style={{ minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: '#09154b' }}>
-                Who is on site now
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: 24,
+                  fontWeight: 900,
+                  color: '#09154b',
+                }}
+              >
+                Site QR link
               </h2>
 
-              <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96', lineHeight: 1.55 }}>
-                Live view of operatives currently signed in using the site QR code.
+              <p
+                style={{
+                  margin: '8px 0 0',
+                  fontSize: 15,
+                  color: '#5a6f96',
+                  lineHeight: 1.45,
+                }}
+              >
+                Permanent site sign-in link. Print the QR once and place it on site.
               </p>
             </div>
 
-            <button type="button" className="btn btn-secondary" onClick={() => void loadCompanyDashboard()}>
-              Refresh
-            </button>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-secondary" onClick={handleCopySiteLink}>
+                Copy site link
+              </button>
+
+              {siteLink && (
+                <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-outline">
+                  Open site page
+                </a>
+              )}
+            </div>
           </div>
-
-          {onSiteWorkers.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: 34,
-                border: '2px dashed #d7e1ef',
-                borderRadius: 20,
-                background: '#fbfdff',
-              }}
-            >
-              <h3 style={{ margin: 0, color: '#09154b', fontSize: 24, fontWeight: 900 }}>
-                No operatives currently on site
-              </h3>
-              <p style={{ margin: '10px 0 0', color: '#5a6f96', fontSize: 16 }}>
-                When a worker scans the site QR and signs in, they will appear here.
-              </p>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gap: 12 }}>
-              {onSiteWorkers.map((worker) => (
-                <div
-                  key={worker.savedId}
-                  style={{
-                    border: '1px solid #b7e4c7',
-                    borderRadius: 20,
-                    padding: 16,
-                    background: '#ecfdf3',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto',
-                    gap: 14,
-                    alignItems: 'center',
-                  }}
-                  className="on-site-worker-row"
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: '#09154b' }}>
-                      🟢 {worker.fullName || 'Operative'}
-                    </div>
-
-                    <div style={{ fontSize: 14, color: '#315f45', marginTop: 4, fontWeight: 800 }}>
-                      {worker.role || 'No role'} • {worker.company || 'No company'}
-                    </div>
-
-                    <div style={{ fontSize: 13, color: '#315f45', marginTop: 8, fontWeight: 800 }}>
-                      Signed in: {formatDateTime(worker.lastAttendanceAt)}
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/scan/${worker.workerId}`}
-                    className="btn btn-secondary"
-                    style={{
-                      minHeight: 40,
-                      padding: '0 14px',
-                      borderRadius: 12,
-                      fontSize: 14,
-                      fontWeight: 900,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    View passport
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
         </section>
 
         <section className="card">
@@ -919,13 +799,20 @@ export default function CompanyPage() {
               </h2>
 
               <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96' }}>
-                Search, filter and manage your workforce
+                Search, filter and manage your workforce. Attendance status is shown on
+                each operative passport card.
               </p>
             </div>
 
-            <Link href="/scan" className="btn btn-secondary">
-              Scan QR
-            </Link>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => void loadCompanyDashboard()}>
+                Refresh
+              </button>
+
+              <Link href="/scan" className="btn btn-secondary">
+                Scan QR
+              </Link>
+            </div>
           </div>
 
           <div
@@ -1170,16 +1057,6 @@ export default function CompanyPage() {
           align-items: center;
           justify-content: flex-end;
           flex-wrap: wrap;
-        }
-
-        @media (max-width: 800px) {
-          .site-qr-grid {
-            grid-template-columns: 1fr !important;
-          }
-
-          .on-site-worker-row {
-            grid-template-columns: 1fr !important;
-          }
         }
 
         @media (max-width: 700px) {
