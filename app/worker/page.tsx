@@ -31,6 +31,14 @@ type Worker = {
   qualifications: Qualification[]
 }
 
+type AttendanceStatus = 'IN' | 'OUT'
+
+type RememberedSite = {
+  siteId: string
+  companyId: string
+  siteName: string
+}
+
 function SitePassportLogo() {
   return (
     <div
@@ -147,6 +155,11 @@ export default function WorkerPage() {
   const [passport, setPassport] = useState<Worker | null>(null)
   const [deletingAccount, setDeletingAccount] = useState(false)
 
+  const [rememberedSite, setRememberedSite] = useState<RememberedSite | null>(null)
+  const [attendanceStatus, setAttendanceStatus] = useState<AttendanceStatus>('OUT')
+  const [savingAttendance, setSavingAttendance] = useState(false)
+  const [attendanceMessage, setAttendanceMessage] = useState('')
+
   useEffect(() => {
     async function load() {
       const {
@@ -208,11 +221,81 @@ export default function WorkerPage() {
       const mappedPassport = mapWorkerRow(workerRow, qualificationsRows ?? [])
       setPassport(mappedPassport)
 
+      const savedSiteId = localStorage.getItem('sitepassport_last_site_id') || ''
+      const savedCompanyId = localStorage.getItem('sitepassport_last_company_id') || ''
+      const savedSiteName = localStorage.getItem('sitepassport_last_site_name') || ''
+
+      if (savedSiteId && savedCompanyId) {
+        setRememberedSite({
+          siteId: savedSiteId,
+          companyId: savedCompanyId,
+          siteName: savedSiteName || 'Current site',
+        })
+
+        const { data: lastAttendance, error: attendanceError } = await supabase
+          .from('site_attendance')
+          .select('status')
+          .eq('worker_id', workerRow.id)
+          .eq('site_id', savedSiteId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (attendanceError) {
+          console.error('attendance load error:', attendanceError)
+        } else {
+          setAttendanceStatus(lastAttendance?.status === 'IN' ? 'IN' : 'OUT')
+        }
+      }
+
       setLoading(false)
     }
 
     void load()
   }, [router])
+
+  async function handleAttendance(nextStatus: AttendanceStatus) {
+    if (!passport || !rememberedSite) {
+      setAttendanceMessage('Please scan the site QR code first.')
+      return
+    }
+
+    try {
+      setSavingAttendance(true)
+      setAttendanceMessage('')
+
+      const { error } = await supabase.from('site_attendance').insert({
+        company_id: rememberedSite.companyId,
+        worker_id: passport.id,
+        site_id: rememberedSite.siteId,
+        status: nextStatus,
+      })
+
+      if (error) {
+        console.error('attendance save error:', error)
+        setAttendanceMessage('Could not update attendance. Please try again.')
+        return
+      }
+
+      setAttendanceStatus(nextStatus)
+      setAttendanceMessage(
+        nextStatus === 'IN'
+          ? `You are now signed in at ${rememberedSite.siteName}.`
+          : `You are now signed out from ${rememberedSite.siteName}.`
+      )
+    } finally {
+      setSavingAttendance(false)
+    }
+  }
+
+  function clearRememberedSite() {
+    localStorage.removeItem('sitepassport_last_site_id')
+    localStorage.removeItem('sitepassport_last_company_id')
+    localStorage.removeItem('sitepassport_last_site_name')
+    setRememberedSite(null)
+    setAttendanceStatus('OUT')
+    setAttendanceMessage('Site removed. Scan a site QR to choose another site.')
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -434,6 +517,124 @@ export default function WorkerPage() {
               Logout
             </button>
           </div>
+        </section>
+
+        <section
+          className="card"
+          style={{
+            marginBottom: 24,
+            border: rememberedSite ? '1px solid #badbcc' : '1px solid #d7e0ec',
+            background: rememberedSite ? '#f0fff4' : '#fbfdff',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 18,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 className="section-title">Site attendance</h2>
+              <p className="section-subtitle" style={{ marginBottom: 0 }}>
+                {rememberedSite
+                  ? `Current site: ${rememberedSite.siteName}`
+                  : 'Scan the site QR first to connect your passport to the correct site.'}
+              </p>
+
+              <div
+                style={{
+                  marginTop: 14,
+                  fontSize: 14,
+                  fontWeight: 900,
+                  letterSpacing: 1.3,
+                  textTransform: 'uppercase',
+                  color: rememberedSite
+                    ? attendanceStatus === 'IN'
+                      ? '#167342'
+                      : '#b42318'
+                    : '#62779a',
+                }}
+              >
+                {rememberedSite
+                  ? attendanceStatus === 'IN'
+                    ? 'Current status: ON SITE'
+                    : 'Current status: OFF SITE'
+                  : 'No site saved yet'}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+              }}
+            >
+              {rememberedSite ? (
+                <button
+                  type="button"
+                  disabled={savingAttendance}
+                  onClick={() =>
+                    handleAttendance(attendanceStatus === 'IN' ? 'OUT' : 'IN')
+                  }
+                  style={{
+                    minHeight: 52,
+                    border:
+                      attendanceStatus === 'IN'
+                        ? '1px solid #b42318'
+                        : '1px solid #09154b',
+                    borderRadius: 18,
+                    padding: '14px 22px',
+                    background: attendanceStatus === 'IN' ? '#b42318' : '#09154b',
+                    color: '#ffffff',
+                    fontWeight: 900,
+                    cursor: savingAttendance ? 'not-allowed' : 'pointer',
+                    opacity: savingAttendance ? 0.65 : 1,
+                  }}
+                >
+                  {savingAttendance
+                    ? 'Saving...'
+                    : attendanceStatus === 'IN'
+                      ? 'Sign OUT'
+                      : 'Sign IN'}
+                </button>
+              ) : (
+                <Link href="/worker/site-scan" className="btn btn-primary">
+                  Scan site QR
+                </Link>
+              )}
+
+              {rememberedSite ? (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={clearRememberedSite}
+                >
+                  Change site
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          {attendanceMessage ? (
+            <div
+              style={{
+                marginTop: 18,
+                border: '1px solid #d7e0ec',
+                borderRadius: 18,
+                padding: 16,
+                background: '#ffffff',
+                color: '#09154b',
+                fontWeight: 800,
+              }}
+            >
+              {attendanceMessage}
+            </div>
+          ) : null}
         </section>
 
         <section className="card" style={{ marginBottom: 24 }}>

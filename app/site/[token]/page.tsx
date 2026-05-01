@@ -106,13 +106,18 @@ export default function SiteAttendancePage() {
         return
       }
 
-      setSite(siteRow as CompanySite)
+      const currentSite = siteRow as CompanySite
+      setSite(currentSite)
+
+      localStorage.setItem('sitepassport_last_site_id', currentSite.id)
+      localStorage.setItem('sitepassport_last_company_id', currentSite.company_id)
+      localStorage.setItem('sitepassport_last_site_name', currentSite.site_name)
 
       const { data: lastAttendance, error: attendanceError } = await supabase
         .from('site_attendance')
         .select('status')
         .eq('worker_id', workerRow.id)
-        .eq('site_id', siteRow.id)
+        .eq('site_id', currentSite.id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
