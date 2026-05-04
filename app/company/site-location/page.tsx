@@ -1,5 +1,5 @@
 'use client'
-
+// site location page
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
