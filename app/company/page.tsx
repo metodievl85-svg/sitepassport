@@ -901,6 +901,10 @@ export default function CompanyPage() {
                 Copy site link
               </button>
 
+              <Link href="/company/site-location" className="btn btn-outline">
+                Site location
+              </Link>
+
               <Link href="/company/print-qr" className="btn btn-primary">
                 Print site QR
               </Link>
