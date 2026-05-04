@@ -10,6 +10,9 @@ type CompanySite = {
   site_name: string
   site_qr_token: string
   created_at: string
+  latitude: number | null
+  longitude: number | null
+  allowed_radius_m: number | null
 }
 
 type WorkerRow = {
@@ -20,6 +23,54 @@ type WorkerRow = {
 
 type AttendanceStatus = 'IN' | 'OUT'
 
+type LocationCheck = {
+  latitude: number
+  longitude: number
+  accuracy: number
+  distanceFromSite: number
+  allowedRadius: number
+  isAllowed: boolean
+}
+
+function calculateDistanceMetres(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+) {
+  const earthRadius = 6371000
+  const toRadians = (value: number) => (value * Math.PI) / 180
+
+  const dLat = toRadians(lat2 - lat1)
+  const dLon = toRadians(lon2 - lon1)
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return earthRadius * c
+}
+
+function getCurrentPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Location is not supported on this device.'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    })
+  })
+}
+
 export default function SiteAttendancePage() {
   const router = useRouter()
   const params = useParams()
@@ -29,10 +80,12 @@ export default function SiteAttendancePage() {
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [checkingLocation, setCheckingLocation] = useState(false)
   const [worker, setWorker] = useState<WorkerRow | null>(null)
   const [site, setSite] = useState<CompanySite | null>(null)
   const [status, setStatus] = useState<AttendanceStatus>('OUT')
   const [message, setMessage] = useState('')
+  const [locationCheck, setLocationCheck] = useState<LocationCheck | null>(null)
 
   useEffect(() => {
     void loadAttendancePage()
@@ -91,7 +144,9 @@ export default function SiteAttendancePage() {
 
       const { data: siteRow, error: siteError } = await supabase
         .from('company_sites')
-        .select('id, company_id, site_name, site_qr_token, created_at')
+        .select(
+          'id, company_id, site_name, site_qr_token, created_at, latitude, longitude, allowed_radius_m'
+        )
         .eq('site_qr_token', token)
         .maybeSingle()
 
@@ -134,6 +189,64 @@ export default function SiteAttendancePage() {
     }
   }
 
+  async function checkWorkerLocation(currentSite: CompanySite) {
+    if (currentSite.latitude === null || currentSite.longitude === null) {
+      setMessage('Site location has not been configured yet. Please contact your manager.')
+      return null
+    }
+
+    try {
+      setCheckingLocation(true)
+      setMessage('Checking your location...')
+
+      const position = await getCurrentPosition()
+
+      const workerLatitude = position.coords.latitude
+      const workerLongitude = position.coords.longitude
+      const accuracy = position.coords.accuracy
+
+      const allowedRadius = currentSite.allowed_radius_m || 150
+
+      const distanceFromSite = calculateDistanceMetres(
+        workerLatitude,
+        workerLongitude,
+        Number(currentSite.latitude),
+        Number(currentSite.longitude)
+      )
+
+      const check: LocationCheck = {
+        latitude: workerLatitude,
+        longitude: workerLongitude,
+        accuracy,
+        distanceFromSite,
+        allowedRadius,
+        isAllowed: distanceFromSite <= allowedRadius,
+      }
+
+      setLocationCheck(check)
+
+      if (!check.isAllowed) {
+        setMessage(
+          `You are too far from site to sign in. Distance: ${Math.round(
+            distanceFromSite
+          )}m. Allowed: ${allowedRadius}m.`
+        )
+        return null
+      }
+
+      setMessage('')
+      return check
+    } catch (error) {
+      console.error(error)
+      setMessage(
+        'Location permission is required to sign in on site. Please allow location access and try again.'
+      )
+      return null
+    } finally {
+      setCheckingLocation(false)
+    }
+  }
+
   async function handleAttendance(nextStatus: AttendanceStatus) {
     if (!worker || !site) return
 
@@ -141,11 +254,25 @@ export default function SiteAttendancePage() {
       setSaving(true)
       setMessage('')
 
+      let checkedLocation: LocationCheck | null = null
+
+      if (nextStatus === 'IN') {
+        checkedLocation = await checkWorkerLocation(site)
+
+        if (!checkedLocation) {
+          return
+        }
+      }
+
       const { error } = await supabase.from('site_attendance').insert({
         company_id: site.company_id,
         worker_id: worker.id,
         site_id: site.id,
         status: nextStatus,
+        latitude: checkedLocation?.latitude ?? null,
+        longitude: checkedLocation?.longitude ?? null,
+        location_accuracy_m: checkedLocation?.accuracy ?? null,
+        distance_from_site_m: checkedLocation?.distanceFromSite ?? null,
       })
 
       if (error) {
@@ -163,6 +290,7 @@ export default function SiteAttendancePage() {
       }
     } finally {
       setSaving(false)
+      setCheckingLocation(false)
     }
   }
 
@@ -257,6 +385,27 @@ export default function SiteAttendancePage() {
                 </div>
               </div>
 
+              {locationCheck && (
+                <div
+                  style={{
+                    border: locationCheck.isAllowed
+                      ? '1px solid #abefc6'
+                      : '1px solid #ffccc7',
+                    borderRadius: 18,
+                    padding: 16,
+                    background: locationCheck.isAllowed ? '#ecfdf3' : '#fff1f0',
+                    color: locationCheck.isAllowed ? '#027a48' : '#b42318',
+                    fontWeight: 800,
+                    marginBottom: 20,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  Location check: {Math.round(locationCheck.distanceFromSite)}m from site.
+                  Allowed radius: {locationCheck.allowedRadius}m. GPS accuracy:{' '}
+                  {Math.round(locationCheck.accuracy)}m.
+                </div>
+              )}
+
               {message && (
                 <div
                   style={{
@@ -267,6 +416,7 @@ export default function SiteAttendancePage() {
                     color: '#09154b',
                     fontWeight: 800,
                     marginBottom: 20,
+                    lineHeight: 1.45,
                   }}
                 >
                   {message}
@@ -276,7 +426,7 @@ export default function SiteAttendancePage() {
               {status === 'IN' ? (
                 <button
                   type="button"
-                  disabled={saving}
+                  disabled={saving || checkingLocation}
                   onClick={() => handleAttendance('OUT')}
                   style={{
                     width: '100%',
@@ -287,8 +437,8 @@ export default function SiteAttendancePage() {
                     color: '#ffffff',
                     fontSize: 18,
                     fontWeight: 900,
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    opacity: saving ? 0.65 : 1,
+                    cursor: saving || checkingLocation ? 'not-allowed' : 'pointer',
+                    opacity: saving || checkingLocation ? 0.65 : 1,
                   }}
                 >
                   {saving ? 'Saving...' : 'Sign OUT'}
@@ -296,7 +446,7 @@ export default function SiteAttendancePage() {
               ) : (
                 <button
                   type="button"
-                  disabled={saving}
+                  disabled={saving || checkingLocation}
                   onClick={() => handleAttendance('IN')}
                   className="btn btn-primary"
                   style={{
@@ -304,11 +454,11 @@ export default function SiteAttendancePage() {
                     minHeight: 58,
                     fontSize: 18,
                     fontWeight: 900,
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    opacity: saving ? 0.65 : 1,
+                    cursor: saving || checkingLocation ? 'not-allowed' : 'pointer',
+                    opacity: saving || checkingLocation ? 0.65 : 1,
                   }}
                 >
-                  {saving ? 'Saving...' : 'Sign IN'}
+                  {checkingLocation ? 'Checking location...' : saving ? 'Saving...' : 'Sign IN'}
                 </button>
               )}
             </>
