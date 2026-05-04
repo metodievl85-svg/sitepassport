@@ -13,6 +13,14 @@ type Qualification = {
   expiry: string
 }
 
+type AttendanceLog = {
+  id: string
+  worker_id: string
+  company_id: string
+  status: 'IN' | 'OUT'
+  created_at: string
+}
+
 type Worker = {
   id: string
   fullName: string
@@ -40,6 +48,20 @@ function formatDate(value: string) {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+  })
+}
+
+function formatDateTime(value: string) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  return date.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -173,6 +195,7 @@ export default function PublicWorkerPage() {
   const workerId = Array.isArray(params.id) ? params.id[0] : params.id
 
   const [worker, setWorker] = useState<Worker | null>(null)
+  const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCompanyUser, setIsCompanyUser] = useState(false)
   const [companyId, setCompanyId] = useState<string | null>(null)
@@ -196,6 +219,15 @@ export default function PublicWorkerPage() {
     fetchWorker()
     checkCompanyUser()
   }, [workerId])
+
+  useEffect(() => {
+    if (!workerId || !companyId || !isCompanyUser) {
+      setAttendanceLogs([])
+      return
+    }
+
+    fetchAttendanceLogs(companyId)
+  }, [workerId, companyId, isCompanyUser])
 
   async function checkCompanyUser() {
     try {
@@ -277,6 +309,29 @@ export default function PublicWorkerPage() {
       setWorker(null)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function fetchAttendanceLogs(activeCompanyId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('site_attendance')
+        .select('id, worker_id, company_id, status, created_at')
+        .eq('worker_id', workerId)
+        .eq('company_id', activeCompanyId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (error) {
+        console.error(error)
+        setAttendanceLogs([])
+        return
+      }
+
+      setAttendanceLogs((data ?? []) as AttendanceLog[])
+    } catch (error) {
+      console.error(error)
+      setAttendanceLogs([])
     }
   }
 
@@ -719,6 +774,78 @@ export default function PublicWorkerPage() {
               <div className="notes-title">Notes</div>
               <p className="notes-text">{worker.notes || 'No notes added.'}</p>
             </div>
+
+            {isCompanyUser ? (
+              <div className="notes-box">
+                <div className="notes-title">Attendance log</div>
+
+                {attendanceLogs.length === 0 ? (
+                  <p className="notes-text">No attendance records yet.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: '#62779a',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Last activity: {formatDateTime(attendanceLogs[0].created_at)}
+                    </div>
+
+                    {attendanceLogs.map((log) => (
+                      <div
+                        key={log.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 12,
+                          background: '#ffffff',
+                          border: '1px solid #d7e0ec',
+                          borderRadius: 18,
+                          padding: 14,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: 999,
+                            padding: '7px 11px',
+                            fontSize: 12,
+                            fontWeight: 900,
+                            lineHeight: 1,
+                            background: log.status === 'IN' ? '#ecfdf3' : '#fff1f0',
+                            color: log.status === 'IN' ? '#027a48' : '#b42318',
+                            border:
+                              log.status === 'IN'
+                                ? '1px solid #abefc6'
+                                : '1px solid #ffccc7',
+                          }}
+                        >
+                          {log.status === 'IN' ? 'IN' : 'OUT'}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: 15,
+                            fontWeight: 800,
+                            color: '#08153d',
+                            textAlign: 'right',
+                          }}
+                        >
+                          {formatDateTime(log.created_at)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </section>
       </div>
