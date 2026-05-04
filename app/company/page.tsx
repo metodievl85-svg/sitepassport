@@ -901,7 +901,7 @@ export default function CompanyPage() {
                 Copy site link
               </button>
 
-              <Link href="/company/site-location" className="btn btn-outline">
+              <Link href="/company/site-location" className="btn btn-secondary">
                 Site location
               </Link>
 
@@ -910,7 +910,7 @@ export default function CompanyPage() {
               </Link>
 
               {siteLink && (
-                <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-outline">
+                <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-secondary">
                   Open site page
                 </a>
               )}
