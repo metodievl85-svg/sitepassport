@@ -32,12 +32,7 @@ type LocationCheck = {
   isAllowed: boolean
 }
 
-function calculateDistanceMetres(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-) {
+function calculateDistanceMetres(lat1: number, lon1: number, lat2: number, lon2: number) {
   const earthRadius = 6371000
   const toRadians = (value: number) => (value * Math.PI) / 180
 
@@ -83,18 +78,20 @@ export default function SiteAttendancePage() {
   const [checkingLocation, setCheckingLocation] = useState(false)
   const [worker, setWorker] = useState<WorkerRow | null>(null)
   const [site, setSite] = useState<CompanySite | null>(null)
-  const [status, setStatus] = useState<AttendanceStatus>('OUT')
+  const [status, setStatus] = useState<AttendanceStatus | null>(null)
   const [message, setMessage] = useState('')
   const [locationCheck, setLocationCheck] = useState<LocationCheck | null>(null)
 
   useEffect(() => {
     void loadAttendancePage()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function loadAttendancePage() {
     try {
       setLoading(true)
       setMessage('')
+      setStatus(null)
 
       const {
         data: { session },
@@ -170,20 +167,24 @@ export default function SiteAttendancePage() {
 
       const { data: lastAttendance, error: attendanceError } = await supabase
         .from('site_attendance')
-        .select('status')
+        .select('status, created_at')
         .eq('worker_id', workerRow.id)
-        .eq('site_id', currentSite.id)
+        .eq('company_id', currentSite.company_id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
       if (attendanceError) {
         console.error(attendanceError)
-        setMessage('Could not check your latest attendance status.')
+        setMessage('Could not check your latest attendance status. Please refresh the page.')
         return
       }
 
-      setStatus(lastAttendance?.status === 'IN' ? 'IN' : 'OUT')
+      if (lastAttendance?.status === 'IN') {
+        setStatus('IN')
+      } else {
+        setStatus('OUT')
+      }
     } finally {
       setLoading(false)
     }
@@ -300,7 +301,9 @@ export default function SiteAttendancePage() {
         <div className="container">
           <section className="card">
             <h1 className="section-title">Loading site attendance</h1>
-            <p className="section-subtitle">Please wait a moment.</p>
+            <p className="section-subtitle">
+              Checking your passport, site QR code, and latest attendance status.
+            </p>
           </section>
         </div>
       </main>
@@ -351,39 +354,75 @@ export default function SiteAttendancePage() {
                 {worker?.full_name ? `Operative: ${worker.full_name}` : 'Operative attendance'}
               </p>
 
-              <div
-                style={{
-                  border: '1px solid #d7e0ec',
-                  borderRadius: 24,
-                  padding: 22,
-                  background: status === 'IN' ? '#ecfdf3' : '#fff1f1',
-                  marginBottom: 22,
-                }}
-              >
+              {status === null ? (
                 <div
                   style={{
-                    fontSize: 13,
-                    fontWeight: 900,
-                    letterSpacing: 1.5,
-                    textTransform: 'uppercase',
-                    color: status === 'IN' ? '#167342' : '#b42318',
-                    marginBottom: 10,
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 24,
+                    padding: 22,
+                    background: '#f8fbff',
+                    marginBottom: 22,
                   }}
                 >
-                  Current status
-                </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 900,
+                      letterSpacing: 1.5,
+                      textTransform: 'uppercase',
+                      color: '#09154b',
+                      marginBottom: 10,
+                    }}
+                  >
+                    Checking status
+                  </div>
 
+                  <div
+                    style={{
+                      fontSize: 24,
+                      lineHeight: 1.2,
+                      fontWeight: 900,
+                      color: '#09154b',
+                    }}
+                  >
+                    Please wait...
+                  </div>
+                </div>
+              ) : (
                 <div
                   style={{
-                    fontSize: 36,
-                    lineHeight: 1,
-                    fontWeight: 900,
-                    color: status === 'IN' ? '#167342' : '#b42318',
+                    border: '1px solid #d7e0ec',
+                    borderRadius: 24,
+                    padding: 22,
+                    background: status === 'IN' ? '#ecfdf3' : '#fff1f1',
+                    marginBottom: 22,
                   }}
                 >
-                  {status === 'IN' ? 'ON SITE' : 'OFF SITE'}
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 900,
+                      letterSpacing: 1.5,
+                      textTransform: 'uppercase',
+                      color: status === 'IN' ? '#167342' : '#b42318',
+                      marginBottom: 10,
+                    }}
+                  >
+                    Current status
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 36,
+                      lineHeight: 1,
+                      fontWeight: 900,
+                      color: status === 'IN' ? '#167342' : '#b42318',
+                    }}
+                  >
+                    {status === 'IN' ? 'ON SITE' : 'OFF SITE'}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {locationCheck && (
                 <div
@@ -446,7 +485,7 @@ export default function SiteAttendancePage() {
               ) : (
                 <button
                   type="button"
-                  disabled={saving || checkingLocation}
+                  disabled={saving || checkingLocation || status === null}
                   onClick={() => handleAttendance('IN')}
                   className="btn btn-primary"
                   style={{
@@ -454,8 +493,8 @@ export default function SiteAttendancePage() {
                     minHeight: 58,
                     fontSize: 18,
                     fontWeight: 900,
-                    cursor: saving || checkingLocation ? 'not-allowed' : 'pointer',
-                    opacity: saving || checkingLocation ? 0.65 : 1,
+                    cursor: saving || checkingLocation || status === null ? 'not-allowed' : 'pointer',
+                    opacity: saving || checkingLocation || status === null ? 0.65 : 1,
                   }}
                 >
                   {checkingLocation ? 'Checking location...' : saving ? 'Saving...' : 'Sign IN'}
