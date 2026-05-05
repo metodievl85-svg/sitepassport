@@ -47,6 +47,18 @@ type SiteAttendanceRow = {
   created_at: string
 }
 
+type InductionRequestRow = {
+  id: string
+  company_id: string
+  worker_id: string
+  status: 'sent' | 'opened' | 'completed'
+  created_at: string
+  opened_at: string | null
+  completed_at: string | null
+}
+
+type InductionStatus = 'none' | 'sent' | 'opened' | 'completed'
+
 type SavedWorkerCard = {
   savedId: string
   savedAt: string
@@ -60,6 +72,8 @@ type SavedWorkerCard = {
   cscsVerificationStatus: string
   siteStatus: 'IN' | 'OUT'
   lastAttendanceAt: string
+  inductionStatus: InductionStatus
+  inductionRequestId: string
 }
 
 type FilterValue = 'all' | 'valid' | 'expiring' | 'expired'
@@ -200,6 +214,66 @@ function getFilterButtonStyle(current: FilterValue, value: FilterValue) {
   }
 }
 
+function getInductionButtonStyle(status: InductionStatus) {
+  if (status === 'completed') {
+    return {
+      minHeight: 38,
+      padding: '0 14px',
+      borderRadius: 12,
+      border: '1px solid #b7e4c7',
+      background: '#ecfdf3',
+      color: '#167342',
+      fontSize: 14,
+      fontWeight: 900,
+      cursor: 'not-allowed' as const,
+      whiteSpace: 'nowrap' as const,
+    }
+  }
+
+  if (status === 'opened') {
+    return {
+      minHeight: 38,
+      padding: '0 14px',
+      borderRadius: 12,
+      border: '1px solid #ffd591',
+      background: '#fff7e6',
+      color: '#9a5b00',
+      fontSize: 14,
+      fontWeight: 900,
+      cursor: 'not-allowed' as const,
+      whiteSpace: 'nowrap' as const,
+    }
+  }
+
+  if (status === 'sent') {
+    return {
+      minHeight: 38,
+      padding: '0 14px',
+      borderRadius: 12,
+      border: '1px solid #d7e1ef',
+      background: '#f8fbff',
+      color: '#5a6f96',
+      fontSize: 14,
+      fontWeight: 900,
+      cursor: 'not-allowed' as const,
+      whiteSpace: 'nowrap' as const,
+    }
+  }
+
+  return {
+    minHeight: 38,
+    padding: '0 14px',
+    borderRadius: 12,
+    border: '1px solid #243caa',
+    background: '#243caa',
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: 900,
+    cursor: 'pointer' as const,
+    whiteSpace: 'nowrap' as const,
+  }
+}
+
 function SitePassportLogo() {
   return (
     <div
@@ -241,6 +315,7 @@ export default function CompanyPage() {
   const [filter, setFilter] = useState<FilterValue>('all')
   const [sortBy, setSortBy] = useState<SortValue>('newest')
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [sendingInductionId, setSendingInductionId] = useState<string | null>(null)
   const [realScansToday, setRealScansToday] = useState(0)
   const [realActiveWorkersToday, setRealActiveWorkersToday] = useState(0)
   const [siteLink, setSiteLink] = useState('')
@@ -355,6 +430,42 @@ export default function CompanyPage() {
         })
       }
 
+      const inductionByWorker = new Map<
+        string,
+        {
+          id: string
+          status: InductionStatus
+          created_at: string
+        }
+      >()
+
+      const { data: inductionRows, error: inductionError } = await supabase
+        .from('induction_requests')
+        .select('id, company_id, worker_id, status, created_at, opened_at, completed_at')
+        .eq('company_id', currentCompanyId)
+        .order('created_at', { ascending: false })
+
+      if (inductionError) {
+        console.error(inductionError)
+      } else {
+        ;((inductionRows || []) as InductionRequestRow[]).forEach((request) => {
+          if (!inductionByWorker.has(request.worker_id)) {
+            const safeStatus: InductionStatus =
+              request.status === 'completed'
+                ? 'completed'
+                : request.status === 'opened'
+                  ? 'opened'
+                  : 'sent'
+
+            inductionByWorker.set(request.worker_id, {
+              id: request.id,
+              status: safeStatus,
+              created_at: request.created_at,
+            })
+          }
+        })
+      }
+
       const { data: savedRows, error: savedError } = await supabase
         .from('saved_workers')
         .select('*')
@@ -395,6 +506,7 @@ export default function CompanyPage() {
                 if (!worker) return null
 
                 const attendance = attendanceByWorker.get(worker.id)
+                const induction = inductionByWorker.get(worker.id)
 
                 return {
                   savedId: savedItem.id,
@@ -410,6 +522,8 @@ export default function CompanyPage() {
                     worker.cscs_verification_status ?? 'self_declared',
                   siteStatus: attendance?.status ?? 'OUT',
                   lastAttendanceAt: attendance?.created_at ?? '',
+                  inductionStatus: induction?.status ?? 'none',
+                  inductionRequestId: induction?.id ?? '',
                 }
               })
               .filter(Boolean) as SavedWorkerCard[]
@@ -444,6 +558,92 @@ export default function CompanyPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSendInduction(workerId: string) {
+    if (!companyId) {
+      alert('Could not identify company account.')
+      return
+    }
+
+    try {
+      setSendingInductionId(workerId)
+
+      const existingWorker = savedWorkers.find((worker) => worker.workerId === workerId)
+
+      if (existingWorker?.inductionStatus !== 'none') {
+        setSendingInductionId(null)
+        return
+      }
+
+      const { data: existingRequest, error: existingError } = await supabase
+        .from('induction_requests')
+        .select('id, status, created_at')
+        .eq('company_id', companyId)
+        .eq('worker_id', workerId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (existingError) {
+        console.error(existingError)
+        alert('Could not check existing induction request.')
+        return
+      }
+
+      if (existingRequest) {
+        const safeStatus: InductionStatus =
+          existingRequest.status === 'completed'
+            ? 'completed'
+            : existingRequest.status === 'opened'
+              ? 'opened'
+              : 'sent'
+
+        setSavedWorkers((current) =>
+          current.map((worker) =>
+            worker.workerId === workerId
+              ? {
+                  ...worker,
+                  inductionStatus: safeStatus,
+                  inductionRequestId: existingRequest.id,
+                }
+              : worker
+          )
+        )
+
+        return
+      }
+
+      const { data: newRequest, error } = await supabase
+        .from('induction_requests')
+        .insert({
+          company_id: companyId,
+          worker_id: workerId,
+          status: 'sent',
+        })
+        .select('id, status')
+        .single()
+
+      if (error) {
+        console.error(error)
+        alert('Could not send induction request.')
+        return
+      }
+
+      setSavedWorkers((current) =>
+        current.map((worker) =>
+          worker.workerId === workerId
+            ? {
+                ...worker,
+                inductionStatus: 'sent',
+                inductionRequestId: newRequest?.id ?? '',
+              }
+            : worker
+        )
+      )
+    } finally {
+      setSendingInductionId(null)
     }
   }
 
@@ -1022,6 +1222,7 @@ export default function CompanyPage() {
                 const rtwStatus = getStatus(worker.rightToWorkExpiry)
                 const cscsBadge = getCscsBadgeStyle(worker.cscsVerificationStatus)
                 const isOnSite = worker.siteStatus === 'IN'
+                const isSendingInduction = sendingInductionId === worker.workerId
 
                 return (
                   <div
@@ -1113,6 +1314,41 @@ export default function CompanyPage() {
                           >
                             RTW: {rtwStatus.text}
                           </span>
+
+                          {worker.inductionStatus !== 'none' && (
+                            <span
+                              style={{
+                                background:
+                                  worker.inductionStatus === 'completed'
+                                    ? '#ecfdf3'
+                                    : worker.inductionStatus === 'opened'
+                                      ? '#fff7e6'
+                                      : '#f8fbff',
+                                color:
+                                  worker.inductionStatus === 'completed'
+                                    ? '#167342'
+                                    : worker.inductionStatus === 'opened'
+                                      ? '#9a5b00'
+                                      : '#5a6f96',
+                                border:
+                                  worker.inductionStatus === 'completed'
+                                    ? '1px solid #b7e4c7'
+                                    : worker.inductionStatus === 'opened'
+                                      ? '1px solid #ffd591'
+                                      : '1px solid #d7e1ef',
+                                borderRadius: 999,
+                                padding: '6px 10px',
+                                fontSize: 12,
+                                fontWeight: 900,
+                              }}
+                            >
+                              {worker.inductionStatus === 'completed'
+                                ? 'Induction completed'
+                                : worker.inductionStatus === 'opened'
+                                  ? 'Induction opened'
+                                  : 'Induction sent'}
+                            </span>
+                          )}
                         </div>
 
                         {worker.lastAttendanceAt && (
@@ -1144,6 +1380,33 @@ export default function CompanyPage() {
                         >
                           View
                         </Link>
+
+                        {worker.inductionStatus === 'none' ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleSendInduction(worker.workerId)}
+                            disabled={isSendingInduction}
+                            style={{
+                              ...getInductionButtonStyle('none'),
+                              cursor: isSendingInduction ? 'not-allowed' : 'pointer',
+                              opacity: isSendingInduction ? 0.65 : 1,
+                            }}
+                          >
+                            {isSendingInduction ? 'Sending...' : 'Send induction'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            style={getInductionButtonStyle(worker.inductionStatus)}
+                          >
+                            {worker.inductionStatus === 'completed'
+                              ? 'Completed ✅'
+                              : worker.inductionStatus === 'opened'
+                                ? 'Opened'
+                                : 'Sent'}
+                          </button>
+                        )}
 
                         <button
                           onClick={() => handleRemoveSavedWorker(worker.savedId)}
