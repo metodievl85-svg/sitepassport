@@ -39,6 +39,17 @@ type RememberedSite = {
   siteName: string
 }
 
+type InductionRequest = {
+  id: string
+  company_id: string
+  worker_id: string
+  status: 'sent' | 'opened' | 'completed'
+  induction_url: string | null
+  created_at: string
+  opened_at: string | null
+  completed_at: string | null
+}
+
 function SitePassportLogo() {
   return (
     <div
@@ -160,6 +171,11 @@ export default function WorkerPage() {
   const [savingAttendance, setSavingAttendance] = useState(false)
   const [attendanceMessage, setAttendanceMessage] = useState('')
 
+  const [inductionRequest, setInductionRequest] = useState<InductionRequest | null>(null)
+  const [openingInduction, setOpeningInduction] = useState(false)
+  const [completingInduction, setCompletingInduction] = useState(false)
+  const [inductionMessage, setInductionMessage] = useState('')
+
   useEffect(() => {
     async function load() {
       const {
@@ -221,6 +237,22 @@ export default function WorkerPage() {
       const mappedPassport = mapWorkerRow(workerRow, qualificationsRows ?? [])
       setPassport(mappedPassport)
 
+      const { data: inductionRows, error: inductionError } = await supabase
+        .from('induction_requests')
+        .select(
+          'id, company_id, worker_id, status, induction_url, created_at, opened_at, completed_at'
+        )
+        .eq('worker_id', workerRow.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (inductionError) {
+        console.error('induction load error:', inductionError)
+      } else {
+        const latestInduction = (inductionRows?.[0] ?? null) as InductionRequest | null
+        setInductionRequest(latestInduction)
+      }
+
       const savedSiteId = localStorage.getItem('sitepassport_last_site_id') || ''
       const savedCompanyId = localStorage.getItem('sitepassport_last_company_id') || ''
       const savedSiteName = localStorage.getItem('sitepassport_last_site_name') || ''
@@ -253,6 +285,91 @@ export default function WorkerPage() {
 
     void load()
   }, [router])
+
+  async function handleOpenInduction() {
+    if (!inductionRequest) return
+
+    const inductionUrl = inductionRequest.induction_url?.trim()
+
+    if (!inductionUrl) {
+      setInductionMessage('No induction link is attached to this request. Please contact your manager.')
+      return
+    }
+
+    try {
+      setOpeningInduction(true)
+      setInductionMessage('')
+
+      if (inductionRequest.status === 'sent') {
+        const { error } = await supabase
+          .from('induction_requests')
+          .update({
+            status: 'opened',
+            opened_at: new Date().toISOString(),
+          })
+          .eq('id', inductionRequest.id)
+
+        if (error) {
+          console.error('open induction error:', error)
+          setInductionMessage('Could not update induction status. Please try again.')
+          return
+        }
+
+        setInductionRequest({
+          ...inductionRequest,
+          status: 'opened',
+          opened_at: new Date().toISOString(),
+        })
+      }
+
+      window.open(inductionUrl, '_blank', 'noopener,noreferrer')
+    } finally {
+      setOpeningInduction(false)
+    }
+  }
+
+  async function handleCompleteInduction() {
+    if (!inductionRequest) return
+
+    const confirmed = window.confirm(
+      'Confirm you have completed the induction? This will notify your company dashboard.'
+    )
+
+    if (!confirmed) return
+
+    try {
+      setCompletingInduction(true)
+      setInductionMessage('')
+
+      const completedAt = new Date().toISOString()
+
+      const { error } = await supabase
+        .from('induction_requests')
+        .update({
+          status: 'completed',
+          completed_at: completedAt,
+          opened_at: inductionRequest.opened_at || completedAt,
+        })
+        .eq('id', inductionRequest.id)
+
+      if (error) {
+        console.error('complete induction error:', error)
+        setInductionMessage('Could not complete induction. Please try again.')
+        return
+      }
+
+      setInductionRequest({
+        ...inductionRequest,
+        status: 'completed',
+        completed_at: completedAt,
+        opened_at: inductionRequest.opened_at || completedAt,
+      })
+
+      setInductionMessage('Induction marked as completed.')
+    } finally {
+      setCompletingInduction(false)
+    }
+  }
 
   async function handleAttendance(nextStatus: AttendanceStatus) {
     if (!passport || !rememberedSite) {
@@ -421,6 +538,133 @@ export default function WorkerPage() {
     )
   }
 
+  function InductionCard() {
+    if (!inductionRequest) return null
+
+    const isCompleted = inductionRequest.status === 'completed'
+    const isOpened = inductionRequest.status === 'opened'
+    const isSent = inductionRequest.status === 'sent'
+
+    return (
+      <section
+        className="card"
+        style={{
+          marginBottom: 24,
+          border: isCompleted ? '1px solid #b7e4c7' : '1px solid #ffd591',
+          background: isCompleted ? '#ecfdf3' : '#fffaf0',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 18,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <h2
+              className="section-title"
+              style={{
+                color: isCompleted ? '#167342' : '#9a5b00',
+              }}
+            >
+              Site induction
+            </h2>
+
+            <p className="section-subtitle" style={{ marginBottom: 0 }}>
+              {isCompleted
+                ? 'Your induction has been marked as completed.'
+                : isOpened
+                  ? 'You have opened the induction. Mark it as completed when finished.'
+                  : 'You have a new induction request from your company.'}
+            </p>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: 'inline-flex',
+                alignItems: 'center',
+                minHeight: 32,
+                padding: '0 12px',
+                borderRadius: 999,
+                background: isCompleted ? '#ffffff' : '#fff7e6',
+                border: isCompleted ? '1px solid #b7e4c7' : '1px solid #ffd591',
+                color: isCompleted ? '#167342' : '#9a5b00',
+                fontSize: 13,
+                fontWeight: 900,
+                textTransform: 'uppercase',
+                letterSpacing: 1.1,
+              }}
+            >
+              {isCompleted ? 'Completed' : isOpened ? 'Opened' : isSent ? 'Pending' : 'Induction'}
+            </div>
+          </div>
+
+          {!isCompleted ? (
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => void handleOpenInduction()}
+                disabled={openingInduction}
+                className="btn btn-primary"
+                style={{
+                  opacity: openingInduction ? 0.65 : 1,
+                  cursor: openingInduction ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {openingInduction ? 'Opening...' : isOpened ? 'Open again' : 'Open induction'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void handleCompleteInduction()}
+                disabled={completingInduction}
+                style={{
+                  minHeight: 52,
+                  border: '1px solid #167342',
+                  borderRadius: 18,
+                  padding: '14px 22px',
+                  background: '#167342',
+                  color: '#ffffff',
+                  fontWeight: 900,
+                  cursor: completingInduction ? 'not-allowed' : 'pointer',
+                  opacity: completingInduction ? 0.65 : 1,
+                }}
+              >
+                {completingInduction ? 'Saving...' : 'I completed induction'}
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {inductionMessage ? (
+          <div
+            style={{
+              marginTop: 18,
+              border: '1px solid #d7e0ec',
+              borderRadius: 18,
+              padding: 16,
+              background: '#ffffff',
+              color: '#09154b',
+              fontWeight: 800,
+            }}
+          >
+            {inductionMessage}
+          </div>
+        ) : null}
+      </section>
+    )
+  }
+
   if (loading) {
     return (
       <main className="page-shell">
@@ -518,6 +762,8 @@ export default function WorkerPage() {
             </button>
           </div>
         </section>
+
+        <InductionCard />
 
         <section
           className="card"
