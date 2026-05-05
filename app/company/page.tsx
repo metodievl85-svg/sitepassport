@@ -55,6 +55,7 @@ type InductionRequestRow = {
   created_at: string
   opened_at: string | null
   completed_at: string | null
+  induction_url: string | null
 }
 
 type InductionStatus = 'none' | 'sent' | 'opened' | 'completed'
@@ -310,6 +311,10 @@ export default function CompanyPage() {
   const [savingCompanyName, setSavingCompanyName] = useState(false)
   const [companyNameMessage, setCompanyNameMessage] = useState('')
 
+  const [inductionLink, setInductionLink] = useState('')
+  const [savingInductionLink, setSavingInductionLink] = useState(false)
+  const [inductionLinkMessage, setInductionLinkMessage] = useState('')
+
   const [savedWorkers, setSavedWorkers] = useState<SavedWorkerCard[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<FilterValue>('all')
@@ -376,7 +381,7 @@ export default function CompanyPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, role, company_name')
+        .select('id, role, company_name, induction_url')
         .eq('id', session.user.id)
         .single()
 
@@ -392,10 +397,12 @@ export default function CompanyPage() {
 
       const currentCompanyId = profile.id
       const profileCompanyName = profile.company_name || ''
+      const profileInductionLink = profile.induction_url || ''
 
       setCompanyId(currentCompanyId)
       setCompanyName(profileCompanyName)
       setCompanyNameDraft(profileCompanyName)
+      setInductionLink(profileInductionLink)
 
       const site = await getOrCreateCompanySite(currentCompanyId)
 
@@ -441,7 +448,7 @@ export default function CompanyPage() {
 
       const { data: inductionRows, error: inductionError } = await supabase
         .from('induction_requests')
-        .select('id, company_id, worker_id, status, created_at, opened_at, completed_at')
+        .select('id, company_id, worker_id, status, created_at, opened_at, completed_at, induction_url')
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false })
 
@@ -561,9 +568,64 @@ export default function CompanyPage() {
     }
   }
 
+  async function handleSaveInductionLink() {
+    const cleanLink = inductionLink.trim()
+
+    if (!companyId) {
+      setInductionLinkMessage('Could not identify company account.')
+      return
+    }
+
+    if (!cleanLink) {
+      setInductionLinkMessage('Please paste your induction link.')
+      return
+    }
+
+    if (!cleanLink.startsWith('http://') && !cleanLink.startsWith('https://')) {
+      setInductionLinkMessage('Please use a full link starting with http:// or https://')
+      return
+    }
+
+    try {
+      setSavingInductionLink(true)
+      setInductionLinkMessage('')
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ induction_url: cleanLink })
+        .eq('id', companyId)
+
+      if (error) {
+        console.error(error)
+        setInductionLinkMessage('Could not save induction link.')
+        return
+      }
+
+      setInductionLink(cleanLink)
+      setInductionLinkMessage('Induction link saved.')
+    } finally {
+      setSavingInductionLink(false)
+    }
+  }
+
   async function handleSendInduction(workerId: string) {
     if (!companyId) {
       alert('Could not identify company account.')
+      return
+    }
+
+    const cleanInductionLink = inductionLink.trim()
+
+    if (!cleanInductionLink) {
+      alert('Please save an induction link before sending induction.')
+      return
+    }
+
+    if (
+      !cleanInductionLink.startsWith('http://') &&
+      !cleanInductionLink.startsWith('https://')
+    ) {
+      alert('Please save a valid induction link starting with http:// or https://')
       return
     }
 
@@ -621,6 +683,7 @@ export default function CompanyPage() {
           company_id: companyId,
           worker_id: workerId,
           status: 'sent',
+          induction_url: cleanInductionLink,
         })
         .select('id, status')
         .single()
@@ -1072,6 +1135,72 @@ export default function CompanyPage() {
               }}
             >
               Current saved name: {companyName}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="card" style={{ marginBottom: 24, padding: 18 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gap: 16,
+              alignItems: 'center',
+            }}
+            className="company-settings-row"
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#09154b' }}>
+                Induction link
+              </h2>
+
+              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#5a6f96', lineHeight: 1.45 }}>
+                Paste your existing online induction link here. This will be attached when
+                you press Send induction.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <input
+                value={inductionLink}
+                onChange={(event) => setInductionLink(event.target.value)}
+                placeholder="https://..."
+                style={{
+                  minHeight: 50,
+                  minWidth: 360,
+                  borderRadius: 14,
+                  border: '1px solid #d7e1ef',
+                  padding: '0 14px',
+                  fontSize: 15,
+                  fontWeight: 800,
+                }}
+              />
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleSaveInductionLink}
+                disabled={savingInductionLink}
+                style={{
+                  opacity: savingInductionLink ? 0.65 : 1,
+                  cursor: savingInductionLink ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {savingInductionLink ? 'Saving...' : 'Save link'}
+              </button>
+            </div>
+          </div>
+
+          {inductionLinkMessage ? (
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 14,
+                fontWeight: 800,
+                color: inductionLinkMessage.includes('saved') ? '#167342' : '#b42318',
+              }}
+            >
+              {inductionLinkMessage}
             </div>
           ) : null}
         </section>
