@@ -1459,7 +1459,10 @@ export default function CompanyPage() {
           <button
             type="button"
             className="company-stats-button"
-            onClick={() => setVisitorModalOpen(true)}
+            onClick={() => {
+  alert('clicked')
+  setVisitorModalOpen(true)
+}}
             style={{
               textAlign: 'left',
               background: '#eef3ff',
