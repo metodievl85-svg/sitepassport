@@ -230,7 +230,10 @@ export default function SiteAttendancePage() {
     }
   }
 
-  async function checkLocationForSite(currentSite: CompanySite, messageSetter: (value: string) => void) {
+  async function checkLocationForSite(
+    currentSite: CompanySite,
+    messageSetter: (value: string) => void
+  ) {
     if (currentSite.latitude === null || currentSite.longitude === null) {
       messageSetter('Site location has not been configured yet. Please contact your manager.')
       return null
@@ -590,14 +593,18 @@ export default function SiteAttendancePage() {
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
                   disabled={saving}
-                  className="btn btn-outline"
                   style={{
                     width: '100%',
                     minHeight: 58,
+                    border: '1px solid #09154b',
+                    borderRadius: 18,
+                    background: '#09154b',
+                    color: '#ffffff',
                     fontSize: 18,
                     fontWeight: 900,
                     cursor: saving ? 'not-allowed' : 'pointer',
                     opacity: saving ? 0.65 : 1,
+                    boxShadow: '0 12px 30px rgba(9, 21, 75, 0.18)',
                   }}
                 >
                   {visitorPhoto ? 'Retake photo' : 'Take photo'}
