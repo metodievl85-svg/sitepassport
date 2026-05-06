@@ -764,8 +764,7 @@ export default function CompanyPage() {
       setSavingInductionLink(false)
     }
   }
-
-  async function handleSendInduction(workerId: string) {
+    async function handleSendInduction(workerId: string) {
     if (!companyId) {
       alert('Could not identify company account.')
       return
@@ -1176,6 +1175,7 @@ export default function CompanyPage() {
                             VIS
                           </div>
                         )}
+
                       </div>
 
                       <div style={{ minWidth: 0 }}>
@@ -1434,14 +1434,7 @@ export default function CompanyPage() {
           </div>
         </section>
 
-        <section
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-            gap: 14,
-            marginBottom: 24,
-          }}
-        >
+        <section className="company-stats-grid">
           <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Saved operatives</div>
             <div style={{ fontSize: 34, fontWeight: 900, color: '#09154b', lineHeight: 1, marginTop: 8 }}>
@@ -1465,6 +1458,7 @@ export default function CompanyPage() {
 
           <button
             type="button"
+            className="company-stats-button"
             onClick={() => setVisitorModalOpen(true)}
             style={{
               textAlign: 'left',
@@ -2018,6 +2012,23 @@ export default function CompanyPage() {
           transform-origin: left center;
         }
 
+        .company-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(7, minmax(0, 1fr));
+          gap: 14px;
+          margin-bottom: 24px;
+        }
+
+        .company-stats-grid > div,
+        .company-stats-grid > button {
+          min-width: 0;
+        }
+
+        .company-stats-button {
+          appearance: none;
+          font-family: inherit;
+        }
+
         .saved-operative-row {
           display: grid;
           grid-template-columns: 100px 1fr auto;
@@ -2073,9 +2084,21 @@ export default function CompanyPage() {
           align-items: center;
         }
 
+        @media (max-width: 1200px) {
+          .company-stats-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+          }
+        }
+
         @media (max-width: 900px) {
           .company-settings-row {
             grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 800px) {
+          .company-stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
 
@@ -2124,6 +2147,12 @@ export default function CompanyPage() {
         @media (max-width: 520px) {
           .company-brand-logo img {
             width: min(320px, 100%) !important;
+          }
+        }
+
+        @media (max-width: 440px) {
+          .company-stats-grid {
+            grid-template-columns: 1fr;
           }
         }
 
