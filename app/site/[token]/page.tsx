@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
 
@@ -86,6 +86,7 @@ function fileToBase64(file: File): Promise<string> {
 export default function SiteAttendancePage() {
   const router = useRouter()
   const params = useParams()
+  const photoInputRef = useRef<HTMLInputElement | null>(null)
 
   const rawToken = params?.token
   const token = Array.isArray(rawToken) ? rawToken[0] : rawToken || ''
@@ -105,6 +106,7 @@ export default function SiteAttendancePage() {
   const [visitorPhone, setVisitorPhone] = useState('')
   const [visitorPhoto, setVisitorPhoto] = useState('')
   const [visitorMessage, setVisitorMessage] = useState('')
+  const [visitorLocationCheck, setVisitorLocationCheck] = useState<LocationCheck | null>(null)
 
   useEffect(() => {
     void loadSite()
@@ -228,56 +230,53 @@ export default function SiteAttendancePage() {
     }
   }
 
-  async function checkWorkerLocation(currentSite: CompanySite) {
+  async function checkLocationForSite(currentSite: CompanySite, messageSetter: (value: string) => void) {
     if (currentSite.latitude === null || currentSite.longitude === null) {
-      setMessage('Site location has not been configured yet. Please contact your manager.')
+      messageSetter('Site location has not been configured yet. Please contact your manager.')
       return null
     }
 
     try {
       setCheckingLocation(true)
-      setMessage('Checking your location...')
+      messageSetter('Checking your location...')
 
       const position = await getCurrentPosition()
 
-      const workerLatitude = position.coords.latitude
-      const workerLongitude = position.coords.longitude
+      const currentLatitude = position.coords.latitude
+      const currentLongitude = position.coords.longitude
       const accuracy = position.coords.accuracy
-
       const allowedRadius = currentSite.allowed_radius_m || 150
 
       const distanceFromSite = calculateDistanceMetres(
-        workerLatitude,
-        workerLongitude,
+        currentLatitude,
+        currentLongitude,
         Number(currentSite.latitude),
         Number(currentSite.longitude)
       )
 
       const check: LocationCheck = {
-        latitude: workerLatitude,
-        longitude: workerLongitude,
+        latitude: currentLatitude,
+        longitude: currentLongitude,
         accuracy,
         distanceFromSite,
         allowedRadius,
         isAllowed: distanceFromSite <= allowedRadius,
       }
 
-      setLocationCheck(check)
-
       if (!check.isAllowed) {
-        setMessage(
+        messageSetter(
           `You are too far from site to sign in. Distance: ${Math.round(
             distanceFromSite
           )}m. Allowed: ${allowedRadius}m.`
         )
-        return null
+        return check
       }
 
-      setMessage('')
+      messageSetter('')
       return check
     } catch (error) {
       console.error(error)
-      setMessage(
+      messageSetter(
         'Location permission is required to sign in on site. Please allow location access and try again.'
       )
       return null
@@ -296,9 +295,10 @@ export default function SiteAttendancePage() {
       let checkedLocation: LocationCheck | null = null
 
       if (nextStatus === 'IN') {
-        checkedLocation = await checkWorkerLocation(site)
+        checkedLocation = await checkLocationForSite(site, setMessage)
+        setLocationCheck(checkedLocation)
 
-        if (!checkedLocation) {
+        if (!checkedLocation?.isAllowed) {
           return
         }
       }
@@ -345,7 +345,7 @@ export default function SiteAttendancePage() {
       setVisitorPhoto(base64)
     } catch (error) {
       console.error(error)
-      setVisitorMessage('Could not upload visitor photo. Please try again.')
+      setVisitorMessage('Could not upload photo. Please try again.')
     }
   }
 
@@ -354,6 +354,11 @@ export default function SiteAttendancePage() {
 
     const cleanName = visitorName.trim()
     const cleanPhone = visitorPhone.trim()
+
+    if (!visitorPhoto) {
+      setVisitorMessage('Please take a photo.')
+      return
+    }
 
     if (!cleanName) {
       setVisitorMessage('Please enter your full name.')
@@ -368,26 +373,39 @@ export default function SiteAttendancePage() {
     try {
       setSaving(true)
       setVisitorMessage('')
+      setVisitorLocationCheck(null)
+
+      const checkedLocation = await checkLocationForSite(site, setVisitorMessage)
+      setVisitorLocationCheck(checkedLocation)
+
+      if (!checkedLocation?.isAllowed) {
+        return
+      }
 
       const { error } = await supabase.from('site_visitors').insert({
         company_id: site.company_id,
         site_id: site.id,
         full_name: cleanName,
         phone: cleanPhone,
-        photo: visitorPhoto || null,
+        photo: visitorPhoto,
         status: 'IN',
         signed_in_at: new Date().toISOString(),
+        latitude: checkedLocation.latitude,
+        longitude: checkedLocation.longitude,
+        location_accuracy_m: checkedLocation.accuracy,
+        distance_from_site_m: checkedLocation.distanceFromSite,
       })
 
       if (error) {
         console.error(error)
-        setVisitorMessage('Could not sign visitor in. Please try again.')
+        setVisitorMessage('Could not sign in. Please try again.')
         return
       }
 
       setStep('visitorDone')
     } finally {
       setSaving(false)
+      setCheckingLocation(false)
     }
   }
 
@@ -470,6 +488,7 @@ export default function SiteAttendancePage() {
                 onClick={() => {
                   setStep('visitor')
                   setVisitorMessage('')
+                  setVisitorLocationCheck(null)
                 }}
                 disabled={saving}
                 style={{
@@ -527,7 +546,7 @@ export default function SiteAttendancePage() {
                     letterSpacing: 1,
                   }}
                 >
-                  Visitor photo
+                  Photo
                 </label>
 
                 {visitorPhoto ? (
@@ -557,21 +576,32 @@ export default function SiteAttendancePage() {
                 ) : null}
 
                 <input
+                  ref={photoInputRef}
                   type="file"
                   accept="image/*"
                   capture="user"
                   onChange={(event) => void handleVisitorPhotoChange(event)}
                   style={{
-                    width: '100%',
-                    minHeight: 52,
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 16,
-                    padding: 14,
-                    background: '#ffffff',
-                    color: '#09154b',
-                    fontWeight: 800,
+                    display: 'none',
                   }}
                 />
+
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={saving}
+                  className="btn btn-outline"
+                  style={{
+                    width: '100%',
+                    minHeight: 58,
+                    fontSize: 18,
+                    fontWeight: 900,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.65 : 1,
+                  }}
+                >
+                  {visitorPhoto ? 'Retake photo' : 'Take photo'}
+                </button>
               </div>
 
               <div>
@@ -643,6 +673,27 @@ export default function SiteAttendancePage() {
               </div>
             </div>
 
+            {visitorLocationCheck ? (
+              <div
+                style={{
+                  border: visitorLocationCheck.isAllowed
+                    ? '1px solid #abefc6'
+                    : '1px solid #ffccc7',
+                  borderRadius: 18,
+                  padding: 16,
+                  background: visitorLocationCheck.isAllowed ? '#ecfdf3' : '#fff1f0',
+                  color: visitorLocationCheck.isAllowed ? '#027a48' : '#b42318',
+                  fontWeight: 800,
+                  marginTop: 20,
+                  lineHeight: 1.45,
+                }}
+              >
+                Location check: {Math.round(visitorLocationCheck.distanceFromSite)}m from site.
+                Allowed radius: {visitorLocationCheck.allowedRadius}m. GPS accuracy:{' '}
+                {Math.round(visitorLocationCheck.accuracy)}m.
+              </div>
+            ) : null}
+
             {visitorMessage ? (
               <div
                 style={{
@@ -671,18 +722,18 @@ export default function SiteAttendancePage() {
               <button
                 type="button"
                 onClick={() => void handleVisitorSignIn()}
-                disabled={saving}
+                disabled={saving || checkingLocation}
                 className="btn btn-primary"
                 style={{
                   flex: '1 1 220px',
                   minHeight: 58,
                   fontSize: 18,
                   fontWeight: 900,
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.65 : 1,
+                  cursor: saving || checkingLocation ? 'not-allowed' : 'pointer',
+                  opacity: saving || checkingLocation ? 0.65 : 1,
                 }}
               >
-                {saving ? 'Signing in...' : 'Sign IN as visitor'}
+                {checkingLocation ? 'Checking location...' : saving ? 'Signing in...' : 'Sign IN'}
               </button>
 
               <button
@@ -690,14 +741,15 @@ export default function SiteAttendancePage() {
                 onClick={() => {
                   setStep('choice')
                   setVisitorMessage('')
+                  setVisitorLocationCheck(null)
                 }}
-                disabled={saving}
+                disabled={saving || checkingLocation}
                 className="btn btn-outline"
                 style={{
                   flex: '1 1 160px',
                   minHeight: 58,
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.65 : 1,
+                  cursor: saving || checkingLocation ? 'not-allowed' : 'pointer',
+                  opacity: saving || checkingLocation ? 0.65 : 1,
                 }}
               >
                 Back
@@ -744,6 +796,7 @@ export default function SiteAttendancePage() {
                 setVisitorPhone('')
                 setVisitorPhoto('')
                 setVisitorMessage('')
+                setVisitorLocationCheck(null)
                 setStep('choice')
               }}
               className="btn btn-primary"
