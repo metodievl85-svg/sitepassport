@@ -58,6 +58,35 @@ type InductionRequestRow = {
   induction_url: string | null
 }
 
+type SiteVisitorRow = {
+  id: string
+  company_id: string
+  site_id: string
+  full_name: string
+  phone: string
+  photo: string | null
+  status: 'IN' | 'OUT'
+  signed_in_at: string
+  signed_out_at: string | null
+  created_at: string
+  distance_from_site_m: number | null
+  location_accuracy_m: number | null
+}
+
+type SiteVisitorCard = {
+  id: string
+  siteId: string
+  siteName: string
+  fullName: string
+  phone: string
+  photo: string
+  status: 'IN' | 'OUT'
+  signedInAt: string
+  signedOutAt: string
+  distanceFromSite: number | null
+  locationAccuracy: number | null
+}
+
 type InductionStatus = 'none' | 'sent' | 'opened' | 'completed'
 
 type SavedWorkerCard = {
@@ -138,6 +167,31 @@ function formatDateTime(value: string) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function formatTime(value: string) {
+  if (!value) return '—'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function getTodayRange() {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
+  const tomorrowStart = new Date(todayStart)
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1)
+
+  return {
+    todayStart,
+    tomorrowStart,
+  }
 }
 
 function getCscsBadgeStyle(status: string) {
@@ -316,6 +370,10 @@ export default function CompanyPage() {
   const [inductionLinkMessage, setInductionLinkMessage] = useState('')
 
   const [savedWorkers, setSavedWorkers] = useState<SavedWorkerCard[]>([])
+  const [visitorsToday, setVisitorsToday] = useState<SiteVisitorCard[]>([])
+  const [visitorModalOpen, setVisitorModalOpen] = useState(false)
+  const [signingOutVisitorId, setSigningOutVisitorId] = useState<string | null>(null)
+
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<FilterValue>('all')
   const [sortBy, setSortBy] = useState<SortValue>('newest')
@@ -364,6 +422,49 @@ export default function CompanyPage() {
     return newSite as CompanySiteRow
   }
 
+  async function loadVisitorsToday(currentCompanyId: string, sites: CompanySiteRow[]) {
+    const { todayStart, tomorrowStart } = getTodayRange()
+
+    const siteNameById = new Map<string, string>()
+    sites.forEach((site) => {
+      siteNameById.set(site.id, site.site_name || 'Site')
+    })
+
+    const { data: visitorRows, error: visitorError } = await supabase
+      .from('site_visitors')
+      .select(
+        'id, company_id, site_id, full_name, phone, photo, status, signed_in_at, signed_out_at, created_at, distance_from_site_m, location_accuracy_m'
+      )
+      .eq('company_id', currentCompanyId)
+      .gte('signed_in_at', todayStart.toISOString())
+      .lt('signed_in_at', tomorrowStart.toISOString())
+      .order('signed_in_at', { ascending: false })
+
+    if (visitorError) {
+      console.error(visitorError)
+      setVisitorsToday([])
+      return
+    }
+
+    const mappedVisitors: SiteVisitorCard[] = ((visitorRows || []) as SiteVisitorRow[]).map(
+      (visitor) => ({
+        id: visitor.id,
+        siteId: visitor.site_id,
+        siteName: siteNameById.get(visitor.site_id) || 'Site',
+        fullName: visitor.full_name || 'Visitor',
+        phone: visitor.phone || '—',
+        photo: visitor.photo || '',
+        status: visitor.status === 'OUT' ? 'OUT' : 'IN',
+        signedInAt: visitor.signed_in_at || visitor.created_at || '',
+        signedOutAt: visitor.signed_out_at || '',
+        distanceFromSite: visitor.distance_from_site_m,
+        locationAccuracy: visitor.location_accuracy_m,
+      })
+    )
+
+    setVisitorsToday(mappedVisitors)
+  }
+
   async function loadCompanyDashboard() {
     try {
       setLoading(true)
@@ -406,9 +507,29 @@ export default function CompanyPage() {
 
       const site = await getOrCreateCompanySite(currentCompanyId)
 
+      let companySites: CompanySiteRow[] = []
+
+      const { data: allSites, error: allSitesError } = await supabase
+        .from('company_sites')
+        .select('id, company_id, site_name, site_qr_token, created_at')
+        .eq('company_id', currentCompanyId)
+        .order('created_at', { ascending: true })
+
+      if (allSitesError) {
+        console.error(allSitesError)
+      } else {
+        companySites = (allSites || []) as CompanySiteRow[]
+      }
+
       if (site && typeof window !== 'undefined') {
         setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
+
+        if (!companySites.find((item) => item.id === site.id)) {
+          companySites = [site, ...companySites]
+        }
       }
+
+      await loadVisitorsToday(currentCompanyId, companySites)
 
       const attendanceByWorker = new Map<
         string,
@@ -540,11 +661,7 @@ export default function CompanyPage() {
         }
       }
 
-      const todayStart = new Date()
-      todayStart.setHours(0, 0, 0, 0)
-
-      const tomorrowStart = new Date(todayStart)
-      tomorrowStart.setDate(tomorrowStart.getDate() + 1)
+      const { todayStart, tomorrowStart } = getTodayRange()
 
       const { data: scanRows, error: scanError } = await supabase
         .from('scan_logs')
@@ -565,6 +682,46 @@ export default function CompanyPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleVisitorSignOut(visitorId: string) {
+    const confirmed = window.confirm('Sign this visitor out?')
+    if (!confirmed) return
+
+    try {
+      setSigningOutVisitorId(visitorId)
+
+      const signedOutAt = new Date().toISOString()
+
+      const { error } = await supabase
+        .from('site_visitors')
+        .update({
+          status: 'OUT',
+          signed_out_at: signedOutAt,
+        })
+        .eq('id', visitorId)
+        .eq('company_id', companyId)
+
+      if (error) {
+        console.error(error)
+        alert('Could not sign visitor out.')
+        return
+      }
+
+      setVisitorsToday((current) =>
+        current.map((visitor) =>
+          visitor.id === visitorId
+            ? {
+                ...visitor,
+                status: 'OUT',
+                signedOutAt,
+              }
+            : visitor
+        )
+      )
+    } finally {
+      setSigningOutVisitorId(null)
     }
   }
 
@@ -828,6 +985,10 @@ export default function CompanyPage() {
     return savedWorkers.filter((worker) => worker.siteStatus === 'IN').length
   }, [savedWorkers])
 
+  const visitorsOnSiteCount = useMemo(() => {
+    return visitorsToday.filter((visitor) => visitor.status === 'IN').length
+  }, [visitorsToday])
+
   const expiringSoonCount = useMemo(() => {
     return savedWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expiring').length
   }, [savedWorkers])
@@ -866,6 +1027,267 @@ export default function CompanyPage() {
     return result
   }, [savedWorkers, searchTerm, filter, sortBy])
 
+  function VisitorsModal() {
+    if (!visitorModalOpen) return null
+
+    const visitorsOnSite = visitorsToday.filter((visitor) => visitor.status === 'IN')
+    const signedOutVisitors = visitorsToday.filter((visitor) => visitor.status === 'OUT')
+
+    return (
+      <div
+        className="visitor-modal-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Visitors on site today"
+      >
+        <div className="visitor-modal">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: 16,
+              alignItems: 'flex-start',
+              marginBottom: 18,
+            }}
+          >
+            <div>
+              <h2 style={{ margin: 0, fontSize: 30, fontWeight: 900, color: '#09154b' }}>
+                Visitors on site today
+              </h2>
+
+              <p style={{ margin: '8px 0 0', color: '#5a6f96', fontSize: 15, lineHeight: 1.45 }}>
+                Current visitors signed in from today&apos;s site QR records.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setVisitorModalOpen(false)}
+              style={{
+                minWidth: 44,
+                minHeight: 44,
+                borderRadius: 14,
+                border: '1px solid #d7e1ef',
+                background: '#ffffff',
+                color: '#09154b',
+                fontSize: 22,
+                fontWeight: 900,
+                cursor: 'pointer',
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 12,
+              marginBottom: 18,
+            }}
+          >
+            <div
+              style={{
+                border: '1px solid #b7e4c7',
+                background: '#ecfdf3',
+                borderRadius: 18,
+                padding: 14,
+              }}
+            >
+              <div className="meta-label">Currently on site</div>
+              <div style={{ fontSize: 30, fontWeight: 900, color: '#167342', marginTop: 6 }}>
+                {visitorsOnSite.length}
+              </div>
+            </div>
+
+            <div
+              style={{
+                border: '1px solid #d7e1ef',
+                background: '#fbfdff',
+                borderRadius: 18,
+                padding: 14,
+              }}
+            >
+              <div className="meta-label">Total visitors today</div>
+              <div style={{ fontSize: 30, fontWeight: 900, color: '#09154b', marginTop: 6 }}>
+                {visitorsToday.length}
+              </div>
+            </div>
+          </div>
+
+          {visitorsToday.length === 0 ? (
+            <div
+              style={{
+                border: '2px dashed #d7e1ef',
+                borderRadius: 20,
+                padding: 30,
+                textAlign: 'center',
+                color: '#5a6f96',
+                fontWeight: 800,
+              }}
+            >
+              No visitors signed in today.
+            </div>
+          ) : (
+            <div className="visitor-modal-list">
+              {[...visitorsOnSite, ...signedOutVisitors].map((visitor) => {
+                const isSigningOut = signingOutVisitorId === visitor.id
+
+                return (
+                  <div
+                    key={visitor.id}
+                    style={{
+                      border: '1px solid #d7e1ef',
+                      borderRadius: 20,
+                      padding: 14,
+                      background: visitor.status === 'IN' ? '#fbfdff' : '#f8fbff',
+                    }}
+                  >
+                    <div className="visitor-row">
+                      <div>
+                        {visitor.photo ? (
+                          <img
+                            src={visitor.photo}
+                            alt={visitor.fullName}
+                            style={{
+                              width: 76,
+                              height: 76,
+                              borderRadius: 16,
+                              objectFit: 'cover',
+                              display: 'block',
+                              background: '#eef3ff',
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 76,
+                              height: 76,
+                              borderRadius: 16,
+                              background: '#eef3ff',
+                              color: '#243caa',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 900,
+                            }}
+                          >
+                            VIS
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontSize: 20,
+                            fontWeight: 900,
+                            color: '#09154b',
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          {visitor.fullName}
+                        </div>
+
+                        <div style={{ marginTop: 4, fontSize: 14, color: '#5a6f96', fontWeight: 800 }}>
+                          Phone: {visitor.phone}
+                        </div>
+
+                        <div style={{ marginTop: 4, fontSize: 14, color: '#5a6f96', fontWeight: 800 }}>
+                          Site: {visitor.siteName}
+                        </div>
+
+                        <div style={{ marginTop: 4, fontSize: 14, color: '#5a6f96', fontWeight: 800 }}>
+                          Signed in: {formatTime(visitor.signedInAt)}
+                        </div>
+
+                        {visitor.signedOutAt ? (
+                          <div style={{ marginTop: 4, fontSize: 14, color: '#5a6f96', fontWeight: 800 }}>
+                            Signed out: {formatTime(visitor.signedOutAt)}
+                          </div>
+                        ) : null}
+
+                        {visitor.distanceFromSite !== null ? (
+                          <div style={{ marginTop: 4, fontSize: 13, color: '#5a6f96', fontWeight: 700 }}>
+                            GPS: {Math.round(visitor.distanceFromSite)}m from site
+                          </div>
+                        ) : null}
+
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                          <span
+                            style={{
+                              background: visitor.status === 'IN' ? '#ecfdf3' : '#fff1f1',
+                              color: visitor.status === 'IN' ? '#167342' : '#b42318',
+                              border:
+                                visitor.status === 'IN'
+                                  ? '1px solid #b7e4c7'
+                                  : '1px solid #efc1c1',
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 12,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {visitor.status === 'IN' ? '🟢 On site' : '🔴 Signed out'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="visitor-actions">
+                        {visitor.status === 'IN' ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleVisitorSignOut(visitor.id)}
+                            disabled={isSigningOut}
+                            style={{
+                              minHeight: 42,
+                              padding: '0 14px',
+                              borderRadius: 12,
+                              border: '1px solid #b42318',
+                              background: '#b42318',
+                              color: '#ffffff',
+                              fontSize: 14,
+                              fontWeight: 900,
+                              cursor: isSigningOut ? 'not-allowed' : 'pointer',
+                              opacity: isSigningOut ? 0.65 : 1,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {isSigningOut ? 'Signing out...' : 'Sign OUT'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled
+                            style={{
+                              minHeight: 42,
+                              padding: '0 14px',
+                              borderRadius: 12,
+                              border: '1px solid #d7e1ef',
+                              background: '#f8fbff',
+                              color: '#5a6f96',
+                              fontSize: 14,
+                              fontWeight: 900,
+                              cursor: 'not-allowed',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Signed out
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <main className="page-shell">
@@ -900,6 +1322,8 @@ export default function CompanyPage() {
 
   return (
     <main className="page-shell">
+      <VisitorsModal />
+
       <div className="container">
         <section
           className="hero company-hero-compact"
@@ -1013,7 +1437,7 @@ export default function CompanyPage() {
         <section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
             gap: 14,
             marginBottom: 24,
           }}
@@ -1038,6 +1462,28 @@ export default function CompanyPage() {
               {onSiteCount}
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setVisitorModalOpen(true)}
+            style={{
+              textAlign: 'left',
+              background: '#eef3ff',
+              border: '1px solid #cdd9ff',
+              borderRadius: 22,
+              padding: 18,
+              cursor: 'pointer',
+              boxShadow: visitorsOnSiteCount > 0 ? '0 14px 34px rgba(36, 60, 170, 0.12)' : 'none',
+            }}
+          >
+            <div className="meta-label">Visitors on site</div>
+            <div style={{ fontSize: 34, fontWeight: 900, color: '#243caa', lineHeight: 1, marginTop: 8 }}>
+              {visitorsOnSiteCount}
+            </div>
+            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 900, color: '#243caa' }}>
+              Click to view
+            </div>
+          </button>
 
           <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
             <div className="meta-label">Active</div>
@@ -1587,6 +2033,46 @@ export default function CompanyPage() {
           flex-wrap: wrap;
         }
 
+        .visitor-modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1000;
+          background: rgba(3, 10, 35, 0.62);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
+        .visitor-modal {
+          width: min(920px, 100%);
+          max-height: min(82vh, 760px);
+          overflow: auto;
+          background: #ffffff;
+          border-radius: 28px;
+          border: 1px solid #d7e1ef;
+          box-shadow: 0 30px 90px rgba(3, 10, 35, 0.35);
+          padding: 22px;
+        }
+
+        .visitor-modal-list {
+          display: grid;
+          gap: 12px;
+        }
+
+        .visitor-row {
+          display: grid;
+          grid-template-columns: 76px 1fr auto;
+          gap: 14px;
+          align-items: center;
+        }
+
+        .visitor-actions {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+        }
+
         @media (max-width: 900px) {
           .company-settings-row {
             grid-template-columns: 1fr !important;
@@ -1611,6 +2097,27 @@ export default function CompanyPage() {
             grid-column: 1 / -1;
             justify-content: flex-start;
             padding-top: 8px;
+          }
+
+          .visitor-modal-overlay {
+            align-items: stretch;
+            padding: 12px;
+          }
+
+          .visitor-modal {
+            max-height: calc(100vh - 24px);
+            border-radius: 22px;
+            padding: 16px;
+          }
+
+          .visitor-row {
+            grid-template-columns: 76px 1fr;
+            align-items: start;
+          }
+
+          .visitor-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
           }
         }
 
