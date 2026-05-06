@@ -50,6 +50,12 @@ type InductionRequest = {
   completed_at: string | null
 }
 
+type SiteLocationRow = {
+  latitude: number | string | null
+  longitude: number | string | null
+  allowed_radius_m: number | string | null
+}
+
 function SitePassportLogo() {
   return (
     <div
@@ -156,6 +162,52 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
         )
       : [],
   }
+}
+
+function toNumber(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === '') return null
+  const numberValue = Number(value)
+  return Number.isFinite(numberValue) ? numberValue : null
+}
+
+function getDistanceInMeters(
+  userLatitude: number,
+  userLongitude: number,
+  siteLatitude: number,
+  siteLongitude: number
+) {
+  const earthRadiusMeters = 6371000
+
+  const toRadians = (value: number) => (value * Math.PI) / 180
+
+  const latitudeDifference = toRadians(siteLatitude - userLatitude)
+  const longitudeDifference = toRadians(siteLongitude - userLongitude)
+
+  const a =
+    Math.sin(latitudeDifference / 2) * Math.sin(latitudeDifference / 2) +
+    Math.cos(toRadians(userLatitude)) *
+      Math.cos(toRadians(siteLatitude)) *
+      Math.sin(longitudeDifference / 2) *
+      Math.sin(longitudeDifference / 2)
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+  return earthRadiusMeters * c
+}
+
+function getCurrentPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('GPS is not supported on this device.'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0,
+    })
+  })
 }
 
 export default function WorkerPage() {
@@ -286,6 +338,85 @@ export default function WorkerPage() {
     void load()
   }, [router])
 
+  async function validateGpsForSignIn() {
+    if (!rememberedSite) {
+      return {
+        allowed: false,
+        message: 'Please scan the site QR code first.',
+      }
+    }
+
+    const { data: siteRow, error: siteError } = await supabase
+      .from('company_sites')
+      .select('latitude, longitude, allowed_radius_m')
+      .eq('id', rememberedSite.siteId)
+      .eq('company_id', rememberedSite.companyId)
+      .maybeSingle()
+
+    if (siteError) {
+      console.error('site location load error:', siteError)
+      return {
+        allowed: false,
+        message: 'Could not check site GPS location. Please try again.',
+      }
+    }
+
+    if (!siteRow) {
+      return {
+        allowed: false,
+        message: 'Site location could not be found. Please scan the site QR again.',
+      }
+    }
+
+    const siteLocation = siteRow as SiteLocationRow
+    const siteLatitude = toNumber(siteLocation.latitude)
+    const siteLongitude = toNumber(siteLocation.longitude)
+    const allowedRadius = toNumber(siteLocation.allowed_radius_m) ?? 100
+
+    if (siteLatitude === null || siteLongitude === null) {
+      return {
+        allowed: false,
+        message: 'This site does not have GPS configured yet. Please contact your manager.',
+      }
+    }
+
+    try {
+      const position = await getCurrentPosition()
+
+      const userLatitude = position.coords.latitude
+      const userLongitude = position.coords.longitude
+
+      const distanceMeters = getDistanceInMeters(
+        userLatitude,
+        userLongitude,
+        siteLatitude,
+        siteLongitude
+      )
+
+      if (distanceMeters > allowedRadius) {
+        return {
+          allowed: false,
+          message: `You are too far from ${rememberedSite.siteName}. Distance: ${Math.round(
+            distanceMeters
+          )}m. Allowed radius: ${Math.round(allowedRadius)}m.`,
+        }
+      }
+
+      return {
+        allowed: true,
+        message: `GPS confirmed. Distance to site: ${Math.round(distanceMeters)}m.`,
+      }
+    } catch (error) {
+      console.error('gps error:', error)
+
+      return {
+        allowed: false,
+        message:
+          'GPS permission is required to sign IN. Please allow location access and try again.',
+      }
+    }
+  }
+
   async function handleOpenInduction() {
     if (!inductionRequest) return
 
@@ -301,11 +432,13 @@ export default function WorkerPage() {
       setInductionMessage('')
 
       if (inductionRequest.status === 'sent') {
+        const openedAt = new Date().toISOString()
+
         const { error } = await supabase
           .from('induction_requests')
           .update({
             status: 'opened',
-            opened_at: new Date().toISOString(),
+            opened_at: openedAt,
           })
           .eq('id', inductionRequest.id)
 
@@ -318,7 +451,7 @@ export default function WorkerPage() {
         setInductionRequest({
           ...inductionRequest,
           status: 'opened',
-          opened_at: new Date().toISOString(),
+          opened_at: openedAt,
         })
       }
 
@@ -380,6 +513,19 @@ export default function WorkerPage() {
     try {
       setSavingAttendance(true)
       setAttendanceMessage('')
+
+      if (nextStatus === 'IN') {
+        setAttendanceMessage('Checking your GPS location...')
+
+        const gpsCheck = await validateGpsForSignIn()
+
+        if (!gpsCheck.allowed) {
+          setAttendanceMessage(gpsCheck.message)
+          return
+        }
+
+        setAttendanceMessage(gpsCheck.message)
+      }
 
       const { error } = await supabase.from('site_attendance').insert({
         company_id: rememberedSite.companyId,
@@ -843,7 +989,9 @@ export default function WorkerPage() {
                   }}
                 >
                   {savingAttendance
-                    ? 'Saving...'
+                    ? attendanceStatus === 'IN'
+                      ? 'Signing out...'
+                      : 'Checking GPS...'
                     : attendanceStatus === 'IN'
                       ? 'Sign OUT'
                       : 'Sign IN'}
