@@ -373,7 +373,7 @@ export default function CompanyPage() {
   const [savedWorkers, setSavedWorkers] = useState<SavedWorkerCard[]>([])
   const [visitorsToday, setVisitorsToday] = useState<SiteVisitorCard[]>([])
   const [visitorModalOpen, setVisitorModalOpen] = useState(false)
-  const [visitorModalMounted, setVisitorModalMounted] = useState(false)
+
   const [signingOutVisitorId, setSigningOutVisitorId] = useState<string | null>(null)
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -389,9 +389,7 @@ export default function CompanyPage() {
     void loadCompanyDashboard()
   }, [])
 
-  useEffect(() => {
-    setVisitorModalMounted(true)
-  }, [])
+
 
   useEffect(() => {
     if (!visitorModalOpen) return
@@ -1045,20 +1043,43 @@ export default function CompanyPage() {
   }, [savedWorkers, searchTerm, filter, sortBy])
 
   function VisitorsModal() {
-    if (!visitorModalOpen || !visitorModalMounted) return null
+    if (!visitorModalOpen) return null
 
     const visitorsOnSite = visitorsToday.filter((visitor) => visitor.status === 'IN')
     const signedOutVisitors = visitorsToday.filter((visitor) => visitor.status === 'OUT')
 
     return createPortal(
-      <div
-        className="visitor-modal-overlay"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Visitors on site today"
-        onClick={() => setVisitorModalOpen(false)}
-      >
-        <div className="visitor-modal" onClick={(event) => event.stopPropagation()}>
+<div
+  role="dialog"
+  aria-modal="true"
+  aria-label="Visitors on site today"
+  onClick={() => setVisitorModalOpen(false)}
+  style={{
+    position: 'fixed',
+    inset: 0,
+    zIndex: 999999,
+    background: 'rgba(3, 10, 35, 0.68)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  }}
+>
+<div
+  onClick={(event) => event.stopPropagation()}
+  style={{
+    width: 'min(920px, 100%)',
+    maxHeight: 'min(82vh, 760px)',
+    overflow: 'auto',
+    background: '#ffffff',
+    borderRadius: 28,
+    border: '1px solid #d7e1ef',
+    boxShadow: '0 30px 90px rgba(3, 10, 35, 0.35)',
+    padding: 22,
+    position: 'relative',
+    zIndex: 1000000,
+  }}
+>
           <div
             style={{
               display: 'flex',
@@ -1303,7 +1324,9 @@ export default function CompanyPage() {
           )}
         </div>
       </div>,
-      document.body
+     typeof window !== 'undefined'
+  ? document.body
+  : document.createElement('div')
     )
   }
 
@@ -1478,7 +1501,10 @@ export default function CompanyPage() {
           <button
             type="button"
             className="company-stats-button"
-            onClick={() => setVisitorModalOpen(true)}
+            onClick={() => {
+  
+  setVisitorModalOpen(true)
+}}
             style={{
               textAlign: 'left',
               background: '#eef3ff',
