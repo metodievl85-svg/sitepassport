@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
@@ -372,6 +373,7 @@ export default function CompanyPage() {
   const [savedWorkers, setSavedWorkers] = useState<SavedWorkerCard[]>([])
   const [visitorsToday, setVisitorsToday] = useState<SiteVisitorCard[]>([])
   const [visitorModalOpen, setVisitorModalOpen] = useState(false)
+  const [visitorModalMounted, setVisitorModalMounted] = useState(false)
   const [signingOutVisitorId, setSigningOutVisitorId] = useState<string | null>(null)
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -386,6 +388,21 @@ export default function CompanyPage() {
   useEffect(() => {
     void loadCompanyDashboard()
   }, [])
+
+  useEffect(() => {
+    setVisitorModalMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!visitorModalOpen) return
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [visitorModalOpen])
 
   async function getOrCreateCompanySite(currentCompanyId: string) {
     const { data: existingSite, error: existingError } = await supabase
@@ -764,7 +781,8 @@ export default function CompanyPage() {
       setSavingInductionLink(false)
     }
   }
-    async function handleSendInduction(workerId: string) {
+
+  async function handleSendInduction(workerId: string) {
     if (!companyId) {
       alert('Could not identify company account.')
       return
@@ -1027,19 +1045,20 @@ export default function CompanyPage() {
   }, [savedWorkers, searchTerm, filter, sortBy])
 
   function VisitorsModal() {
-    if (!visitorModalOpen) return null
+    if (!visitorModalOpen || !visitorModalMounted) return null
 
     const visitorsOnSite = visitorsToday.filter((visitor) => visitor.status === 'IN')
     const signedOutVisitors = visitorsToday.filter((visitor) => visitor.status === 'OUT')
 
-    return (
+    return createPortal(
       <div
         className="visitor-modal-overlay"
         role="dialog"
         aria-modal="true"
         aria-label="Visitors on site today"
+        onClick={() => setVisitorModalOpen(false)}
       >
-        <div className="visitor-modal">
+        <div className="visitor-modal" onClick={(event) => event.stopPropagation()}>
           <div
             style={{
               display: 'flex',
@@ -1175,7 +1194,6 @@ export default function CompanyPage() {
                             VIS
                           </div>
                         )}
-
                       </div>
 
                       <div style={{ minWidth: 0 }}>
@@ -1284,7 +1302,8 @@ export default function CompanyPage() {
             </div>
           )}
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
@@ -1459,10 +1478,7 @@ export default function CompanyPage() {
           <button
             type="button"
             className="company-stats-button"
-  onClick={() => {
-  alert('clicked')
-  setVisitorModalOpen(true)
-}}
+            onClick={() => setVisitorModalOpen(true)}
             style={{
               textAlign: 'left',
               background: '#eef3ff',
@@ -2050,8 +2066,8 @@ export default function CompanyPage() {
         .visitor-modal-overlay {
           position: fixed;
           inset: 0;
-          z-index: 1000;
-          background: rgba(3, 10, 35, 0.62);
+          z-index: 999999;
+          background: rgba(3, 10, 35, 0.68);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2067,6 +2083,8 @@ export default function CompanyPage() {
           border: 1px solid #d7e1ef;
           box-shadow: 0 30px 90px rgba(3, 10, 35, 0.35);
           padding: 22px;
+          position: relative;
+          z-index: 1000000;
         }
 
         .visitor-modal-list {
