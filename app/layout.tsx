@@ -3,13 +3,13 @@ import Link from 'next/link'
 import PWARegister from './pwa-register'
 
 export const metadata = {
-  title: 'SitePassport',
-  description: 'Digital construction worker passport',
+  title: 'NekaID',
+  description: 'Secure workforce identity and compliance platform',
   manifest: '/manifest.json',
   themeColor: '#16286d',
   appleWebApp: {
     capable: true,
-    title: 'SitePassport',
+    title: 'NekaID',
     statusBarStyle: 'default',
   },
 }
@@ -42,7 +42,7 @@ export default function RootLayout({
           }}
         >
           <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
-            SITEPASSPORT
+            NEKAID
           </div>
 
           <div
@@ -60,7 +60,7 @@ export default function RootLayout({
           </div>
 
           <div style={{ color: '#666' }}>
-            © {new Date().getFullYear()} SitePassport. All rights reserved.
+            © {new Date().getFullYear()} NekaID. All rights reserved.
           </div>
         </footer>
       </body>

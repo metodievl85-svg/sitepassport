@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase'
 type Mode = 'login' | 'signup' | 'forgot'
 type Role = 'worker' | 'company'
 
-function SitePassportLogo({ dark = false }: { dark?: boolean }) {
+function NekaIDLogo({ dark = false }: { dark?: boolean }) {
   return (
     <div
       style={{
@@ -19,8 +19,8 @@ function SitePassportLogo({ dark = false }: { dark?: boolean }) {
       }}
     >
       <img
-        src="/sitepassport-logo.png"
-        alt="SitePassport"
+      src="/nekaid-logo.png"
+        alt="NekaID"
         style={{
           display: 'block',
           width: dark ? 'min(240px, 100%)' : 'min(300px, 100%)',
@@ -136,14 +136,14 @@ export default function LoginPage() {
 
   const subtitle = useMemo(() => {
     if (mode === 'signup') {
-      return 'Create your SitePassport account and choose whether you are an operative or a company.'
+      return 'Create your NekaID account and choose whether you are an operative or a company.'
     }
 
     if (mode === 'forgot') {
       return 'Enter your email and we will send you a password reset link.'
     }
 
-    return 'Login to open your SitePassport dashboard.'
+    return 'Login to open your NekaID dashboard.'
   }, [mode])
 
   function resetMessages() {
@@ -320,10 +320,11 @@ export default function LoginPage() {
               }}
             >
               <div style={{ marginBottom: 16 }}>
-                <SitePassportLogo dark />
+                <NekaIDLogo dark />
               </div>
 
-              <h1 className="section-title">Loading SitePassport</h1>
+              <h1 className="section-title">Loading NekaID</h1>
+
               <p className="section-subtitle" style={{ marginBottom: 0 }}>
                 Please wait a moment.
               </p>
@@ -369,7 +370,7 @@ export default function LoginPage() {
                 justifyContent: 'center',
               }}
             >
-              <SitePassportLogo />
+              <NekaIDLogo />
             </div>
 
             <h1
@@ -380,7 +381,7 @@ export default function LoginPage() {
                 margin: 0,
               }}
             >
-              Digital operative passports for real site use
+              Secure workforce identity for real site operations
             </h1>
 
             <p
@@ -391,8 +392,8 @@ export default function LoginPage() {
                 margin: 0,
               }}
             >
-              Store operative details, CSCS card image, qualifications, expiry dates,
-              QR code, and passport summary in one secure place for fast site checks.
+              Store operative details, qualifications, compliance records,
+              QR verification, and workforce identity in one secure platform.
             </p>
 
             {!isMobile ? (
@@ -417,8 +418,9 @@ export default function LoginPage() {
                     marginBottom: 4,
                   }}
                 >
-                  Construction workforce passport system
+                  Workforce identity & compliance platform
                 </div>
+
                 <div
                   style={{
                     fontSize: 13,
@@ -426,8 +428,8 @@ export default function LoginPage() {
                     lineHeight: 1.3,
                   }}
                 >
-                  Built for operatives, supervisors, and companies working on real
-                  construction sites.
+                  Built for operatives, supervisors, contractors, and scalable
+                  enterprise workforce management.
                 </div>
               </div>
             ) : null}
@@ -529,6 +531,7 @@ export default function LoginPage() {
               {mode === 'signup' ? (
                 <div className="field">
                   <label>I am registering as</label>
+
                   <div
                     style={{
                       display: 'grid',
@@ -557,10 +560,11 @@ export default function LoginPage() {
 
               <div className="field">
                 <label htmlFor="email">Email</label>
+
                 <input
                   id="email"
                   type="email"
-                  placeholder="info@sitepassportapp.co.uk"
+                  placeholder="info@nekaid.co.uk"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -570,6 +574,7 @@ export default function LoginPage() {
               {mode !== 'forgot' ? (
                 <div className="field">
                   <label htmlFor="password">Password</label>
+
                   <input
                     id="password"
                     type="password"
@@ -584,6 +589,7 @@ export default function LoginPage() {
               {mode === 'signup' ? (
                 <div className="field">
                   <label htmlFor="confirmPassword">Confirm password</label>
+
                   <input
                     id="confirmPassword"
                     type="password"

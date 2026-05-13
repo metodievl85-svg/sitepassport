@@ -1,7 +1,7 @@
 {
-  "name": "SitePassport",
-  "short_name": "SitePassport",
-  "description": "Digital construction worker passport",
+  "name": "NekaID",
+  "short_name": "NekaID",
+  "description": "Secure workforce identity and compliance platform",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",

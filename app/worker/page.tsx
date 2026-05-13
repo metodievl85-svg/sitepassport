@@ -68,8 +68,8 @@ function SitePassportLogo() {
       }}
     >
       <img
-        src="/sitepassport-logo.png"
-        alt="SitePassport"
+        src="/nekaid-logo.png"
+        alt="NekaID"
         style={{
           display: 'block',
           width: 'min(340px, 100%)',

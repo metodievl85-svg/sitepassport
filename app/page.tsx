@@ -49,7 +49,7 @@ export default function HomePage() {
     <main className="page-shell">
       <div className="container">
         <div className="card">
-          <h1 className="section-title">Loading SitePassport</h1>
+          <h1 className="section-title">Loading NekaID</h1>
           <p className="section-subtitle">Please wait a moment.</p>
         </div>
       </div>

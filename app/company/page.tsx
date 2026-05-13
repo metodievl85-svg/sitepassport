@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
+import CompanyHero from './components/CompanyHero'
 
 type SavedWorkerRow = {
   id: string
@@ -337,16 +338,17 @@ function SitePassportLogo() {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        marginBottom: 0,
+        marginBottom: 22,
         maxWidth: '100%',
       }}
     >
       <img
-        src="/sitepassport-logo.png"
-        alt="SitePassport"
+        src="/nekaid-logo.png"
+        alt="NekaID"
         style={{
           display: 'block',
-          width: 'min(430px, 100%)',
+         width: '760px',
+ maxWidth: '760px',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -1337,7 +1339,7 @@ export default function CompanyPage() {
           <section
             className="hero company-hero-compact"
             style={{
-              padding: '20px 32px',
+              padding: '12px 32px 20px',
               marginBottom: 22,
               alignItems: 'center',
             }}
@@ -1367,114 +1369,10 @@ export default function CompanyPage() {
       <VisitorsModal />
 
       <div className="container">
-        <section
-          className="hero company-hero-compact"
-          style={{
-            padding: '20px 32px',
-            marginBottom: 22,
-            alignItems: 'center',
-            gap: 20,
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <SitePassportLogo />
-
-            <h1
-              style={{
-                marginTop: 4,
-                marginBottom: 8,
-                fontSize: 'clamp(24px, 2.3vw, 32px)',
-                lineHeight: 1.06,
-                fontWeight: 900,
-              }}
-            >
-              Company dashboard
-            </h1>
-
-            <p style={{ maxWidth: 760, marginBottom: 0 }}>
-              Manage operatives, review expiry status, scan QR codes, and keep your
-              workforce records organised from one responsive control centre.
-            </p>
-
-            <div
-              style={{
-                display: 'flex',
-                gap: 12,
-                flexWrap: 'wrap',
-                marginTop: 14,
-              }}
-            >
-              {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((item) => (
-                <span
-                  key={item}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    minHeight: 34,
-                    padding: '0 15px',
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.14)',
-                    border: '1px solid rgba(255,255,255,0.16)',
-                    fontSize: 14,
-                    fontWeight: 800,
-                  }}
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div
-            style={{
-              width: '100%',
-              maxWidth: 420,
-              background: 'rgba(255,255,255,0.12)',
-              border: '1px solid rgba(255,255,255,0.14)',
-              borderRadius: 24,
-              padding: 20,
-              display: 'grid',
-              gap: 12,
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  letterSpacing: 1.6,
-                  textTransform: 'uppercase',
-                  color: 'rgba(255,255,255,0.8)',
-                  marginBottom: 8,
-                }}
-              >
-                Logged in as
-              </div>
-
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 900,
-                  lineHeight: 1.25,
-                  color: '#ffffff',
-                  wordBreak: 'break-word',
-                }}
-              >
-                {email}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gap: 12 }}>
-              <Link href="/scan" className="btn btn-primary">
-                Scan QR
-              </Link>
-
-              <button onClick={handleLogout} className="btn btn-outline" type="button">
-                Logout
-              </button>
-            </div>
-          </div>
-        </section>
+        <CompanyHero
+  email={email}
+  handleLogout={handleLogout}
+/>
 
         <section className="company-stats-grid">
           <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
