@@ -1,71 +1,105 @@
-export default function CookiesPage() {
+export default function CookiePolicyPage() {
   return (
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', lineHeight: 1.7 }}>
       <h1>Cookie Policy</h1>
-      <p><strong>Last updated:</strong> 25 April 2026</p>
+
+      <p><strong>Last updated:</strong> 13 May 2026</p>
 
       <p>
-        This Cookie Policy explains how SitePassport uses cookies and similar technologies
-        when you visit our website.
+        This Cookie Policy explains how NekaID uses cookies and similar technologies
+        when you use our website and platform.
       </p>
 
       <h2>1. What are cookies?</h2>
+
       <p>
         Cookies are small text files stored on your device when you visit a website.
-        They help websites work properly and improve user experience.
+        They help websites remember information about your visit, device, login session,
+        and preferences.
       </p>
 
-      <h2>2. How we use cookies</h2>
-      <p>SitePassport uses cookies to:</p>
+      <h2>2. How NekaID uses cookies</h2>
+
+      <p>NekaID uses cookies and similar technologies to:</p>
+
       <ul>
         <li>Keep users logged in securely</li>
-        <li>Maintain session information</li>
-        <li>Ensure the website functions correctly</li>
-        <li>Improve performance and reliability</li>
+        <li>Protect user sessions and authentication</li>
+        <li>Remember basic preferences and settings</li>
+        <li>Improve website performance and reliability</li>
+        <li>Support platform security and fraud prevention</li>
+        <li>Help pages and features function correctly</li>
       </ul>
 
-      <h2>3. Types of cookies we use</h2>
+      <h2>3. Authentication cookies</h2>
 
-      <h3>Essential cookies</h3>
       <p>
-        These cookies are required for the website to function. They include authentication
-        and session cookies provided by Supabase.
+        NekaID uses authentication technologies provided through Supabase to manage
+        secure login sessions for workers, companies, and administrators.
       </p>
 
-      <h3>Analytics cookies</h3>
       <p>
-        Currently, SitePassport does not use third-party analytics or tracking cookies.
-        If this changes in the future, this policy will be updated.
+        These cookies are necessary for the platform to function properly and cannot
+        normally be disabled while using account features.
       </p>
 
-      <h3>Third-party cookies</h3>
+      <h2>4. Analytics and performance</h2>
+
       <p>
-        SitePassport may rely on third-party services (such as hosting or authentication providers)
-        which may use cookies as part of their service.
+        NekaID may use analytics, diagnostics, or performance tools to help improve
+        the platform, monitor reliability, detect issues, and understand general
+        platform usage.
       </p>
 
-      <h2>4. Managing cookies</h2>
       <p>
-        You can control or delete cookies through your browser settings. Most browsers allow you to:
+        We do not use cookies to sell personal data.
       </p>
+
+      <h2>5. Third-party services</h2>
+
+      <p>
+        Some services used by NekaID may place their own cookies or use similar
+        technologies, including:
+      </p>
+
       <ul>
-        <li>View stored cookies</li>
-        <li>Delete cookies</li>
-        <li>Block cookies</li>
-        <li>Set preferences for certain websites</li>
+        <li>Supabase</li>
+        <li>Vercel</li>
+        <li>Browser security and session systems</li>
       </ul>
 
-      <h2>5. Changes to this policy</h2>
       <p>
-        We may update this Cookie Policy as SitePassport grows. The latest version will always
-        be available on this page.
+        These providers may process technical information necessary for hosting,
+        authentication, security, and platform functionality.
       </p>
 
-      <h2>6. Contact</h2>
+      <h2>6. Managing cookies</h2>
+
       <p>
-        For questions about cookies, contact:
-        <br />
-        <strong>info@sitepassportapp.co.uk</strong>
+        Most web browsers allow you to manage, block, or delete cookies through
+        browser settings.
+      </p>
+
+      <p>
+        Disabling some cookies may affect login functionality, QR scanning,
+        dashboard access, or other platform features.
+      </p>
+
+      <h2>7. Updates to this Cookie Policy</h2>
+
+      <p>
+        We may update this Cookie Policy as NekaID develops. The latest version
+        will always be available on this page.
+      </p>
+
+      <h2>8. Contact</h2>
+
+      <p>
+        If you have questions about this Cookie Policy, contact:
+      </p>
+
+      <p>
+        <strong>info@nekaid.co.uk</strong>
       </p>
     </main>
   )
