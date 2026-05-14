@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import CompanyDashboardMenu from './CompanyDashboardMenu'
 
 type Props = {
   email: string
@@ -42,6 +43,8 @@ export default function CompanyHero({ email, handleLogout }: Props) {
         <button onClick={handleLogout} className="btn btn-outline" type="button">
           Logout
         </button>
+
+        <CompanyDashboardMenu />
       </div>
 
       <style jsx>{`
@@ -55,7 +58,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           margin-bottom: 24px;
           border-radius: 32px;
           background: linear-gradient(135deg, #071133 0%, #0d1b52 45%, #243caa 100%);
-          overflow: hidden;
+          overflow: visible;
         }
 
         .company-hero-left {
@@ -118,6 +121,8 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           border: 1px solid rgba(255, 255, 255, 0.14);
           display: grid;
           gap: 14px;
+          position: relative;
+          z-index: 30;
         }
 
         .company-panel-label {

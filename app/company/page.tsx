@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import CompanyHero from './components/CompanyHero'
 import CompanyStats from './components/CompanyStats'
+import CompanyDashboardMenu from './components/CompanyDashboardMenu'
 import CompanySettings from './components/CompanySettings'
 
 type SavedWorkerRow = {
@@ -1379,7 +1380,7 @@ export default function CompanyPage() {
           expiredCount={expiredCount}
           onVisitorsClick={() => setVisitorModalOpen(true)}
         />
-
+<CompanyDashboardMenu />
         <CompanySettings
           companyName={companyName}
           companyNameDraft={companyNameDraft}
