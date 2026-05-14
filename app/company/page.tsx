@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import CompanyHero from './components/CompanyHero'
 import CompanyStats from './components/CompanyStats'
+import CompanySettings from './components/CompanySettings'
 
 type SavedWorkerRow = {
   id: string
@@ -348,8 +349,8 @@ function SitePassportLogo() {
         alt="NekaID"
         style={{
           display: 'block',
-         width: '760px',
- maxWidth: '760px',
+          width: '760px',
+          maxWidth: '760px',
           height: 'auto',
           objectFit: 'contain',
         }}
@@ -391,8 +392,6 @@ export default function CompanyPage() {
   useEffect(() => {
     void loadCompanyDashboard()
   }, [])
-
-
 
   useEffect(() => {
     if (!visitorModalOpen) return
@@ -1052,37 +1051,37 @@ export default function CompanyPage() {
     const signedOutVisitors = visitorsToday.filter((visitor) => visitor.status === 'OUT')
 
     return createPortal(
-<div
-  role="dialog"
-  aria-modal="true"
-  aria-label="Visitors on site today"
-  onClick={() => setVisitorModalOpen(false)}
-  style={{
-    position: 'fixed',
-    inset: 0,
-    zIndex: 999999,
-    background: 'rgba(3, 10, 35, 0.68)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  }}
->
-<div
-  onClick={(event) => event.stopPropagation()}
-  style={{
-    width: 'min(920px, 100%)',
-    maxHeight: 'min(82vh, 760px)',
-    overflow: 'auto',
-    background: '#ffffff',
-    borderRadius: 28,
-    border: '1px solid #d7e1ef',
-    boxShadow: '0 30px 90px rgba(3, 10, 35, 0.35)',
-    padding: 22,
-    position: 'relative',
-    zIndex: 1000000,
-  }}
->
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Visitors on site today"
+        onClick={() => setVisitorModalOpen(false)}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 999999,
+          background: 'rgba(3, 10, 35, 0.68)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 20,
+        }}
+      >
+        <div
+          onClick={(event) => event.stopPropagation()}
+          style={{
+            width: 'min(920px, 100%)',
+            maxHeight: 'min(82vh, 760px)',
+            overflow: 'auto',
+            background: '#ffffff',
+            borderRadius: 28,
+            border: '1px solid #d7e1ef',
+            boxShadow: '0 30px 90px rgba(3, 10, 35, 0.35)',
+            padding: 22,
+            position: 'relative',
+            zIndex: 1000000,
+          }}
+        >
           <div
             style={{
               display: 'flex',
@@ -1327,9 +1326,7 @@ export default function CompanyPage() {
           )}
         </div>
       </div>,
-     typeof window !== 'undefined'
-  ? document.body
-  : document.createElement('div')
+      typeof window !== 'undefined' ? document.body : document.createElement('div')
     )
   }
 
@@ -1370,207 +1367,34 @@ export default function CompanyPage() {
       <VisitorsModal />
 
       <div className="container">
-        <CompanyHero
-  email={email}
-  handleLogout={handleLogout}
-/>
+        <CompanyHero email={email} handleLogout={handleLogout} />
 
-  <CompanyStats
-  savedWorkersCount={savedWorkers.length}
-  scansToday={scansToday}
-  onSiteCount={onSiteCount}
-  visitorsOnSiteCount={visitorsOnSiteCount}
-  activeWorkers={activeWorkers}
-  expiringSoonCount={expiringSoonCount}
-  expiredCount={expiredCount}
-  onVisitorsClick={() => setVisitorModalOpen(true)}
-/>
+        <CompanyStats
+          savedWorkersCount={savedWorkers.length}
+          scansToday={scansToday}
+          onSiteCount={onSiteCount}
+          visitorsOnSiteCount={visitorsOnSiteCount}
+          activeWorkers={activeWorkers}
+          expiringSoonCount={expiringSoonCount}
+          expiredCount={expiredCount}
+          onVisitorsClick={() => setVisitorModalOpen(true)}
+        />
 
-        <section className="card" style={{ marginBottom: 24, padding: 18 }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              gap: 16,
-              alignItems: 'center',
-            }}
-            className="company-settings-row"
-          >
-            <div style={{ minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#09154b' }}>
-                Company name
-              </h2>
-
-              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#5a6f96', lineHeight: 1.45 }}>
-                This name will appear on your printable site QR poster.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <input
-                value={companyNameDraft}
-                onChange={(event) => setCompanyNameDraft(event.target.value)}
-                placeholder="Enter company name"
-                style={{
-                  minHeight: 50,
-                  minWidth: 260,
-                  borderRadius: 14,
-                  border: '1px solid #d7e1ef',
-                  padding: '0 14px',
-                  fontSize: 15,
-                  fontWeight: 800,
-                }}
-              />
-
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleSaveCompanyName}
-                disabled={savingCompanyName}
-                style={{
-                  opacity: savingCompanyName ? 0.65 : 1,
-                  cursor: savingCompanyName ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {savingCompanyName ? 'Saving...' : 'Save name'}
-              </button>
-            </div>
-          </div>
-
-          {companyNameMessage ? (
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: 14,
-                fontWeight: 800,
-                color: companyNameMessage.includes('saved') ? '#167342' : '#b42318',
-              }}
-            >
-              {companyNameMessage}
-            </div>
-          ) : null}
-
-          {companyName ? (
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: 14,
-                color: '#5a6f96',
-                fontWeight: 800,
-              }}
-            >
-              Current saved name: {companyName}
-            </div>
-          ) : null}
-        </section>
-
-        <section className="card" style={{ marginBottom: 24, padding: 18 }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              gap: 16,
-              alignItems: 'center',
-            }}
-            className="company-settings-row"
-          >
-            <div style={{ minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#09154b' }}>
-                Induction link
-              </h2>
-
-              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#5a6f96', lineHeight: 1.45 }}>
-                Paste your existing online induction link here. This will be attached when
-                you press Send induction.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <input
-                value={inductionLink}
-                onChange={(event) => setInductionLink(event.target.value)}
-                placeholder="https://..."
-                style={{
-                  minHeight: 50,
-                  minWidth: 360,
-                  borderRadius: 14,
-                  border: '1px solid #d7e1ef',
-                  padding: '0 14px',
-                  fontSize: 15,
-                  fontWeight: 800,
-                }}
-              />
-
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleSaveInductionLink}
-                disabled={savingInductionLink}
-                style={{
-                  opacity: savingInductionLink ? 0.65 : 1,
-                  cursor: savingInductionLink ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {savingInductionLink ? 'Saving...' : 'Save link'}
-              </button>
-            </div>
-          </div>
-
-          {inductionLinkMessage ? (
-            <div
-              style={{
-                marginTop: 14,
-                fontSize: 14,
-                fontWeight: 800,
-                color: inductionLinkMessage.includes('saved') ? '#167342' : '#b42318',
-              }}
-            >
-              {inductionLinkMessage}
-            </div>
-          ) : null}
-        </section>
-
-        <section className="card" style={{ marginBottom: 24, padding: 18 }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 16,
-              flexWrap: 'wrap',
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#09154b' }}>
-                Site QR link
-              </h2>
-
-              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#5a6f96', lineHeight: 1.45 }}>
-                Permanent site sign-in link. Print the QR once and place it on site.
-              </p>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button type="button" className="btn btn-secondary" onClick={handleCopySiteLink}>
-                Copy site link
-              </button>
-
-              <Link href="/company/site-location" className="btn btn-secondary">
-                Site location
-              </Link>
-
-              <Link href="/company/print-qr" className="btn btn-primary">
-                Print site QR
-              </Link>
-
-              {siteLink && (
-                <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-secondary">
-                  Open site page
-                </a>
-              )}
-            </div>
-          </div>
-        </section>
+        <CompanySettings
+          companyName={companyName}
+          companyNameDraft={companyNameDraft}
+          savingCompanyName={savingCompanyName}
+          companyNameMessage={companyNameMessage}
+          inductionLink={inductionLink}
+          savingInductionLink={savingInductionLink}
+          inductionLinkMessage={inductionLinkMessage}
+          siteLink={siteLink}
+          setCompanyNameDraft={setCompanyNameDraft}
+          setInductionLink={setInductionLink}
+          handleSaveCompanyName={handleSaveCompanyName}
+          handleSaveInductionLink={handleSaveInductionLink}
+          handleCopySiteLink={handleCopySiteLink}
+        />
 
         <section className="card">
           <div
@@ -1897,23 +1721,6 @@ export default function CompanyPage() {
           transform-origin: left center;
         }
 
-        .company-stats-grid {
-          display: grid;
-          grid-template-columns: repeat(7, minmax(0, 1fr));
-          gap: 14px;
-          margin-bottom: 24px;
-        }
-
-        .company-stats-grid > div,
-        .company-stats-grid > button {
-          min-width: 0;
-        }
-
-        .company-stats-button {
-          appearance: none;
-          font-family: inherit;
-        }
-
         .saved-operative-row {
           display: grid;
           grid-template-columns: 100px 1fr auto;
@@ -1927,30 +1734,6 @@ export default function CompanyPage() {
           align-items: center;
           justify-content: flex-end;
           flex-wrap: wrap;
-        }
-
-        .visitor-modal-overlay {
-          position: fixed;
-          inset: 0;
-          z-index: 999999;
-          background: rgba(3, 10, 35, 0.68);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        }
-
-        .visitor-modal {
-          width: min(920px, 100%);
-          max-height: min(82vh, 760px);
-          overflow: auto;
-          background: #ffffff;
-          border-radius: 28px;
-          border: 1px solid #d7e1ef;
-          box-shadow: 0 30px 90px rgba(3, 10, 35, 0.35);
-          padding: 22px;
-          position: relative;
-          z-index: 1000000;
         }
 
         .visitor-modal-list {
@@ -1969,24 +1752,6 @@ export default function CompanyPage() {
           display: flex;
           justify-content: flex-end;
           align-items: center;
-        }
-
-        @media (max-width: 1200px) {
-          .company-stats-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 900px) {
-          .company-settings-row {
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-        @media (max-width: 800px) {
-          .company-stats-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
         }
 
         @media (max-width: 700px) {
@@ -2009,17 +1774,6 @@ export default function CompanyPage() {
             padding-top: 8px;
           }
 
-          .visitor-modal-overlay {
-            align-items: stretch;
-            padding: 12px;
-          }
-
-          .visitor-modal {
-            max-height: calc(100vh - 24px);
-            border-radius: 22px;
-            padding: 16px;
-          }
-
           .visitor-row {
             grid-template-columns: 76px 1fr;
             align-items: start;
@@ -2034,12 +1788,6 @@ export default function CompanyPage() {
         @media (max-width: 520px) {
           .company-brand-logo img {
             width: min(320px, 100%) !important;
-          }
-        }
-
-        @media (max-width: 440px) {
-          .company-stats-grid {
-            grid-template-columns: 1fr;
           }
         }
 
