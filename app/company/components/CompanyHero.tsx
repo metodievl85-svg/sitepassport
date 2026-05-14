@@ -7,279 +7,171 @@ type Props = {
   handleLogout: () => void
 }
 
-function SitePassportLogo() {
+export default function CompanyHero({ email, handleLogout }: Props) {
   return (
-    <div
-      className="company-brand-logo"
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '100%',
-        marginBottom: 18,
-      }}
-    >
-      <img
-        src="/nekaid-logo.png"
-        alt="NekaID"
-        style={{
-          display: 'block',
-          width: '100%',
-          maxWidth: '760px',
-          height: 'auto',
-          objectFit: 'contain',
-        }}
-      />
-    </div>
-  )
-}
+    <section className="company-hero">
+      <div className="company-hero-left">
+        <img src="/nekaid-logo.png" alt="NekaID" className="company-logo" />
 
-export default function CompanyHero({
-  email,
-  handleLogout,
-}: Props) {
-  return (
-    <section
-      className="hero company-hero-redesign"
-      style={{
-        marginBottom: 24,
-      }}
-    >
-      <div className="company-hero-content">
-        <SitePassportLogo />
+        <div>
+          <h1>Company dashboard</h1>
 
-        <h1 className="company-hero-title">
-          Company dashboard
-        </h1>
+          <p>
+            Manage operatives, review expiry status, scan QR codes, and monitor workforce
+            activity from one central dashboard.
+          </p>
 
-        <p className="company-hero-description">
-          Manage operatives, review expiry status,
-          scan QR codes, and monitor workforce
-          activity from one central dashboard.
-        </p>
-
-        <div className="company-hero-badges">
-          <span>Desktop-first</span>
-          <span>Mobile-friendly</span>
-          <span>Real-time workforce view</span>
+          <div className="company-hero-badges">
+            <span>Desktop-first</span>
+            <span>Mobile-friendly</span>
+            <span>Real-time workforce view</span>
+          </div>
         </div>
       </div>
 
       <div className="company-hero-panel">
         <div>
-          <div className="company-panel-label">
-            Logged in as
-          </div>
-
-          <div className="company-panel-email">
-            {email}
-          </div>
+          <div className="company-panel-label">LOGGED IN AS</div>
+          <div className="company-panel-email">{email}</div>
         </div>
 
-        <div className="company-panel-buttons">
-          <Link href="/scan" className="btn btn-primary">
-            Scan QR
-          </Link>
+        <Link href="/scan" className="btn btn-primary">
+          Scan QR
+        </Link>
 
-          <button
-            onClick={handleLogout}
-            className="btn btn-outline"
-            type="button"
-          >
-            Logout
-          </button>
-        </div>
+        <button onClick={handleLogout} className="btn btn-outline" type="button">
+          Logout
+        </button>
       </div>
 
       <style jsx>{`
-        .company-hero-redesign {
+        .company-hero {
           display: grid;
-          grid-template-columns: 1fr 360px;
-          gap: 28px;
+          grid-template-columns: minmax(0, 1fr) 430px;
+          gap: 34px;
           align-items: center;
-
-          padding: 42px;
-
-          border-radius: 34px;
-
-          background:
-            linear-gradient(
-              135deg,
-              #071133 0%,
-              #0d1b52 45%,
-              #243caa 100%
-            );
-
-          position: relative;
+          min-height: 330px;
+          padding: 24px 44px;
+          margin-bottom: 24px;
+          border-radius: 32px;
+          background: linear-gradient(135deg, #071133 0%, #0d1b52 45%, #243caa 100%);
           overflow: hidden;
         }
 
-        .company-hero-redesign::before {
-          content: '';
-          position: absolute;
-          top: -180px;
-          right: -140px;
-
-          width: 420px;
-          height: 420px;
-
-          border-radius: 50%;
-
-          background:
-            radial-gradient(
-              circle,
-              rgba(255,255,255,0.16) 0%,
-              rgba(255,255,255,0) 72%
-            );
+        .company-hero-left {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 28px;
         }
 
-        .company-hero-content {
-          position: relative;
-          z-index: 2;
+        .company-logo {
+          display: block;
+          width: 560px;
+          max-width: 100%;
+          height: auto;
+          margin-left: -18px;
         }
 
-        .company-hero-title {
-          margin: 0 0 14px;
-
-          font-size: clamp(42px, 4vw, 64px);
-
-          line-height: 0.95;
-
+        h1 {
+          margin: 0 0 10px;
+          font-size: 44px;
+          line-height: 1;
           font-weight: 900;
-
           color: #ffffff;
-
-          letter-spacing: -2px;
+          letter-spacing: -1.2px;
         }
 
-        .company-hero-description {
-          max-width: 760px;
-
+        p {
           margin: 0;
-
-          font-size: 18px;
-
-          line-height: 1.7;
-
-          color: rgba(255,255,255,0.82);
-
+          max-width: 720px;
+          font-size: 16px;
+          line-height: 1.45;
+          color: rgba(255, 255, 255, 0.86);
           font-weight: 500;
         }
 
         .company-hero-badges {
           display: flex;
           flex-wrap: wrap;
-          gap: 12px;
-
-          margin-top: 24px;
+          gap: 10px;
+          margin-top: 18px;
         }
 
         .company-hero-badges span {
-          min-height: 42px;
-
-          padding: 0 18px;
-
+          min-height: 34px;
+          padding: 0 15px;
           display: inline-flex;
           align-items: center;
-          justify-content: center;
-
           border-radius: 999px;
-
-          background: rgba(255,255,255,0.12);
-
-          border: 1px solid rgba(255,255,255,0.12);
-
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           color: #ffffff;
-
-          font-size: 14px;
+          font-size: 13px;
           font-weight: 800;
-
-          backdrop-filter: blur(10px);
         }
 
         .company-hero-panel {
-          position: relative;
-          z-index: 2;
-
-          border-radius: 28px;
-
-          padding: 26px;
-
-          background: rgba(255,255,255,0.12);
-
-          border: 1px solid rgba(255,255,255,0.14);
-
-          backdrop-filter: blur(18px);
-
-          box-shadow:
-            0 18px 50px rgba(0,0,0,0.22);
-
+          border-radius: 26px;
+          padding: 24px;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.14);
           display: grid;
-          gap: 20px;
+          gap: 14px;
         }
 
         .company-panel-label {
+          color: rgba(255, 255, 255, 0.72);
+          letter-spacing: 2px;
           font-size: 12px;
           font-weight: 800;
-
-          letter-spacing: 1.6px;
-
-          text-transform: uppercase;
-
-          color: rgba(255,255,255,0.72);
-
-          margin-bottom: 10px;
+          margin-bottom: 8px;
         }
 
         .company-panel-email {
-          font-size: 24px;
-          font-weight: 900;
-
-          line-height: 1.3;
-
           color: #ffffff;
-
+          font-size: 23px;
+          line-height: 1.2;
+          font-weight: 900;
           word-break: break-word;
         }
 
-        .company-panel-buttons {
-          display: grid;
-          gap: 12px;
-        }
-
         @media (max-width: 980px) {
-          .company-hero-redesign {
+          .company-hero {
             grid-template-columns: 1fr;
+            min-height: auto;
+          }
+
+          .company-logo {
+            width: 420px;
+            margin-left: 0;
+          }
+
+          h1 {
+            font-size: 40px;
           }
         }
 
         @media (max-width: 700px) {
-          .company-hero-redesign {
-            padding: 24px;
-            border-radius: 26px;
+          .company-hero {
+            padding: 22px;
+            border-radius: 24px;
           }
 
-          .company-hero-title {
-            font-size: 38px;
-            line-height: 1;
+          .company-logo {
+            width: 320px;
           }
 
-          .company-hero-description {
-            font-size: 16px;
+          h1 {
+            font-size: 34px;
+          }
+
+          p {
+            font-size: 15px;
           }
 
           .company-panel-email {
-            font-size: 20px;
-          }
-        }
-
-        @media (max-width: 520px) {
-          .company-brand-logo img {
-            max-width: 100%;
-          }
-
-          .company-hero-title {
-            font-size: 34px;
+            font-size: 19px;
           }
         }
       `}</style>

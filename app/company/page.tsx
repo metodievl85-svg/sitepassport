@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import CompanyHero from './components/CompanyHero'
+import CompanyStats from './components/CompanyStats'
 
 type SavedWorkerRow = {
   id: string
@@ -1374,75 +1375,16 @@ export default function CompanyPage() {
   handleLogout={handleLogout}
 />
 
-        <section className="company-stats-grid">
-          <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
-            <div className="meta-label">Saved operatives</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#09154b', lineHeight: 1, marginTop: 8 }}>
-              {savedWorkers.length}
-            </div>
-          </div>
-
-          <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
-            <div className="meta-label">Scans today</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#09154b', lineHeight: 1, marginTop: 8 }}>
-              {scansToday}
-            </div>
-          </div>
-
-          <div style={{ background: '#ecfdf3', border: '1px solid #b7e4c7', borderRadius: 22, padding: 18 }}>
-            <div className="meta-label">On site now</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#167342', lineHeight: 1, marginTop: 8 }}>
-              {onSiteCount}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="company-stats-button"
-            onClick={() => {
-  
-  setVisitorModalOpen(true)
-}}
-            style={{
-              textAlign: 'left',
-              background: '#eef3ff',
-              border: '1px solid #cdd9ff',
-              borderRadius: 22,
-              padding: 18,
-              cursor: 'pointer',
-              boxShadow: visitorsOnSiteCount > 0 ? '0 14px 34px rgba(36, 60, 170, 0.12)' : 'none',
-            }}
-          >
-            <div className="meta-label">Visitors on site</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#243caa', lineHeight: 1, marginTop: 8 }}>
-              {visitorsOnSiteCount}
-            </div>
-            <div style={{ marginTop: 8, fontSize: 12, fontWeight: 900, color: '#243caa' }}>
-              Click to view
-            </div>
-          </button>
-
-          <div style={{ background: '#fbfdff', border: '1px solid #d7e1ef', borderRadius: 22, padding: 18 }}>
-            <div className="meta-label">Active</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#167342', lineHeight: 1, marginTop: 8 }}>
-              {activeWorkers}
-            </div>
-          </div>
-
-          <div style={{ background: '#fff8ea', border: '1px solid #efd6ac', borderRadius: 22, padding: 18 }}>
-            <div className="meta-label">Expiring soon</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#9b5d00', lineHeight: 1, marginTop: 8 }}>
-              {expiringSoonCount}
-            </div>
-          </div>
-
-          <div style={{ background: '#fff1f1', border: '1px solid #efc1c1', borderRadius: 22, padding: 18 }}>
-            <div className="meta-label">Expired</div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: '#b42318', lineHeight: 1, marginTop: 8 }}>
-              {expiredCount}
-            </div>
-          </div>
-        </section>
+  <CompanyStats
+  savedWorkersCount={savedWorkers.length}
+  scansToday={scansToday}
+  onSiteCount={onSiteCount}
+  visitorsOnSiteCount={visitorsOnSiteCount}
+  activeWorkers={activeWorkers}
+  expiringSoonCount={expiringSoonCount}
+  expiredCount={expiredCount}
+  onVisitorsClick={() => setVisitorModalOpen(true)}
+/>
 
         <section className="card" style={{ marginBottom: 24, padding: 18 }}>
           <div
