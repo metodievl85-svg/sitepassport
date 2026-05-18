@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
+import { runEndOfDayAutoSignOut } from '../lib/attendance/autoSignOut'
 import CompanyHero from './components/CompanyHero'
 import CompanyStats from './components/CompanyStats'
 import CompanyDashboardMenu from './components/CompanyDashboardMenu'
@@ -391,8 +392,14 @@ export default function CompanyPage() {
   const [siteLink, setSiteLink] = useState('')
 
   useEffect(() => {
+  void loadCompanyDashboard()
+
+  const interval = setInterval(() => {
     void loadCompanyDashboard()
-  }, [])
+  }, 60000)
+
+  return () => clearInterval(interval)
+}, [])
 
   useEffect(() => {
     if (!visitorModalOpen) return
@@ -515,6 +522,7 @@ export default function CompanyPage() {
       }
 
       const currentCompanyId = profile.id
+      await runEndOfDayAutoSignOut(currentCompanyId)
       const profileCompanyName = profile.company_name || ''
       const profileInductionLink = profile.induction_url || ''
 

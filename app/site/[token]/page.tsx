@@ -143,6 +143,13 @@ export default function SiteAttendancePage() {
       localStorage.setItem('sitepassport_last_site_id', currentSite.id)
       localStorage.setItem('sitepassport_last_company_id', currentSite.company_id)
       localStorage.setItem('sitepassport_last_site_name', currentSite.site_name)
+      const {
+  data: { session },
+} = await supabase.auth.getSession()
+
+if (session?.user) {
+  void loadOperativeAttendance()
+}
     } finally {
       setLoading(false)
     }
@@ -323,7 +330,16 @@ export default function SiteAttendancePage() {
         return
       }
 
-      setStatus(nextStatus)
+      const { data: latestAttendance } = await supabase
+  .from('site_attendance')
+  .select('status')
+  .eq('worker_id', worker.id)
+  .eq('site_id', site.id)
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .single()
+
+setStatus(latestAttendance?.status || nextStatus)
 
       if (nextStatus === 'IN') {
         setMessage('You are now signed in on site.')
