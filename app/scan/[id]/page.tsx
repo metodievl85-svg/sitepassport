@@ -95,7 +95,7 @@ function getVerificationStatus(status: string) {
     return {
       text: 'Verified',
       warning:
-        'CSCS details have been marked as verified in SitePassport. Official CSCS system integration is not connected yet.',
+        'CSCS details have been marked as verified in NekaID. Official CSCS system integration is not connected yet.',
       style: {
         background: '#ecfdf3',
         color: '#027a48',
@@ -365,7 +365,7 @@ export default function PublicWorkerPage() {
         <div className="container" style={{ maxWidth: 1120 }}>
           <div className="card">
             <div className="brand" style={{ marginBottom: 18 }}>
-              SITEPASSPORT
+              NEKAID
             </div>
             <h1 className="section-title">Loading operative</h1>
             <p className="section-subtitle">Please wait a moment.</p>
@@ -381,7 +381,7 @@ export default function PublicWorkerPage() {
         <div className="container" style={{ maxWidth: 1120 }}>
           <div className="card">
             <div className="brand" style={{ marginBottom: 18 }}>
-              SITEPASSPORT
+              NEKAID
             </div>
             <h1 className="section-title">Operative not found</h1>
             <p className="section-subtitle">
@@ -407,7 +407,7 @@ export default function PublicWorkerPage() {
       <div className="container" style={{ maxWidth: 1120 }}>
         <section className="hero" style={{ marginBottom: 24, alignItems: 'stretch' }}>
           <div>
-            <div className="brand">SITEPASSPORT</div>
+            <div className="brand">NEKAID</div>
             <h1>Operative verification</h1>
             <p>
               Read-only verification page for managers, supervisors, and site access

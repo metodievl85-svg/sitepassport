@@ -130,7 +130,7 @@ export default function ResetPasswordPage() {
         <div className="auth-layout">
           <section className="hero auth-hero">
             <div>
-              <div className="brand">SITEPASSPORT</div>
+              <div className="brand">NEKAID</div>
               <h1 className="auth-hero-title">Choose your new password</h1>
               <p className="auth-hero-text">
                 Finish your password reset securely, then log back in.

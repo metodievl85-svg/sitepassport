@@ -567,7 +567,7 @@ export default function WorkerPage() {
 
   async function handleDeleteAccount() {
     const firstConfirm = window.confirm(
-      'Are you sure you want to delete your SitePassport account? This cannot be undone.'
+      'Are you sure you want to delete your NekaID account? This cannot be undone.'
     )
 
     if (!firstConfirm) return
@@ -656,7 +656,7 @@ export default function WorkerPage() {
             maxWidth: 820,
           }}
         >
-          This permanently deletes your SitePassport account, operative passport,
+          This permanently deletes your NekaID account, operative passport,
           qualifications, saved company records connected to your passport, and login
           account. This action cannot be undone.
         </p>

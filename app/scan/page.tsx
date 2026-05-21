@@ -15,7 +15,7 @@ export default function ScanPage() {
   const [error, setError] = useState('')
   const [isScanning, setIsScanning] = useState(false)
 
-  const readerId = 'sitepassport-qr-reader'
+  const readerId = 'nekaid-qr-reader'
 
   const stopScanner = async () => {
     try {
@@ -65,7 +65,7 @@ export default function ScanPage() {
       }
     }
 
-    setError('This QR code is not a valid SitePassport QR code.')
+    setError('This QR code is not a valid NekaID QR code.')
     setStatus('Ready to scan again.')
     hasScannedRef.current = false
   }
@@ -133,10 +133,10 @@ export default function ScanPage() {
     <main className="scan-page">
       <section className="scan-card">
         <div className="scan-header">
-          <p className="brand-label">SITEPASSPORT</p>
+          <p className="brand-label">NEKAID</p>
           <h1>Scan QR</h1>
           <p>
-            Scan an operative QR code to open their public SitePassport profile.
+            Scan an operative QR code to open their public NekaID profile.
           </p>
         </div>
 
