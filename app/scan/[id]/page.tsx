@@ -667,7 +667,7 @@ export default function PublicWorkerPage() {
               </div>
             </div>
 
-            {worker.medicalInfo ? (
+            {isCompanyUser && worker.medicalInfo ? (
               <div
                 style={{
                   border: '1px solid #fecaca',
@@ -770,10 +770,12 @@ export default function PublicWorkerPage() {
               )}
             </div>
 
-            <div className="notes-box">
-              <div className="notes-title">Notes</div>
-              <p className="notes-text">{worker.notes || 'No notes added.'}</p>
-            </div>
+            {isCompanyUser ? (
+              <div className="notes-box">
+                <div className="notes-title">Notes</div>
+                <p className="notes-text">{worker.notes || 'No notes added.'}</p>
+              </div>
+            ) : null}
 
             {isCompanyUser ? (
               <div className="notes-box">

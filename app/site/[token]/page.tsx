@@ -143,20 +143,26 @@ export default function SiteAttendancePage() {
       localStorage.setItem('sitepassport_last_site_id', currentSite.id)
       localStorage.setItem('sitepassport_last_company_id', currentSite.company_id)
       localStorage.setItem('sitepassport_last_site_name', currentSite.site_name)
-      const {
-  data: { session },
-} = await supabase.auth.getSession()
 
-if (session?.user) {
-  void loadOperativeAttendance()
-}
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.user) {
+        // Await so the loading screen stays up until we know whether to show
+        // the operative screen or the choice screen. Pass currentSite directly
+        // to bypass the stale site state (setSite queues a re-render, it does
+        // not update the variable synchronously).
+        await loadOperativeAttendance(currentSite)
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  async function loadOperativeAttendance() {
-    if (!site) return
+  async function loadOperativeAttendance(resolvedSite?: CompanySite) {
+    const currentSite = resolvedSite ?? site
+    if (!currentSite) return
 
     try {
       setSaving(true)
@@ -214,7 +220,7 @@ if (session?.user) {
         .from('site_attendance')
         .select('status, created_at')
         .eq('worker_id', workerRow.id)
-        .eq('company_id', site.company_id)
+        .eq('company_id', currentSite.company_id)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -331,15 +337,15 @@ if (session?.user) {
       }
 
       const { data: latestAttendance } = await supabase
-  .from('site_attendance')
-  .select('status')
-  .eq('worker_id', worker.id)
-  .eq('site_id', site.id)
-  .order('created_at', { ascending: false })
-  .limit(1)
-  .single()
+        .from('site_attendance')
+        .select('status')
+        .eq('worker_id', worker.id)
+        .eq('site_id', site.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
 
-setStatus(latestAttendance?.status || nextStatus)
+      setStatus(latestAttendance?.status || nextStatus)
 
       if (nextStatus === 'IN') {
         setMessage('You are now signed in on site.')
@@ -434,7 +440,7 @@ setStatus(latestAttendance?.status || nextStatus)
         <div className="container">
           <section className="card">
             <h1 className="section-title">Loading site</h1>
-            <p className="section-subtitle">Checking this SitePassport QR code.</p>
+            <p className="section-subtitle">Checking this NekaID QR code.</p>
           </section>
         </div>
       </main>
@@ -447,8 +453,8 @@ setStatus(latestAttendance?.status || nextStatus)
         <section className="hero" style={{ marginBottom: 24 }}>
           <div>
             <img
-              src="/sitepassport-logo.png"
-              alt="SitePassport"
+              src="/nekaid-logo.png"
+              alt="NekaID"
               style={{
                 display: 'block',
                 width: 'min(340px, 100%)',
@@ -474,7 +480,7 @@ setStatus(latestAttendance?.status || nextStatus)
           <section className="card">
             <h2 className="section-title">Who are you?</h2>
             <p className="section-subtitle">
-              Operatives use their SitePassport account. Visitors can sign in quickly without
+              Operatives use their NekaID account. Visitors can sign in quickly without
               creating an account.
             </p>
 
