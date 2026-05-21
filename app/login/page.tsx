@@ -12,18 +12,20 @@ function NekaIDLogo({ dark = false }: { dark?: boolean }) {
   return (
     <div
       style={{
-        display: 'inline-flex',
+        display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        width: '100%',
         maxWidth: '100%',
       }}
     >
       <img
-      src="/nekaid-logo.png"
+        src="/nekaid-logo.png"
         alt="NekaID"
         style={{
           display: 'block',
-          width: dark ? 'min(240px, 100%)' : 'min(300px, 100%)',
+          width: dark ? 240 : 300,
+          maxWidth: '100%',
           height: 'auto',
           objectFit: 'contain',
         }}
