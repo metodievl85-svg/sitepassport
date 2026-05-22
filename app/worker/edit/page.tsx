@@ -10,6 +10,7 @@ type Qualification = {
   name: string
   number: string
   expiry: string
+  photoUrl: string
 }
 
 const qualificationExamples = [
@@ -32,6 +33,7 @@ function createEmptyQualification(): Qualification {
     name: '',
     number: '',
     expiry: '',
+    photoUrl: '',
   }
 }
 
@@ -41,13 +43,18 @@ export default function EditWorkerPassportPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const cameraStreamRef = useRef<MediaStream | null>(null)
+  const photoPreviewUrlRef = useRef<string>('')
+  const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [userId, setUserId] = useState('')
   const [workerId, setWorkerId] = useState('')
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [photoCaptured, setPhotoCaptured] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
 
   const [form, setForm] = useState({
     fullName: '',
@@ -121,9 +128,11 @@ export default function EditWorkerPassportPage() {
               name: qualification.name ?? '',
               number: qualification.number ?? '',
               expiry: qualification.expiry ?? '',
+              photoUrl: qualification.photo_url ?? '',
             }))
           : [createEmptyQualification()]
 
+      setUserId(session.user.id)
       setWorkerId(workerRow.id)
       setForm({
         fullName: workerRow.full_name ?? '',
@@ -147,6 +156,14 @@ export default function EditWorkerPassportPage() {
 
     return () => {
       stopCamera()
+      if (photoPreviewUrlRef.current) {
+        URL.revokeObjectURL(photoPreviewUrlRef.current)
+        photoPreviewUrlRef.current = ''
+      }
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
     }
   }, [router])
 
@@ -220,7 +237,7 @@ export default function EditWorkerPassportPage() {
     setCameraOpen(false)
   }
 
-  function capturePhoto() {
+  async function capturePhoto() {
     const video = videoRef.current
     const canvas = canvasRef.current
 
@@ -275,12 +292,25 @@ export default function EditWorkerPassportPage() {
       outputHeight
     )
 
-    const image = canvas.toDataURL('image/jpeg', 0.92)
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.92)
+    })
 
-    setForm((prev) => ({
-      ...prev,
-      photo: image,
-    }))
+    if (!blob) {
+      setCameraError('Could not capture photo. Please use upload instead.')
+      return
+    }
+
+    if (photoPreviewUrlRef.current) {
+      URL.revokeObjectURL(photoPreviewUrlRef.current)
+    }
+
+    const previewUrl = URL.createObjectURL(blob)
+    photoPreviewUrlRef.current = previewUrl
+
+    const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
+    setPhotoFile(file)
+    setForm((prev) => ({ ...prev, photo: previewUrl }))
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -294,16 +324,36 @@ export default function EditWorkerPassportPage() {
     stopCamera()
     setPhotoCaptured(false)
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : ''
-      setForm((prev) => ({
-        ...prev,
-        photo: result,
-      }))
-      setPhotoCaptured(true)
+    if (photoPreviewUrlRef.current) {
+      URL.revokeObjectURL(photoPreviewUrlRef.current)
     }
-    reader.readAsDataURL(file)
+
+    const previewUrl = URL.createObjectURL(file)
+    photoPreviewUrlRef.current = previewUrl
+    setPhotoFile(file)
+    setForm((prev) => ({ ...prev, photo: previewUrl }))
+
+    e.target.value = ''
+  }
+
+  function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (qualPhotoPreviewUrlsRef.current[id]) {
+      URL.revokeObjectURL(qualPhotoPreviewUrlsRef.current[id])
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    qualPhotoPreviewUrlsRef.current[id] = previewUrl
+
+    setQualPhotoFiles((prev) => ({ ...prev, [id]: file }))
+    setForm((prev) => ({
+      ...prev,
+      qualifications: prev.qualifications.map((q) =>
+        q.id === id ? { ...q, photoUrl: previewUrl } : q
+      ),
+    }))
 
     e.target.value = ''
   }
@@ -331,6 +381,16 @@ export default function EditWorkerPassportPage() {
   }
 
   function removeQualificationRow(id: string) {
+    if (qualPhotoPreviewUrlsRef.current[id]) {
+      URL.revokeObjectURL(qualPhotoPreviewUrlsRef.current[id])
+      delete qualPhotoPreviewUrlsRef.current[id]
+    }
+    setQualPhotoFiles((prev) => {
+      if (!(id in prev)) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
     setForm((prev) => ({
       ...prev,
       qualifications:
@@ -356,6 +416,29 @@ export default function EditWorkerPassportPage() {
     setSaving(true)
 
     try {
+      let photoValue = form.photo
+
+      if (photoFile) {
+        const path = `${userId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('worker-photos')
+          .upload(path, photoFile, {
+            contentType: photoFile.type || 'image/jpeg',
+            upsert: false,
+          })
+
+        if (uploadError) {
+          alert(`Photo upload failed: ${uploadError.message}`)
+          setSaving(false)
+          return
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('worker-photos')
+          .getPublicUrl(path)
+        photoValue = urlData.publicUrl
+      }
+
       const { error: workerError } = await supabase
         .from('workers')
         .update({
@@ -369,7 +452,7 @@ export default function EditWorkerPassportPage() {
           right_to_work_expiry: form.rightToWorkExpiry || null,
           notes: form.notes.trim(),
           medical_info: form.medicalInfo.trim(),
-          photo: form.photo,
+          photo: photoValue,
         })
         .eq('id', workerId)
 
@@ -394,16 +477,44 @@ export default function EditWorkerPassportPage() {
       )
 
       if (cleanedQualifications.length > 0) {
-        const qualificationRows = cleanedQualifications.map((qualification) => ({
-          worker_id: workerId,
-          name: qualification.name.trim(),
-          number: qualification.number.trim(),
-          expiry: qualification.expiry || null,
-        }))
+        const qualRows = await Promise.all(
+          cleanedQualifications.map(async (qualification) => {
+            // Use existing URL unless the user uploaded a new file
+            let qualPhotoUrl: string | null = qualification.photoUrl || null
+            const file = qualPhotoFiles[qualification.id]
+
+            if (file) {
+              const path = `${workerId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+              const { error: uploadError } = await supabase.storage
+                .from('qualification-photos')
+                .upload(path, file, {
+                  contentType: file.type || 'image/jpeg',
+                  upsert: false,
+                })
+
+              if (!uploadError) {
+                const { data: urlData } = supabase.storage
+                  .from('qualification-photos')
+                  .getPublicUrl(path)
+                qualPhotoUrl = urlData.publicUrl
+              } else {
+                console.error('qualification photo upload error:', uploadError)
+              }
+            }
+
+            return {
+              worker_id: workerId,
+              name: qualification.name.trim(),
+              number: qualification.number.trim(),
+              expiry: qualification.expiry || null,
+              photo_url: qualPhotoUrl,
+            }
+          })
+        )
 
         const { error: qualificationsError } = await supabase
           .from('qualifications')
-          .insert(qualificationRows)
+          .insert(qualRows)
 
         if (qualificationsError) {
           console.error(qualificationsError)
@@ -412,6 +523,15 @@ export default function EditWorkerPassportPage() {
           )
         }
       }
+
+      if (photoPreviewUrlRef.current) {
+        URL.revokeObjectURL(photoPreviewUrlRef.current)
+        photoPreviewUrlRef.current = ''
+      }
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
 
       router.replace('/worker')
     } catch (error) {
@@ -896,6 +1016,72 @@ export default function EditWorkerPassportPage() {
                             )
                           }
                         />
+                      </div>
+
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 800,
+                            letterSpacing: 1.5,
+                            color: '#62779a',
+                            textTransform: 'uppercase',
+                            marginBottom: 8,
+                          }}
+                        >
+                          Certificate photo
+                        </div>
+
+                        {qualification.photoUrl ? (
+                          <img
+                            src={qualification.photoUrl}
+                            alt="Certificate photo"
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              maxWidth: 200,
+                              height: 'auto',
+                              borderRadius: 10,
+                              border: '1px solid #d7e0ec',
+                              objectFit: 'contain',
+                              marginBottom: 8,
+                            }}
+                          />
+                        ) : null}
+
+                        <input
+                          id={`qual-photo-${qualification.id}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleQualPhotoChange(qualification.id, e)}
+                          style={{
+                            position: 'absolute',
+                            width: 1,
+                            height: 1,
+                            padding: 0,
+                            margin: -1,
+                            overflow: 'hidden',
+                            clip: 'rect(0, 0, 0, 0)',
+                            whiteSpace: 'nowrap',
+                            border: 0,
+                          }}
+                        />
+
+                        <label
+                          htmlFor={`qual-photo-${qualification.id}`}
+                          className="btn btn-secondary"
+                          style={{
+                            fontSize: 13,
+                            padding: '8px 14px',
+                            minHeight: 'unset',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                          }}
+                        >
+                          {qualification.photoUrl
+                            ? 'Change photo'
+                            : 'Upload certificate photo'}
+                        </label>
                       </div>
 
                       <button

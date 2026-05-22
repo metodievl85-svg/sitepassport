@@ -6,6 +6,7 @@ import {
   ChangeEvent,
   FormEvent,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import { supabase } from '../../../lib/supabase'
@@ -16,6 +17,7 @@ type Qualification = {
   name: string
   number: string
   expiry: string
+  photoUrl: string
 }
 
 type WorkerForm = {
@@ -40,6 +42,7 @@ function createEmptyQualification(): Qualification {
     name: '',
     number: '',
     expiry: '',
+    photoUrl: '',
   }
 }
 
@@ -63,6 +66,7 @@ function normalizeQualification(
     name: qualification?.name ?? '',
     number: qualification?.number ?? '',
     expiry: qualification?.expiry ?? '',
+    photoUrl: qualification?.photoUrl ?? '',
   }
 }
 
@@ -89,6 +93,7 @@ function mapWorkerToForm(worker: any, qualifications: any[] | null | undefined):
               name: q.name,
               number: q.number,
               expiry: q.expiry,
+              photoUrl: q.photo_url ?? '',
             })
           )
         : [createEmptyQualification()],
@@ -100,14 +105,26 @@ export default function EditWorkerPage() {
   const router = useRouter()
   const workerId = Array.isArray(params.id) ? params.id[0] : params.id
 
+  const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
+
   const [loaded, setLoaded] = useState(false)
   const [form, setForm] = useState<WorkerForm | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
 
   useEffect(() => {
     if (!workerId) return
     fetchWorker()
   }, [workerId])
+
+  useEffect(() => {
+    return () => {
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
+    }
+  }, [])
 
   async function fetchWorker() {
     try {
@@ -183,6 +200,30 @@ export default function EditWorkerPage() {
     })
   }
 
+  function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
+    if (!form) return
+
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (qualPhotoPreviewUrlsRef.current[id]) {
+      URL.revokeObjectURL(qualPhotoPreviewUrlsRef.current[id])
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    qualPhotoPreviewUrlsRef.current[id] = previewUrl
+
+    setQualPhotoFiles((prev) => ({ ...prev, [id]: file }))
+    setForm({
+      ...form,
+      qualifications: form.qualifications.map((q) =>
+        q.id === id ? { ...q, photoUrl: previewUrl } : q
+      ),
+    })
+
+    e.target.value = ''
+  }
+
   function handleQualificationNameChange(id: string, value: string) {
     if (!form) return
 
@@ -227,6 +268,17 @@ export default function EditWorkerPage() {
 
   function removeQualificationRow(id: string) {
     if (!form) return
+
+    if (qualPhotoPreviewUrlsRef.current[id]) {
+      URL.revokeObjectURL(qualPhotoPreviewUrlsRef.current[id])
+      delete qualPhotoPreviewUrlsRef.current[id]
+    }
+    setQualPhotoFiles((prev) => {
+      if (!(id in prev)) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
 
     setForm({
       ...form,
@@ -288,16 +340,44 @@ export default function EditWorkerPage() {
       }
 
       if (cleanedQualifications.length > 0) {
-        const qualificationRows = cleanedQualifications.map((q) => ({
-          worker_id: form.id,
-          name: q.name.trim(),
-          number: q.number.trim(),
-          expiry: q.expiry || null,
-        }))
+        const qualRows = await Promise.all(
+          cleanedQualifications.map(async (q) => {
+            // Carry existing URL through unless a new file was selected
+            let qualPhotoUrl: string | null = q.photoUrl || null
+            const file = qualPhotoFiles[q.id]
+
+            if (file) {
+              const path = `${form.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+              const { error: uploadError } = await supabase.storage
+                .from('qualification-photos')
+                .upload(path, file, {
+                  contentType: file.type || 'image/jpeg',
+                  upsert: false,
+                })
+
+              if (!uploadError) {
+                const { data: urlData } = supabase.storage
+                  .from('qualification-photos')
+                  .getPublicUrl(path)
+                qualPhotoUrl = urlData.publicUrl
+              } else {
+                console.error('qualification photo upload error:', uploadError)
+              }
+            }
+
+            return {
+              worker_id: form.id,
+              name: q.name.trim(),
+              number: q.number.trim(),
+              expiry: q.expiry || null,
+              photo_url: qualPhotoUrl,
+            }
+          })
+        )
 
         const { error: insertQualificationsError } = await supabase
           .from('qualifications')
-          .insert(qualificationRows)
+          .insert(qualRows)
 
         if (insertQualificationsError) {
           console.error(insertQualificationsError)
@@ -305,6 +385,11 @@ export default function EditWorkerPage() {
           return
         }
       }
+
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
 
       router.push(`/worker/${form.id}`)
     } finally {
@@ -556,6 +641,72 @@ export default function EditWorkerPage() {
                             )
                           }
                         />
+                      </div>
+
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 800,
+                            letterSpacing: 1.5,
+                            color: '#62779a',
+                            textTransform: 'uppercase',
+                            marginBottom: 8,
+                          }}
+                        >
+                          Certificate photo
+                        </div>
+
+                        {qualification.photoUrl ? (
+                          <img
+                            src={qualification.photoUrl}
+                            alt="Certificate photo"
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              maxWidth: 200,
+                              height: 'auto',
+                              borderRadius: 10,
+                              border: '1px solid #d7e0ec',
+                              objectFit: 'contain',
+                              marginBottom: 8,
+                            }}
+                          />
+                        ) : null}
+
+                        <input
+                          id={`qual-photo-${qualification.id}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleQualPhotoChange(qualification.id, e)}
+                          style={{
+                            position: 'absolute',
+                            width: 1,
+                            height: 1,
+                            padding: 0,
+                            margin: -1,
+                            overflow: 'hidden',
+                            clip: 'rect(0, 0, 0, 0)',
+                            whiteSpace: 'nowrap',
+                            border: 0,
+                          }}
+                        />
+
+                        <label
+                          htmlFor={`qual-photo-${qualification.id}`}
+                          className="btn btn-secondary"
+                          style={{
+                            fontSize: 13,
+                            padding: '8px 14px',
+                            minHeight: 'unset',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                          }}
+                        >
+                          {qualification.photoUrl
+                            ? 'Change photo'
+                            : 'Upload certificate photo'}
+                        </label>
                       </div>
 
                       <button

@@ -11,6 +11,7 @@ type Qualification = {
   name: string
   number: string
   expiry: string
+  photoUrl: string
 }
 
 type AttendanceLog = {
@@ -185,6 +186,7 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
           name: q.name ?? '',
           number: q.number ?? '',
           expiry: q.expiry ?? '',
+          photoUrl: q.photo_url ?? '',
         }))
       : [],
   }
@@ -763,6 +765,21 @@ export default function PublicWorkerPage() {
                             <div className="meta-value">{formatDate(qualification.expiry)}</div>
                           </div>
                         </div>
+
+                        {qualification.photoUrl ? (
+                          <img
+                            src={qualification.photoUrl}
+                            alt="Certificate"
+                            style={{
+                              marginTop: 12,
+                              maxWidth: 200,
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: 10,
+                              display: 'block',
+                            }}
+                          />
+                        ) : null}
                       </div>
                     )
                   })}

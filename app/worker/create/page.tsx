@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
@@ -10,6 +10,7 @@ type Qualification = {
   name: string
   number: string
   expiry: string
+  photoUrl: string
 }
 
 const qualificationExamples = [
@@ -32,6 +33,7 @@ function createEmptyQualification(): Qualification {
     name: '',
     number: '',
     expiry: '',
+    photoUrl: '',
   }
 }
 
@@ -59,6 +61,10 @@ export default function CreateWorkerPassportPage() {
   const [userId, setUserId] = useState('')
   const [accountEmail, setAccountEmail] = useState('')
   const [form, setForm] = useState(createEmptyForm())
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
+  const photoPreviewUrlRef = useRef<string>('')
+  const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
 
   useEffect(() => {
     async function load() {
@@ -110,6 +116,17 @@ export default function CreateWorkerPassportPage() {
     }
 
     load()
+
+    return () => {
+      if (photoPreviewUrlRef.current) {
+        URL.revokeObjectURL(photoPreviewUrlRef.current)
+        photoPreviewUrlRef.current = ''
+      }
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
+    }
   }, [router])
 
   function handleChange(
@@ -123,15 +140,36 @@ export default function CreateWorkerPassportPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : ''
-      setForm((prev) => ({
-        ...prev,
-        photo: result,
-      }))
+    if (photoPreviewUrlRef.current) {
+      URL.revokeObjectURL(photoPreviewUrlRef.current)
     }
-    reader.readAsDataURL(file)
+
+    const previewUrl = URL.createObjectURL(file)
+    photoPreviewUrlRef.current = previewUrl
+    setPhotoFile(file)
+    setForm((prev) => ({ ...prev, photo: previewUrl }))
+  }
+
+  function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (qualPhotoPreviewUrlsRef.current[id]) {
+      URL.revokeObjectURL(qualPhotoPreviewUrlsRef.current[id])
+    }
+
+    const previewUrl = URL.createObjectURL(file)
+    qualPhotoPreviewUrlsRef.current[id] = previewUrl
+
+    setQualPhotoFiles((prev) => ({ ...prev, [id]: file }))
+    setForm((prev) => ({
+      ...prev,
+      qualifications: prev.qualifications.map((q) =>
+        q.id === id ? { ...q, photoUrl: previewUrl } : q
+      ),
+    }))
+
+    e.target.value = ''
   }
 
   function handleQualificationChange(
@@ -157,6 +195,16 @@ export default function CreateWorkerPassportPage() {
   }
 
   function removeQualificationRow(id: string) {
+    if (qualPhotoPreviewUrlsRef.current[id]) {
+      URL.revokeObjectURL(qualPhotoPreviewUrlsRef.current[id])
+      delete qualPhotoPreviewUrlsRef.current[id]
+    }
+    setQualPhotoFiles((prev) => {
+      if (!(id in prev)) return prev
+      const next = { ...prev }
+      delete next[id]
+      return next
+    })
     setForm((prev) => ({
       ...prev,
       qualifications:
@@ -182,9 +230,28 @@ export default function CreateWorkerPassportPage() {
     setSaving(true)
 
     try {
-      const cleanedQualifications = form.qualifications.filter(
-        (q) => q.name.trim() || q.number.trim() || q.expiry
-      )
+      let photoUrl = ''
+
+      if (photoFile) {
+        const path = `${userId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+        const { error: uploadError } = await supabase.storage
+          .from('worker-photos')
+          .upload(path, photoFile, {
+            contentType: photoFile.type || 'image/jpeg',
+            upsert: false,
+          })
+
+        if (uploadError) {
+          alert(`Photo upload failed: ${uploadError.message}`)
+          setSaving(false)
+          return
+        }
+
+        const { data: urlData } = supabase.storage
+          .from('worker-photos')
+          .getPublicUrl(path)
+        photoUrl = urlData.publicUrl
+      }
 
       const { data: insertedWorker, error: workerError } = await supabase
         .from('workers')
@@ -200,7 +267,7 @@ export default function CreateWorkerPassportPage() {
             cscs_expiry: form.cscsExpiry || null,
             right_to_work_expiry: form.rightToWorkExpiry || null,
             notes: form.notes.trim(),
-            photo: form.photo,
+            photo: photoUrl,
           },
         ])
         .select()
@@ -213,17 +280,48 @@ export default function CreateWorkerPassportPage() {
         return
       }
 
+      const cleanedQualifications = form.qualifications.filter(
+        (q) => q.name.trim() || q.number.trim() || q.expiry
+      )
+
       if (cleanedQualifications.length > 0) {
-        const qualificationRows = cleanedQualifications.map((qualification) => ({
-          worker_id: insertedWorker.id,
-          name: qualification.name.trim(),
-          number: qualification.number.trim(),
-          expiry: qualification.expiry || null,
-        }))
+        const qualRows = await Promise.all(
+          cleanedQualifications.map(async (qualification) => {
+            let qualPhotoUrl: string | null = null
+            const file = qualPhotoFiles[qualification.id]
+
+            if (file) {
+              const path = `${insertedWorker.id}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+              const { error: uploadError } = await supabase.storage
+                .from('qualification-photos')
+                .upload(path, file, {
+                  contentType: file.type || 'image/jpeg',
+                  upsert: false,
+                })
+
+              if (!uploadError) {
+                const { data: urlData } = supabase.storage
+                  .from('qualification-photos')
+                  .getPublicUrl(path)
+                qualPhotoUrl = urlData.publicUrl
+              } else {
+                console.error('qualification photo upload error:', uploadError)
+              }
+            }
+
+            return {
+              worker_id: insertedWorker.id,
+              name: qualification.name.trim(),
+              number: qualification.number.trim(),
+              expiry: qualification.expiry || null,
+              photo_url: qualPhotoUrl,
+            }
+          })
+        )
 
         const { error: qualificationsError } = await supabase
           .from('qualifications')
-          .insert(qualificationRows)
+          .insert(qualRows)
 
         if (qualificationsError) {
           console.error(qualificationsError)
@@ -232,6 +330,15 @@ export default function CreateWorkerPassportPage() {
           )
         }
       }
+
+      if (photoPreviewUrlRef.current) {
+        URL.revokeObjectURL(photoPreviewUrlRef.current)
+        photoPreviewUrlRef.current = ''
+      }
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
 
       router.replace('/worker')
     } catch (error) {
@@ -505,6 +612,72 @@ export default function CreateWorkerPassportPage() {
                             )
                           }
                         />
+                      </div>
+
+                      <div style={{ marginBottom: 12 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 800,
+                            letterSpacing: 1.5,
+                            color: '#62779a',
+                            textTransform: 'uppercase',
+                            marginBottom: 8,
+                          }}
+                        >
+                          Certificate photo
+                        </div>
+
+                        {qualification.photoUrl ? (
+                          <img
+                            src={qualification.photoUrl}
+                            alt="Certificate photo"
+                            style={{
+                              display: 'block',
+                              width: '100%',
+                              maxWidth: 200,
+                              height: 'auto',
+                              borderRadius: 10,
+                              border: '1px solid #d7e0ec',
+                              objectFit: 'contain',
+                              marginBottom: 8,
+                            }}
+                          />
+                        ) : null}
+
+                        <input
+                          id={`qual-photo-${qualification.id}`}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleQualPhotoChange(qualification.id, e)}
+                          style={{
+                            position: 'absolute',
+                            width: 1,
+                            height: 1,
+                            padding: 0,
+                            margin: -1,
+                            overflow: 'hidden',
+                            clip: 'rect(0, 0, 0, 0)',
+                            whiteSpace: 'nowrap',
+                            border: 0,
+                          }}
+                        />
+
+                        <label
+                          htmlFor={`qual-photo-${qualification.id}`}
+                          className="btn btn-secondary"
+                          style={{
+                            fontSize: 13,
+                            padding: '8px 14px',
+                            minHeight: 'unset',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                          }}
+                        >
+                          {qualification.photoUrl
+                            ? 'Change photo'
+                            : 'Upload certificate photo'}
+                        </label>
                       </div>
 
                       <button
