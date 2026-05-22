@@ -1368,18 +1368,29 @@ export default function WorkerPage() {
                     </div>
 
                     {qualification.photoUrl ? (
-                      <img
-                        src={qualification.photoUrl}
-                        alt="Certificate"
-                        style={{
-                          marginTop: 12,
-                          maxWidth: 200,
-                          width: '100%',
-                          height: 'auto',
-                          borderRadius: 10,
-                          display: 'block',
-                        }}
-                      />
+                      <div style={{ marginTop: 12 }}>
+                        <a
+                          href={qualification.photoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: 'inline-block' }}
+                        >
+                          <img
+                            src={qualification.photoUrl}
+                            alt="Certificate"
+                            style={{
+                              maxWidth: 200,
+                              width: '100%',
+                              height: 'auto',
+                              borderRadius: 10,
+                              display: 'block',
+                            }}
+                          />
+                        </a>
+                        <div style={{ marginTop: 4, fontSize: 12, color: '#9aaabf' }}>
+                          Click to view full size
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 )
