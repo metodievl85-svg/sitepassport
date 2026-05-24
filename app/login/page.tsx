@@ -51,6 +51,8 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [isMobile, setIsMobile] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     function handleResize() {
@@ -577,14 +579,37 @@ export default function LoginPage() {
                 <div className="field">
                   <label htmlFor="password">Password</label>
 
-                  <input
-                    id="password"
-                    type="password"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                      style={{ paddingRight: 64 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      style={{
+                        position: 'absolute',
+                        right: 10,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#5a6f96',
+                        fontSize: 13,
+                        fontWeight: 800,
+                        padding: '4px 6px',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
               ) : null}
 
@@ -592,14 +617,37 @@ export default function LoginPage() {
                 <div className="field">
                   <label htmlFor="confirmPassword">Confirm password</label>
 
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Repeat password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Repeat password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                      style={{ paddingRight: 64 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      style={{
+                        position: 'absolute',
+                        right: 10,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#5a6f96',
+                        fontSize: 13,
+                        fontWeight: 800,
+                        padding: '4px 6px',
+                        lineHeight: 1,
+                      }}
+                    >
+                      {showConfirmPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
               ) : null}
 
