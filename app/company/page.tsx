@@ -1397,7 +1397,6 @@ export default function CompanyPage() {
           inductionLink={inductionLink}
           savingInductionLink={savingInductionLink}
           inductionLinkMessage={inductionLinkMessage}
-          siteLink={siteLink}
           setCompanyNameDraft={setCompanyNameDraft}
           setInductionLink={setInductionLink}
           handleSaveCompanyName={handleSaveCompanyName}

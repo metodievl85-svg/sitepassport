@@ -23,6 +23,10 @@ export default function CompanyDashboardMenu() {
             Attendance settings
           </Link>
 
+          <Link href="/company/site-location" className="company-dashboard-menu-link">
+            Site location
+          </Link>
+
           <Link href="/company/print-qr" className="company-dashboard-menu-link">
             Print site QR
           </Link>

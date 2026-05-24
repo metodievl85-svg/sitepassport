@@ -8,7 +8,6 @@ type CompanySettingsProps = {
   inductionLink: string
   savingInductionLink: boolean
   inductionLinkMessage: string
-  siteLink: string
   setCompanyNameDraft: (value: string) => void
   setInductionLink: (value: string) => void
   handleSaveCompanyName: () => void
@@ -24,7 +23,6 @@ export default function CompanySettings({
   inductionLink,
   savingInductionLink,
   inductionLinkMessage,
-  siteLink,
   setCompanyNameDraft,
   setInductionLink,
   handleSaveCompanyName,
@@ -178,19 +176,9 @@ export default function CompanySettings({
               Copy site link
             </button>
 
-            <Link href="/company/site-location" className="btn btn-secondary">
-              Site location
-            </Link>
-
             <Link href="/company/print-qr" className="btn btn-primary">
               Print site QR
             </Link>
-
-            {siteLink && (
-              <a href={siteLink} target="_blank" rel="noreferrer" className="btn btn-secondary">
-                Open site page
-              </a>
-            )}
           </div>
         </div>
       </section>

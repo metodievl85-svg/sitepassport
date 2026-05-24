@@ -42,7 +42,7 @@ export default function RootLayout({
           }}
         >
           <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
-            NEKAID
+            NekaID
           </div>
 
           <div
