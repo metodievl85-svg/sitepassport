@@ -2,7 +2,7 @@ export default function PrivacyPolicyPage() {
   return (
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', lineHeight: 1.7 }}>
       <h1>Privacy Policy</h1>
-      <p><strong>Last updated:</strong> 13 May 2026</p>
+      <p><strong>Last updated:</strong> 24 May 2026</p>
 
       <p>
         NekaID is a UK construction workforce verification and site management platform.
@@ -12,9 +12,9 @@ export default function PrivacyPolicyPage() {
 
       <h2>1. Who we are</h2>
       <p>
-        NekaID operates through <strong>https://www.nekaid.co.uk</strong>.
-        During our rebrand, some services may still redirect from or reference
-        <strong> https://www.sitepassportapp.co.uk</strong>.
+        NekaID operates through <strong>https://www.sitepassportapp.co.uk</strong>.
+        During our rebrand to NekaID, some services may also be found at
+        <strong>https://www.nekaid.co.uk</strong>.
       </p>
       <p>
         For privacy or legal questions, contact us at:
@@ -68,13 +68,23 @@ export default function PrivacyPolicyPage() {
       </ul>
 
       <h2>4. Legal basis for processing</h2>
+      <p>We process personal data under the following legal bases:</p>
+      <ul>
+        <li><strong>Contract performance</strong> — processing necessary to create and manage accounts, deliver the NekaID service, and fulfil platform features requested by the user.</li>
+        <li><strong>Legitimate interests</strong> — processing necessary for platform security, fraud prevention, site safety records, and improving the reliability of the service, where these interests are not overridden by individual rights.</li>
+        <li><strong>Legal obligation</strong> — processing necessary to comply with applicable laws, including the retention of compliance, attendance, and workforce records where legally required.</li>
+        <li><strong>Consent</strong> — where workers voluntarily provide optional information such as medical details, which is collected only on the basis of explicit consent and for health and safety purposes on construction sites.</li>
+      </ul>
+
+      <h2>5. Data controller</h2>
       <p>
-        We process personal data where it is necessary to provide the NekaID service,
-        manage user accounts, support construction site onboarding, protect the platform,
-        comply with legal obligations, and respond to user requests.
+        NekaID acts as the data controller for worker and company personal data processed
+        through the platform. Where companies use NekaID to manage their own workforce data,
+        they may also act as data controllers in their own right and are responsible for
+        ensuring their use of the platform complies with applicable data protection law.
       </p>
 
-      <h2>5. Who can see your data</h2>
+      <h2>6. Who can see your data</h2>
       <p>
         Workers can create and manage their own passport information. Companies can view
         worker information when they scan a worker QR code or save a worker to their
@@ -86,7 +96,7 @@ export default function PrivacyPolicyPage() {
         not trust.
       </p>
 
-      <h2>6. GPS and location data</h2>
+      <h2>7. GPS and location data</h2>
       <p>
         NekaID may use GPS/location data when workers or visitors sign in or sign out of a
         site. This is used to support attendance verification and site safety records.
@@ -95,7 +105,7 @@ export default function PrivacyPolicyPage() {
         NekaID does not continuously track users in the background.
       </p>
 
-      <h2>7. Qualification and verification data</h2>
+      <h2>8. Qualification and verification data</h2>
       <p>
         Workers may upload qualification information, certificates, cards, or supporting
         documents. Unless a record is clearly marked as verified by NekaID, uploaded
@@ -106,21 +116,21 @@ export default function PrivacyPolicyPage() {
         Right to Work, CSCS, and site safety checks where required.
       </p>
 
-      <h2>8. Where your data is stored</h2>
+      <h2>9. Where your data is stored</h2>
       <p>
         NekaID uses Supabase for authentication and database storage. The platform may also
         use services such as Vercel and other hosting, email, or infrastructure providers.
         Data may be stored on secure cloud infrastructure used by our service providers.
       </p>
 
-      <h2>9. How long we keep data</h2>
+      <h2>10. How long we keep data</h2>
       <p>
         We keep personal data for as long as your account or passport profile is active, or
         as long as needed to provide the service, meet legal obligations, resolve disputes,
         maintain security, and support compliance records.
       </p>
 
-      <h2>10. Your rights</h2>
+      <h2>11. Your rights</h2>
       <p>Under UK data protection law, you may have rights including:</p>
       <ul>
         <li>The right to access your personal data</li>
@@ -132,14 +142,14 @@ export default function PrivacyPolicyPage() {
         <li>The right to complain to the Information Commissioner’s Office</li>
       </ul>
 
-      <h2>11. Account deletion</h2>
+      <h2>12. Account deletion</h2>
       <p>
         Users may request or use available account deletion features to delete their account
         and associated personal information. Some records may be retained where legally
         required or where needed for security, audit, or compliance purposes.
       </p>
 
-      <h2>12. Security</h2>
+      <h2>13. Security</h2>
       <p>
         We take reasonable steps to protect personal data, including secure authentication,
         HTTPS, hosted database services, and access controls. No online service is 100%
@@ -147,19 +157,19 @@ export default function PrivacyPolicyPage() {
         responsibly.
       </p>
 
-      <h2>13. Children</h2>
+      <h2>14. Children</h2>
       <p>
         NekaID is intended for construction workers, companies, site managers, contractors,
         and authorised visitors. It is not intended for children.
       </p>
 
-      <h2>14. Changes to this policy</h2>
+      <h2>15. Changes to this policy</h2>
       <p>
         We may update this Privacy Policy as NekaID grows. The latest version will always
         be available on this page.
       </p>
 
-      <h2>15. Contact</h2>
+      <h2>16. Contact</h2>
       <p>
         For privacy requests or questions, email:
         <br />

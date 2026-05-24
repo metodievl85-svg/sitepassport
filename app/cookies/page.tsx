@@ -3,7 +3,7 @@ export default function CookiePolicyPage() {
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', lineHeight: 1.7 }}>
       <h1>Cookie Policy</h1>
 
-      <p><strong>Last updated:</strong> 13 May 2026</p>
+      <p><strong>Last updated:</strong> 24 May 2026</p>
 
       <p>
         This Cookie Policy explains how NekaID uses cookies and similar technologies
@@ -29,6 +29,7 @@ export default function CookiePolicyPage() {
         <li>Improve website performance and reliability</li>
         <li>Support platform security and fraud prevention</li>
         <li>Help pages and features function correctly</li>
+        <li>Store temporary data in localStorage and sessionStorage to support site attendance, remembered sites, and session features</li>
       </ul>
 
       <h2>3. Authentication cookies</h2>
@@ -46,13 +47,9 @@ export default function CookiePolicyPage() {
       <h2>4. Analytics and performance</h2>
 
       <p>
-        NekaID may use analytics, diagnostics, or performance tools to help improve
-        the platform, monitor reliability, detect issues, and understand general
-        platform usage.
-      </p>
-
-      <p>
-        We do not use cookies to sell personal data.
+        NekaID does not currently use third-party analytics cookies. We may use basic
+        platform diagnostics to monitor reliability and detect errors. We do not use
+        cookies or tracking to sell personal data or serve advertising.
       </p>
 
       <h2>5. Third-party services</h2>
