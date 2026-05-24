@@ -7,6 +7,8 @@ type CompanyStatsProps = {
   expiringSoonCount: number
   expiredCount: number
   onVisitorsClick: () => void
+  onExpiringSoonClick: () => void
+  onExpiredClick: () => void
 }
 
 export default function CompanyStats({
@@ -18,6 +20,8 @@ export default function CompanyStats({
   expiringSoonCount,
   expiredCount,
   onVisitorsClick,
+  onExpiringSoonClick,
+  onExpiredClick,
 }: CompanyStatsProps) {
   return (
     <>
@@ -74,19 +78,49 @@ export default function CompanyStats({
           </div>
         </div>
 
-        <div style={{ background:'#fff8ea',border:'1px solid #efd6ac',borderRadius:22,padding:18 }}>
+        <button
+          type="button"
+          className="company-stats-button"
+          onClick={onExpiringSoonClick}
+          style={{
+            textAlign:'left',
+            background:'#fff8ea',
+            border:'1px solid #efd6ac',
+            borderRadius:22,
+            padding:18,
+            cursor:'pointer'
+          }}
+        >
           <div className="meta-label">Expiring soon</div>
           <div style={{fontSize:34,fontWeight:900,color:'#9b5d00',lineHeight:1,marginTop:8}}>
             {expiringSoonCount}
           </div>
-        </div>
+          <div style={{marginTop:8,fontSize:12,fontWeight:900,color:'#9b5d00'}}>
+            Click to view
+          </div>
+        </button>
 
-        <div style={{ background:'#fff1f1',border:'1px solid #efc1c1',borderRadius:22,padding:18 }}>
+        <button
+          type="button"
+          className="company-stats-button"
+          onClick={onExpiredClick}
+          style={{
+            textAlign:'left',
+            background:'#fff1f1',
+            border:'1px solid #efc1c1',
+            borderRadius:22,
+            padding:18,
+            cursor:'pointer'
+          }}
+        >
           <div className="meta-label">Expired</div>
           <div style={{fontSize:34,fontWeight:900,color:'#b42318',lineHeight:1,marginTop:8}}>
             {expiredCount}
           </div>
-        </div>
+          <div style={{marginTop:8,fontSize:12,fontWeight:900,color:'#b42318'}}>
+            Click to view
+          </div>
+        </button>
       </section>
 
       <style jsx>{`

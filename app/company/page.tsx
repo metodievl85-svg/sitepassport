@@ -1387,6 +1387,8 @@ export default function CompanyPage() {
           expiringSoonCount={expiringSoonCount}
           expiredCount={expiredCount}
           onVisitorsClick={() => setVisitorModalOpen(true)}
+          onExpiringSoonClick={() => setFilter('expiring')}
+          onExpiredClick={() => setFilter('expired')}
         />
 <CompanyDashboardMenu />
         <CompanySettings
