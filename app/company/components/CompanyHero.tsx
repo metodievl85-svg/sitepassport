@@ -11,6 +11,7 @@ type Props = {
 export default function CompanyHero({ email, handleLogout }: Props) {
   return (
     <section
+      className="co-hero-section"
       style={{
         display: 'flex',
         alignItems: 'flex-start',
@@ -33,6 +34,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
         }}
       >
         <div
+          className="co-hero-logo-clip"
           style={{
             height: '160px',
             overflow: 'hidden',
@@ -41,6 +43,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           }}
         >
           <img
+            className="co-hero-logo-img"
             src="/nekaid-logo.png"
             alt="NekaID"
             style={{
@@ -53,6 +56,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           />
         </div>
         <h1
+          className="co-hero-h1"
           style={{
             margin: 0,
             fontSize: '48px',
@@ -96,6 +100,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
       </div>
 
       <div
+        className="co-hero-panel"
         style={{
           width: '380px',
           flexShrink: 0,
@@ -145,6 +150,31 @@ export default function CompanyHero({ email, handleLogout }: Props) {
 
         <CompanyDashboardMenu />
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .co-hero-section {
+            flex-direction: column !important;
+            padding: 20px !important;
+            gap: 20px !important;
+          }
+          .co-hero-panel {
+            width: 100% !important;
+          }
+          .co-hero-logo-clip {
+            height: 90px !important;
+            margin-left: 0 !important;
+          }
+          .co-hero-logo-img {
+            width: 300px !important;
+            margin-top: -68px !important;
+          }
+          .co-hero-h1 {
+            font-size: 32px !important;
+            letter-spacing: -0.5px !important;
+          }
+        }
+      `}</style>
     </section>
   )
 }
