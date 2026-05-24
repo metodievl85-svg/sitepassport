@@ -18,17 +18,26 @@ type CompanySiteRow = {
 
 function SitePassportLogo() {
   return (
-    <img
-      src="/sitepassport-logo.png"
-      alt="SitePassport"
+    <div
       style={{
-        display: 'block',
-        width: 'min(320px, 100%)',
-        height: 'auto',
-        objectFit: 'contain',
+        height: 105,
+        overflow: 'hidden',
+        width: 'min(380px, 100%)',
+        maxWidth: '100%',
         marginBottom: 8,
       }}
-    />
+    >
+      <img
+        src="/nekaid-logo.png"
+        alt="NekaID"
+        style={{
+          display: 'block',
+          width: '100%',
+          height: 'auto',
+          marginTop: -88,
+        }}
+      />
+    </div>
   )
 }
 

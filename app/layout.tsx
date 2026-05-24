@@ -6,12 +6,15 @@ export const metadata = {
   title: 'NekaID',
   description: 'Secure workforce identity and compliance platform',
   manifest: '/manifest.json',
-  themeColor: '#16286d',
   appleWebApp: {
     capable: true,
     title: 'NekaID',
     statusBarStyle: 'default',
   },
+}
+
+export const viewport = {
+  themeColor: '#16286d',
 }
 
 export default function RootLayout({
