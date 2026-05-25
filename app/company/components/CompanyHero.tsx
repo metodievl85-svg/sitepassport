@@ -39,17 +39,15 @@ export default function CompanyHero({ email, handleLogout }: Props) {
         }}
       >
         {isRigby ? (
-          <div style={{
-            color: '#ffffff',
-            fontSize: '28px',
-            fontWeight: 300,
-            letterSpacing: '10px',
-            textTransform: 'uppercase',
-            fontFamily: "'Trebuchet MS', 'Century Gothic', sans-serif",
-            marginBottom: '8px',
-          }}>
-            RIGBY <span style={{ fontWeight: 100, fontSize: '24px' }}>&amp;</span> RIGBY
-          </div>
+          <img
+            src="/rigby-logo.png"
+            alt="Rigby & Rigby"
+            style={{
+              height: '55px',
+              width: 'auto',
+              display: 'block',
+            }}
+          />
         ) : (
           <div
             className="co-hero-logo-clip"
