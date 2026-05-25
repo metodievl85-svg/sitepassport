@@ -18,6 +18,9 @@ export default function AttendanceSettingsPage() {
 
   const [message, setMessage] = useState('')
 
+  const [morningReminderTime, setMorningReminderTime] = useState('07:00')
+  const [reminderEnabled, setReminderEnabled] = useState(false)
+
   useEffect(() => {
     void loadSettings()
   }, [])
@@ -37,7 +40,7 @@ export default function AttendanceSettingsPage() {
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, role, auto_sign_out_time, site_radius_m')
+        .select('id, role, auto_sign_out_time, site_radius_m, morning_reminder_time')
         .eq('id', session.user.id)
         .single()
 
@@ -59,6 +62,11 @@ export default function AttendanceSettingsPage() {
 
       if (profile.site_radius_m) {
         setSiteRadius(String(profile.site_radius_m))
+      }
+
+      if (profile.morning_reminder_time) {
+        setMorningReminderTime(profile.morning_reminder_time)
+        setReminderEnabled(true)
       }
     } finally {
       setLoading(false)
@@ -84,6 +92,7 @@ export default function AttendanceSettingsPage() {
         .update({
           auto_sign_out_time: autoSignOutTime,
           site_radius_m: radiusNumber,
+          morning_reminder_time: reminderEnabled ? morningReminderTime : null,
         })
         .eq('id', companyId)
 
@@ -240,6 +249,54 @@ export default function AttendanceSettingsPage() {
                 }}
               >
                 Workers outside this radius can automatically be signed out.
+              </div>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 800,
+                  color: '#09154b',
+                  marginBottom: 10,
+                }}
+              >
+                Morning sign-in reminder
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={reminderEnabled}
+                    onChange={(e) => setReminderEnabled(e.target.checked)}
+                    style={{ width: 18, height: 18, cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: 15, fontWeight: 700, color: '#09154b' }}>
+                    Enable morning reminder
+                  </span>
+                </label>
+              </div>
+
+              {reminderEnabled && (
+                <input
+                  type="time"
+                  value={morningReminderTime}
+                  onChange={(e) => setMorningReminderTime(e.target.value)}
+                  style={{
+                    minHeight: 54,
+                    borderRadius: 14,
+                    border: '1px solid #d7e1ef',
+                    padding: '0 16px',
+                    fontSize: 16,
+                    fontWeight: 700,
+                    width: 220,
+                  }}
+                />
+              )}
+
+              <div style={{ marginTop: 8, fontSize: 14, color: '#5a6f96' }}>
+                Workers who have not signed in by this time will receive a push notification reminder. Only sent on weekdays.
               </div>
             </div>
 

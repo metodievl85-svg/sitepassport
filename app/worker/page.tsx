@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
+import { usePushNotifications } from '../lib/usePushNotifications'
 
 type Qualification = {
   id: string
@@ -230,6 +231,8 @@ export default function WorkerPage() {
   const [openingInduction, setOpeningInduction] = useState(false)
   const [completingInduction, setCompletingInduction] = useState(false)
   const [inductionMessage, setInductionMessage] = useState('')
+
+  usePushNotifications(passport?.user_id ?? '', passport?.id ?? '')
 
   useEffect(() => {
     async function load() {
