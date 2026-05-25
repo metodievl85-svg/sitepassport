@@ -43,7 +43,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
             src="/rigby-logo.png"
             alt="Rigby & Rigby"
             style={{
-              height: '55px',
+              height: '38px',
               width: 'auto',
               display: 'block',
             }}
