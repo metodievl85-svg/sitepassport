@@ -9,6 +9,8 @@ type Props = {
 }
 
 export default function CompanyHero({ email, handleLogout }: Props) {
+  const isRigby = email === 'leroy.smith@rigbyandrigby.com'
+
   return (
     <section
       className="co-hero-section"
@@ -20,7 +22,9 @@ export default function CompanyHero({ email, handleLogout }: Props) {
         padding: '32px 36px',
         marginBottom: '24px',
         borderRadius: '32px',
-        background: 'linear-gradient(135deg, #071133 0%, #0d1b52 45%, #243caa 100%)',
+        background: isRigby
+          ? '#000000'
+          : 'linear-gradient(135deg, #071133 0%, #0d1b52 45%, #243caa 100%)',
         overflow: 'visible',
       }}
     >
@@ -33,28 +37,37 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           gap: '12px',
         }}
       >
-        <div
-          className="co-hero-logo-clip"
-          style={{
-            height: '160px',
-            overflow: 'hidden',
-            maxWidth: '100%',
-            marginLeft: '-14px',
-          }}
-        >
+        {isRigby ? (
           <img
-            className="co-hero-logo-img"
-            src="/nekaid-logo.png"
-            alt="NekaID"
-            style={{
-              display: 'block',
-              width: '560px',
-              maxWidth: '100%',
-              height: 'auto',
-              marginTop: '-130px',
-            }}
+            src="/rigby-logo.png"
+            alt="Rigby & Rigby"
+            style={{ height: '80px', width: 'auto' }}
           />
-        </div>
+        ) : (
+          <div
+            className="co-hero-logo-clip"
+            style={{
+              height: '160px',
+              overflow: 'hidden',
+              maxWidth: '100%',
+              marginLeft: '-14px',
+            }}
+          >
+            <img
+              className="co-hero-logo-img"
+              src="/nekaid-logo.png"
+              alt="NekaID"
+              style={{
+                display: 'block',
+                width: '560px',
+                maxWidth: '100%',
+                height: 'auto',
+                marginTop: '-130px',
+              }}
+            />
+          </div>
+        )}
+
         <h1
           className="co-hero-h1"
           style={{
@@ -66,37 +79,58 @@ export default function CompanyHero({ email, handleLogout }: Props) {
             letterSpacing: '-1px',
           }}
         >
-          Company dashboard
+          {isRigby ? 'Rigby & Rigby' : 'Company dashboard'}
         </h1>
-        <p
-          style={{
-            margin: 0,
-            color: 'rgba(255, 255, 255, 0.82)',
-            fontSize: '15px',
-            fontWeight: 600,
-            lineHeight: 1.5,
-          }}
-        >
-          Manage operatives, review expiry status, scan QR codes, and monitor workforce activity from one central dashboard.
-        </p>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((tag) => (
-            <span
-              key={tag}
-              style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                color: '#ffffff',
-                borderRadius: '999px',
-                padding: '6px 14px',
-                fontSize: '13px',
-                fontWeight: 800,
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+
+        {!isRigby && (
+          <p
+            style={{
+              margin: 0,
+              color: 'rgba(255, 255, 255, 0.82)',
+              fontSize: '15px',
+              fontWeight: 600,
+              lineHeight: 1.5,
+            }}
+          >
+            Manage operatives, review expiry status, scan QR codes, and monitor workforce activity from one central dashboard.
+          </p>
+        )}
+
+        {!isRigby && (
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {['Desktop-first', 'Mobile-friendly', 'Real-time workforce view'].map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  borderRadius: '999px',
+                  padding: '6px 14px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {isRigby && (
+          <div
+            style={{
+              marginTop: 'auto',
+              paddingTop: '24px',
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '12px',
+              fontWeight: 500,
+              letterSpacing: '0.5px',
+            }}
+          >
+            Powered by NekaID
+          </div>
+        )}
       </div>
 
       <div
