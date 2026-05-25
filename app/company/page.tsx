@@ -392,14 +392,56 @@ export default function CompanyPage() {
   const [siteLink, setSiteLink] = useState('')
 
   useEffect(() => {
-  void loadCompanyDashboard()
-
-  const interval = setInterval(() => {
     void loadCompanyDashboard()
-  }, 60000)
+  }, [])
 
-  return () => clearInterval(interval)
-}, [])
+  useEffect(() => {
+    if (!companyId) return
+
+    const channel = supabase
+      .channel('site_attendance_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'site_attendance',
+          filter: `company_id=eq.${companyId}`,
+        },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as SiteAttendanceRow | null
+          if (!row?.worker_id) return
+
+          if (payload.eventType === 'DELETE') {
+            setSavedWorkers((current) =>
+              current.map((worker) =>
+                worker.workerId === row.worker_id
+                  ? { ...worker, siteStatus: 'OUT', lastAttendanceAt: '' }
+                  : worker
+              )
+            )
+            return
+          }
+
+          setSavedWorkers((current) =>
+            current.map((worker) =>
+              worker.workerId === row.worker_id
+                ? {
+                    ...worker,
+                    siteStatus: row.status,
+                    lastAttendanceAt: row.created_at,
+                  }
+                : worker
+            )
+          )
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [companyId])
 
   useEffect(() => {
     if (!visitorModalOpen) return
