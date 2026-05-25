@@ -26,6 +26,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           ? '#000000'
           : 'linear-gradient(135deg, #071133 0%, #0d1b52 45%, #243caa 100%)',
         overflow: 'visible',
+        position: 'relative',
       }}
     >
       <div
@@ -41,7 +42,11 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           <img
             src="/rigby-logo.png"
             alt="Rigby & Rigby"
-            style={{ height: '80px', width: 'auto' }}
+            style={{
+              height: '100px',
+              width: 'auto',
+              filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))',
+            }}
           />
         ) : (
           <div
@@ -77,9 +82,10 @@ export default function CompanyHero({ email, handleLogout }: Props) {
             fontWeight: 900,
             color: '#ffffff',
             letterSpacing: '-1px',
+            display: isRigby ? 'none' : undefined,
           }}
         >
-          {isRigby ? '' : 'Company dashboard'}
+          Company dashboard
         </h1>
 
         {!isRigby && (
@@ -114,21 +120,6 @@ export default function CompanyHero({ email, handleLogout }: Props) {
                 {tag}
               </span>
             ))}
-          </div>
-        )}
-
-        {isRigby && (
-          <div
-            style={{
-              marginTop: 'auto',
-              paddingTop: '24px',
-              color: 'rgba(255, 255, 255, 0.4)',
-              fontSize: '12px',
-              fontWeight: 500,
-              letterSpacing: '0.5px',
-            }}
-          >
-            Powered by NekaID
           </div>
         )}
       </div>
@@ -184,6 +175,47 @@ export default function CompanyHero({ email, handleLogout }: Props) {
 
         <CompanyDashboardMenu />
       </div>
+
+      {isRigby && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '16px',
+            left: '36px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          <span
+            style={{
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontSize: '11px',
+              fontWeight: 500,
+            }}
+          >
+            Powered by
+          </span>
+          <div
+            style={{
+              height: '60px',
+              overflow: 'hidden',
+              flexShrink: 0,
+            }}
+          >
+            <img
+              src="/nekaid-logo.png"
+              alt="NekaID"
+              style={{
+                display: 'block',
+                height: '200px',
+                width: 'auto',
+                marginTop: '-70px',
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       <style>{`
         @media (max-width: 768px) {
