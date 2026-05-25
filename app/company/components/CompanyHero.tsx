@@ -79,7 +79,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
             letterSpacing: '-1px',
           }}
         >
-          {isRigby ? 'Rigby & Rigby' : 'Company dashboard'}
+          {isRigby ? '' : 'Company dashboard'}
         </h1>
 
         {!isRigby && (
