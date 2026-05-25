@@ -39,16 +39,17 @@ export default function CompanyHero({ email, handleLogout }: Props) {
         }}
       >
         {isRigby ? (
-          <img
-            src="/rigby-logo.png"
-            alt="Rigby & Rigby"
-            style={{
-              height: '60px',
-              width: 'auto',
-              display: 'block',
-              mixBlendMode: 'screen',
-            }}
-          />
+          <div style={{
+            color: '#ffffff',
+            fontSize: '28px',
+            fontWeight: 300,
+            letterSpacing: '10px',
+            textTransform: 'uppercase',
+            fontFamily: "'Trebuchet MS', 'Century Gothic', sans-serif",
+            marginBottom: '8px',
+          }}>
+            RIGBY <span style={{ fontWeight: 100, fontSize: '24px' }}>&amp;</span> RIGBY
+          </div>
         ) : (
           <div
             className="co-hero-logo-clip"
@@ -190,8 +191,8 @@ export default function CompanyHero({ email, handleLogout }: Props) {
         >
           <span
             style={{
-              color: 'rgba(255, 255, 255, 0.5)',
-              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.7)',
+              fontSize: '12px',
               fontWeight: 500,
             }}
           >
@@ -199,7 +200,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           </span>
           <div
             style={{
-              height: '60px',
+              height: '24px',
               overflow: 'hidden',
               flexShrink: 0,
             }}
@@ -209,9 +210,9 @@ export default function CompanyHero({ email, handleLogout }: Props) {
               alt="NekaID"
               style={{
                 display: 'block',
-                height: '200px',
+                height: '80px',
                 width: 'auto',
-                marginTop: '-70px',
+                marginTop: '-28px',
               }}
             />
           </div>
