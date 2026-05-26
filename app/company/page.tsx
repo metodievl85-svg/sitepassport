@@ -10,6 +10,7 @@ import CompanyHero from './components/CompanyHero'
 import CompanyStats from './components/CompanyStats'
 import CompanyDashboardMenu from './components/CompanyDashboardMenu'
 import CompanySettings from './components/CompanySettings'
+import CompanyMessages from './components/CompanyMessages'
 
 type SavedWorkerRow = {
   id: string
@@ -1766,6 +1767,10 @@ export default function CompanyPage() {
             </div>
           )}
         </section>
+
+        <div id="messages">
+          <CompanyMessages companyId={companyId} />
+        </div>
       </div>
 
       <style jsx>{`

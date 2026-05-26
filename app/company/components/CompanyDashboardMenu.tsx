@@ -19,6 +19,14 @@ export default function CompanyDashboardMenu() {
 
       {open ? (
         <div className="company-dashboard-menu-panel">
+          <a
+            href="#messages"
+            className="company-dashboard-menu-link"
+            onClick={() => setOpen(false)}
+          >
+            Messages
+          </a>
+
           <Link href="/company/attendance-settings" className="company-dashboard-menu-link">
             Attendance settings
           </Link>
