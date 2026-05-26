@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../lib/usePushNotifications'
+import WorkerMessages from './components/WorkerMessages'
 
 type Qualification = {
   id: string
@@ -1401,6 +1402,8 @@ export default function WorkerPage() {
             )}
           </div>
         </section>
+
+        <WorkerMessages workerId={passport.id} userId={passport.user_id ?? ''} />
 
         <section
           style={{
