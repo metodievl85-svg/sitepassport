@@ -88,6 +88,8 @@ export async function POST(request: NextRequest) {
         .select('endpoint, p256dh, auth')
         .eq('user_id', receiver_id)
 
+      console.log('push debug: receiver_id=%s subscriptions_found=%d', receiver_id, subscriptions?.length ?? 0)
+
       if (subscriptions?.length) {
         const notificationBody = message_text
           ? message_text.slice(0, 60)

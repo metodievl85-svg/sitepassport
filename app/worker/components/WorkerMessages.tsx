@@ -83,22 +83,27 @@ export default function WorkerMessages({ workerId, userId }: Props) {
         return
       }
 
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .in('id', uniqueCompanyIds)
+      const profilesRes = await fetch(
+        `/api/profiles/company?ids=${uniqueCompanyIds.join(',')}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
 
-      if (error || !profiles) {
-        setCompanies(uniqueCompanyIds.map((id) => ({ companyId: id, email: id })))
+      if (!profilesRes.ok) {
+        setCompanies(
+          uniqueCompanyIds.map((id) => ({ companyId: id, email: `${id.slice(0, 8)}...` }))
+        )
         return
       }
 
-      const profileMap = new Map(profiles.map((p: { id: string; email: string }) => [p.id, p.email]))
+      const profilesData = await profilesRes.json()
+      const profileMap = new Map(
+        (profilesData.profiles as { id: string; email: string }[]).map((p) => [p.id, p.email])
+      )
 
       setCompanies(
         uniqueCompanyIds.map((id) => ({
           companyId: id,
-          email: (profileMap.get(id) as string) ?? id,
+          email: profileMap.get(id) ?? `${id.slice(0, 8)}...`,
         }))
       )
     } finally {
