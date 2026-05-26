@@ -49,6 +49,7 @@ export default function CompanyMessages({ companyId }: Props) {
   }, [companyId])
 
   useEffect(() => {
+    if (!selectedWorkerId) return
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, selectedWorkerId])
 

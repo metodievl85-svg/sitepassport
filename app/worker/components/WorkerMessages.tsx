@@ -47,6 +47,7 @@ export default function WorkerMessages({ workerId, userId }: Props) {
   }, [userId])
 
   useEffect(() => {
+    if (!selectedCompanyId) return
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, selectedCompanyId])
 
@@ -224,10 +225,6 @@ export default function WorkerMessages({ workerId, userId }: Props) {
     })
   }
 
-  function companyLabel(email: string) {
-    return email.split('@')[1]?.split('.')[0] ?? email
-  }
-
   if (!loadingMessages && companies.length === 0) {
     return null
   }
@@ -289,20 +286,6 @@ export default function WorkerMessages({ workerId, userId }: Props) {
                           fontSize: 14,
                           fontWeight: 900,
                           color: isSelected ? '#243caa' : '#09154b',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {companyLabel(company.email)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: '#5a6f96',
-                          fontWeight: 700,
-                          marginTop: 2,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
