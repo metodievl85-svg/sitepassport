@@ -13,6 +13,24 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+function getUKOffset(date: Date): number {
+  const year = date.getFullYear()
+  const jul = new Date(Date.UTC(year, 6, 15, 12))
+
+  const ukHourOf = (d: Date) =>
+    Number(
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/London',
+        hour: '2-digit',
+        hour12: false,
+      }).format(d)
+    )
+
+  const julOffset = ukHourOf(jul) - 12
+  const currentOffset = ((ukHourOf(date) - date.getUTCHours()) + 24) % 24
+  return currentOffset === julOffset ? 1 : 0
+}
+
 export async function GET(request: Request) {
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -21,7 +39,11 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date()
-    const currentTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`
+    const offset = getUKOffset(now)
+    const ukHour = (now.getUTCHours() + offset) % 24
+    const ukMinute = now.getUTCMinutes()
+    const ukTotal = ukHour * 60 + ukMinute
+    const currentTime = `${String(ukHour).padStart(2, '0')}:${String(ukMinute).padStart(2, '0')}`
 
     const { data: companies, error: companiesError } = await supabaseAdmin
       .from('profiles')
@@ -42,11 +64,9 @@ export async function GET(request: Request) {
       if (!reminderTime) continue
 
       const [rHour, rMinute] = reminderTime.split(':').map(Number)
-      const nowHour = now.getUTCHours()
-      const nowMinute = now.getUTCMinutes()
+      const reminderTotal = rHour * 60 + rMinute
 
-      const withinWindow =
-        nowHour === rHour && nowMinute >= rMinute && nowMinute < rMinute + 30
+      const withinWindow = ukTotal >= reminderTotal && ukTotal < reminderTotal + 30
 
       if (!withinWindow) continue
 

@@ -19,7 +19,11 @@ async function registerPush(userId: string, workerId: string) {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
-    const registration = await navigator.serviceWorker.ready
+    const registration = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 10000)),
+    ])
+    if (!registration) return
 
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
     if (!publicKey) return
@@ -32,7 +36,7 @@ async function registerPush(userId: string, workerId: string) {
 
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey).buffer as ArrayBuffer,
+        applicationServerKey: urlBase64ToUint8Array(publicKey) as Uint8Array<ArrayBuffer>,
       })
     }
 
