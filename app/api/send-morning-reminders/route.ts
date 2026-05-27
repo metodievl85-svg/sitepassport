@@ -13,37 +13,36 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-function getUKOffset(date: Date): number {
-  const year = date.getFullYear()
-  const jul = new Date(Date.UTC(year, 6, 15, 12))
-
-  const ukHourOf = (d: Date) =>
-    Number(
-      new Intl.DateTimeFormat('en-GB', {
-        timeZone: 'Europe/London',
-        hour: '2-digit',
-        hour12: false,
-      }).format(d)
-    )
-
-  const julOffset = ukHourOf(jul) - 12
-  const currentOffset = ((ukHourOf(date) - date.getUTCHours()) + 24) % 24
-  return currentOffset === julOffset ? 1 : 0
+function getUKTime(date: Date): { hour: number; minute: number; display: string } {
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  const parts = formatter.formatToParts(date)
+  const hour = Number(parts.find(p => p.type === 'hour')!.value)
+  const minute = Number(parts.find(p => p.type === 'minute')!.value)
+  return { hour, minute, display: `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}` }
 }
 
 export async function GET(request: Request) {
+  console.log('[morning-reminder] ✅ Function invoked at UTC:', new Date().toISOString())
+
   const authHeader = request.headers.get('authorization')
+  console.log('[morning-reminder] Auth header present:', !!authHeader)
+
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.error('[morning-reminder] ❌ Unauthorized — header mismatch')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  console.log('[morning-reminder] ✅ Auth passed')
 
   try {
     const now = new Date()
-    const offset = getUKOffset(now)
-    const ukHour = (now.getUTCHours() + offset) % 24
-    const ukMinute = now.getUTCMinutes()
+    const { hour: ukHour, minute: ukMinute, display: currentTime } = getUKTime(now)
     const ukTotal = ukHour * 60 + ukMinute
-    const currentTime = `${String(ukHour).padStart(2, '0')}:${String(ukMinute).padStart(2, '0')}`
+    console.log(`[morning-reminder] UK time: ${currentTime} (${ukTotal} mins)`)
 
     const { data: companies, error: companiesError } = await supabaseAdmin
       .from('profiles')
@@ -52,22 +51,26 @@ export async function GET(request: Request) {
       .not('morning_reminder_time', 'is', null)
 
     if (companiesError) {
-      console.error(companiesError)
+      console.error('[morning-reminder] ❌ Failed to load companies:', companiesError.message)
       return NextResponse.json({ error: 'Could not load companies' }, { status: 500 })
     }
+
+    console.log(`[morning-reminder] Companies with reminders set: ${companies?.length ?? 0}`)
 
     let totalSent = 0
     let totalSkipped = 0
 
-    for (const company of companies || []) {
+    for (const company of companies ?? []) {
+      console.log(`[morning-reminder] Checking company: ${company.id}, reminder: ${company.morning_reminder_time}`)
+
       const reminderTime = company.morning_reminder_time
       if (!reminderTime) continue
 
       const [rHour, rMinute] = reminderTime.split(':').map(Number)
       const reminderTotal = rHour * 60 + rMinute
-
       const withinWindow = ukTotal >= reminderTotal && ukTotal < reminderTotal + 30
 
+      console.log(`[morning-reminder] → Reminder at ${reminderTime} (${reminderTotal} mins), within 30-min window: ${withinWindow}`)
       if (!withinWindow) continue
 
       const { data: savedWorkers, error: savedError } = await supabaseAdmin
@@ -75,70 +78,85 @@ export async function GET(request: Request) {
         .select('worker_id')
         .eq('company_id', company.id)
 
-      if (savedError || !savedWorkers?.length) continue
+      if (savedError) {
+        console.error(`[morning-reminder] ❌ saved_workers error for ${company.id}:`, savedError.message)
+        continue
+      }
+      console.log(`[morning-reminder] → Saved workers: ${savedWorkers?.length ?? 0}`)
+      if (!savedWorkers?.length) continue
 
       const workerIds = savedWorkers.map((w: { worker_id: string }) => w.worker_id)
 
-      const { data: signedInWorkers } = await supabaseAdmin
+      const { data: signedInWorkers, error: attendanceError } = await supabaseAdmin
         .from('site_attendance')
         .select('worker_id')
         .eq('company_id', company.id)
         .eq('status', 'IN')
         .in('worker_id', workerIds)
 
-      const signedInIds = new Set((signedInWorkers || []).map((w: { worker_id: string }) => w.worker_id))
+      if (attendanceError) {
+        console.error(`[morning-reminder] ❌ site_attendance error:`, attendanceError.message)
+      }
+
+      const signedInIds = new Set((signedInWorkers ?? []).map((w: { worker_id: string }) => w.worker_id))
       const notSignedInIds = workerIds.filter((id: string) => !signedInIds.has(id))
 
+      console.log(`[morning-reminder] → Signed in: ${signedInIds.size}, Not signed in: ${notSignedInIds.length}`)
       if (!notSignedInIds.length) continue
 
-      const { data: workerRows } = await supabaseAdmin
+      const { data: workerRows, error: workerRowsError } = await supabaseAdmin
         .from('workers')
         .select('id, user_id')
         .in('id', notSignedInIds)
 
+      if (workerRowsError) {
+        console.error(`[morning-reminder] ❌ workers lookup error:`, workerRowsError.message)
+        continue
+      }
+      console.log(`[morning-reminder] → Worker rows resolved: ${workerRows?.length ?? 0}`)
       if (!workerRows?.length) continue
 
-      const userIds = workerRows.map((w: { id: string; user_id: string }) => w.user_id).filter(Boolean)
+      const userIds = workerRows
+        .map((w: { id: string; user_id: string }) => w.user_id)
+        .filter(Boolean)
+      console.log(`[morning-reminder] → Auth user IDs to notify:`, userIds)
 
-      const { data: subscriptions } = await supabaseAdmin
+      const { data: subscriptions, error: subsError } = await supabaseAdmin
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth')
         .in('user_id', userIds)
 
+      if (subsError) {
+        console.error(`[morning-reminder] ❌ push_subscriptions error:`, subsError.message)
+        continue
+      }
+      console.log(`[morning-reminder] → Push subscriptions found: ${subscriptions?.length ?? 0}`)
       if (!subscriptions?.length) continue
 
       for (const sub of subscriptions) {
         try {
           await webpush.sendNotification(
-            {
-              endpoint: sub.endpoint,
-              keys: {
-                p256dh: sub.p256dh,
-                auth: sub.auth,
-              },
-            },
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             JSON.stringify({
               title: 'NekaID — Sign in reminder',
               body: "Don't forget to sign in on site today.",
               url: '/worker',
             })
           )
+          console.log(`[morning-reminder] ✅ Sent to endpoint: ${sub.endpoint.slice(0, 50)}...`)
           totalSent++
         } catch (err) {
-          console.error('Failed to send push:', err)
+          console.error(`[morning-reminder] ❌ Push failed:`, err)
           totalSkipped++
         }
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      sent: totalSent,
-      skipped: totalSkipped,
-      checkedAt: currentTime,
-    })
+    console.log(`[morning-reminder] ✅ Done — sent: ${totalSent}, skipped: ${totalSkipped}`)
+    return NextResponse.json({ success: true, sent: totalSent, skipped: totalSkipped, checkedAt: currentTime })
+
   } catch (err) {
-    console.error(err)
+    console.error('[morning-reminder] ❌ Unhandled error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
