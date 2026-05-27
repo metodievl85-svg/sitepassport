@@ -11,6 +11,7 @@ import CompanyStats from './components/CompanyStats'
 import CompanyDashboardMenu from './components/CompanyDashboardMenu'
 import CompanySettings from './components/CompanySettings'
 import CompanyMessages from './components/CompanyMessages'
+import { usePushNotifications } from '../lib/usePushNotifications'
 
 type SavedWorkerRow = {
   id: string
@@ -391,6 +392,8 @@ export default function CompanyPage() {
   const [realScansToday, setRealScansToday] = useState(0)
   const [realActiveWorkersToday, setRealActiveWorkersToday] = useState(0)
   const [siteLink, setSiteLink] = useState('')
+
+  usePushNotifications(companyId)
 
   useEffect(() => {
     void loadCompanyDashboard()

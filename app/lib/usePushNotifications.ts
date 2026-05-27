@@ -3,11 +3,11 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
-export function usePushNotifications(userId: string, workerId: string) {
+export function usePushNotifications(userId: string, workerId = '') {
   const attempted = useRef(false)
 
   useEffect(() => {
-    if (!userId || !workerId) return
+    if (!userId) return
     if (attempted.current) return
     attempted.current = true
 
@@ -63,7 +63,7 @@ async function registerPush(userId: string, workerId: string) {
     } else {
       await supabase.from('push_subscriptions').insert({
         user_id: userId,
-        worker_id: workerId,
+        ...(workerId ? { worker_id: workerId } : {}),
         endpoint: subscription.endpoint,
         p256dh: subscriptionJson.keys.p256dh,
         auth: subscriptionJson.keys.auth,
