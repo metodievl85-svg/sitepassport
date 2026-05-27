@@ -18,8 +18,8 @@ self.addEventListener('push', function (event) {
   const title = data.title || 'NekaID'
   const options = {
     body: data.body || 'Don\'t forget to sign in on site today.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/notification-icon.png',
+    badge: '/notification-icon.png',
     tag: 'morning-reminder',
     renotify: false,
     data: {
