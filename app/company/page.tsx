@@ -568,7 +568,7 @@ export default function CompanyPage() {
       }
 
       const currentCompanyId = profile.id
-      await runEndOfDayAutoSignOut(currentCompanyId)
+      // await runEndOfDayAutoSignOut(currentCompanyId)
       const profileCompanyName = profile.company_name || ''
       const profileInductionLink = profile.induction_url || ''
 
