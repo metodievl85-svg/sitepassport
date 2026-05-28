@@ -16,10 +16,14 @@ type SiteAttendanceRow = {
 }
 
 export async function GET(request: Request) {
+  console.log('[auto-signout] ✅ Cron fired at UTC:', new Date().toISOString())
+
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    console.error('[auto-signout] ❌ Unauthorized — CRON_SECRET mismatch')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  console.log('[auto-signout] ✅ Auth passed')
 
   try {
     const now = new Date()
@@ -33,6 +37,9 @@ export async function GET(request: Request) {
 
     const ukHour = Number(ukTimeParts.find((p) => p.type === 'hour')?.value ?? 0)
     const ukMinute = Number(ukTimeParts.find((p) => p.type === 'minute')?.value ?? 0)
+    const ukTotal = ukHour * 60 + ukMinute
+    const ukDisplay = `${String(ukHour).padStart(2, '0')}:${String(ukMinute).padStart(2, '0')}`
+    console.log(`[auto-signout] UK time: ${ukDisplay} (${ukTotal} mins)`)
 
     const { data: companies, error: companiesError } = await supabaseAdmin
       .from('profiles')
@@ -41,9 +48,11 @@ export async function GET(request: Request) {
       .not('auto_sign_out_time', 'is', null)
 
     if (companiesError) {
-      console.error(companiesError)
+      console.error('[auto-signout] ❌ Failed to load companies:', companiesError.message)
       return NextResponse.json({ error: 'Could not load companies' }, { status: 500 })
     }
+
+    console.log(`[auto-signout] Companies with sign-out time set: ${companies?.length ?? 0}`)
 
     let totalSignedOut = 0
 
@@ -52,9 +61,10 @@ export async function GET(request: Request) {
       if (!signOutTime) continue
 
       const [soHour, soMinute] = signOutTime.split(':').map(Number)
+      const soTotal = soHour * 60 + soMinute
+      const withinWindow = ukTotal >= soTotal && ukTotal < soTotal + 30
 
-      const withinWindow =
-        ukHour === soHour && ukMinute >= soMinute && ukMinute < soMinute + 30
+      console.log(`[auto-signout] Company ${company.id} — sign-out: ${signOutTime} (${soTotal} mins), within window: ${withinWindow}`)
 
       if (!withinWindow) continue
 
@@ -65,12 +75,11 @@ export async function GET(request: Request) {
         .order('created_at', { ascending: false })
 
       if (attendanceError) {
-        console.error(attendanceError)
+        console.error(`[auto-signout] ❌ site_attendance error for ${company.id}:`, attendanceError.message)
         continue
       }
 
       const latestByWorker = new Map<string, SiteAttendanceRow>()
-
       for (const row of (attendanceRows || []) as SiteAttendanceRow[]) {
         if (!latestByWorker.has(row.worker_id)) {
           latestByWorker.set(row.worker_id, row)
@@ -80,6 +89,8 @@ export async function GET(request: Request) {
       const workersStillIn = Array.from(latestByWorker.values()).filter(
         (row) => row.status === 'IN'
       )
+
+      console.log(`[auto-signout] Workers still IN for company ${company.id}: ${workersStillIn.length}`)
 
       for (const worker of workersStillIn) {
         const { error: insertError } = await supabaseAdmin
@@ -96,23 +107,20 @@ export async function GET(request: Request) {
           })
 
         if (insertError) {
-          console.error(insertError)
+          console.error(`[auto-signout] ❌ Insert error for worker ${worker.worker_id}:`, insertError.message)
           continue
         }
 
+        console.log(`[auto-signout] ✅ Signed out worker: ${worker.worker_id}`)
         totalSignedOut += 1
       }
     }
 
-    const checkedAt = `${String(ukHour).padStart(2, '0')}:${String(ukMinute).padStart(2, '0')} UK`
+    console.log(`[auto-signout] ✅ Done — total signed out: ${totalSignedOut}`)
+    return NextResponse.json({ success: true, signedOut: totalSignedOut, checkedAt: ukDisplay })
 
-    return NextResponse.json({
-      success: true,
-      signedOut: totalSignedOut,
-      checkedAt,
-    })
   } catch (err) {
-    console.error(err)
+    console.error('[auto-signout] ❌ Unhandled error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

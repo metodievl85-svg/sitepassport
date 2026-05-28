@@ -87,18 +87,27 @@ export async function GET(request: Request) {
 
       const workerIds = savedWorkers.map((w: { worker_id: string }) => w.worker_id)
 
-      const { data: signedInWorkers, error: attendanceError } = await supabaseAdmin
+      const { data: attendanceRows, error: attendanceError } = await supabaseAdmin
         .from('site_attendance')
-        .select('worker_id')
+        .select('worker_id, status, created_at')
         .eq('company_id', company.id)
-        .eq('status', 'IN')
         .in('worker_id', workerIds)
+        .order('created_at', { ascending: false })
 
       if (attendanceError) {
         console.error(`[morning-reminder] ❌ site_attendance error:`, attendanceError.message)
       }
 
-      const signedInIds = new Set((signedInWorkers ?? []).map((w: { worker_id: string }) => w.worker_id))
+      const latestByWorker = new Map<string, string>()
+      for (const row of (attendanceRows ?? []) as { worker_id: string; status: string; created_at: string }[]) {
+        if (!latestByWorker.has(row.worker_id)) {
+          latestByWorker.set(row.worker_id, row.status)
+        }
+      }
+
+      const signedInIds = new Set(
+        workerIds.filter((id: string) => latestByWorker.get(id) === 'IN')
+      )
       const notSignedInIds = workerIds.filter((id: string) => !signedInIds.has(id))
 
       console.log(`[morning-reminder] → Signed in: ${signedInIds.size}, Not signed in: ${notSignedInIds.length}`)
