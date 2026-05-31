@@ -542,114 +542,57 @@ export default function CompanyPage() {
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
       const { todayStart, tomorrowStart } = getTodayRange()
 
-      // All remaining queries fire in parallel — site setup, attendance, workers, visitors, scans
-      const [
-        site,
-        allSitesResult,
-        attendanceResult,
-        inductionResult,
-        savedResult,
-        visitorsResult,
-        scanResult,
-      ] = await Promise.all([
-        getOrCreateCompanySite(currentCompanyId),
-        supabase
-          .from('company_sites')
-          .select('id, company_id, site_name, site_qr_token, created_at')
-          .eq('company_id', currentCompanyId)
-          .order('created_at', { ascending: true }),
-        supabase
-          .from('site_attendance')
-          .select('worker_id, status, created_at')
-          .eq('company_id', currentCompanyId)
-          .gte('created_at', ninetyDaysAgo.toISOString())
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('induction_requests')
-          .select('id, company_id, worker_id, status, created_at, opened_at, completed_at, induction_url')
-          .eq('company_id', currentCompanyId)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('saved_workers')
-          .select('id, company_id, worker_id, created_at')
-          .eq('company_id', currentCompanyId)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('site_visitors')
-          .select('id, company_id, site_id, full_name, phone, photo, status, signed_in_at, signed_out_at, created_at, distance_from_site_m, location_accuracy_m')
-          .eq('company_id', currentCompanyId)
-          .gte('signed_in_at', todayStart.toISOString())
-          .lt('signed_in_at', tomorrowStart.toISOString())
-          .order('signed_in_at', { ascending: false }),
-        supabase
-          .from('scan_logs')
-          .select('id, company_id, worker_id, scanned_at')
-          .eq('company_id', currentCompanyId)
-          .gte('scanned_at', todayStart.toISOString())
-          .lt('scanned_at', tomorrowStart.toISOString())
-          .order('scanned_at', { ascending: false }),
+      // Kick off all 7 queries simultaneously — none are awaited yet
+      const savedWorkerPromise = supabase
+        .from('saved_workers')
+        .select('id, company_id, worker_id, created_at')
+        .eq('company_id', currentCompanyId)
+        .order('created_at', { ascending: false })
+
+      const inductionPromise = supabase
+        .from('induction_requests')
+        .select('id, company_id, worker_id, status, created_at, opened_at, completed_at, induction_url')
+        .eq('company_id', currentCompanyId)
+        .order('created_at', { ascending: false })
+
+      const attendancePromise = supabase
+        .from('site_attendance')
+        .select('worker_id, status, created_at')
+        .eq('company_id', currentCompanyId)
+        .gte('created_at', ninetyDaysAgo.toISOString())
+        .order('created_at', { ascending: false })
+
+      const sitePromise = getOrCreateCompanySite(currentCompanyId)
+
+      const allSitesPromise = supabase
+        .from('company_sites')
+        .select('id, company_id, site_name, site_qr_token, created_at')
+        .eq('company_id', currentCompanyId)
+        .order('created_at', { ascending: true })
+
+      const visitorsPromise = supabase
+        .from('site_visitors')
+        .select('id, company_id, site_id, full_name, phone, photo, status, signed_in_at, signed_out_at, created_at, distance_from_site_m, location_accuracy_m')
+        .eq('company_id', currentCompanyId)
+        .gte('signed_in_at', todayStart.toISOString())
+        .lt('signed_in_at', tomorrowStart.toISOString())
+        .order('signed_in_at', { ascending: false })
+
+      const scanPromise = supabase
+        .from('scan_logs')
+        .select('id, company_id, worker_id, scanned_at')
+        .eq('company_id', currentCompanyId)
+        .gte('scanned_at', todayStart.toISOString())
+        .lt('scanned_at', tomorrowStart.toISOString())
+        .order('scanned_at', { ascending: false })
+
+      // === WORKERS CRITICAL PATH ===
+      // Await only saved_workers + inductions — does NOT wait for site_attendance,
+      // getOrCreateCompanySite, visitors or scans, any of which may be slow
+      const [savedResult, inductionResult] = await Promise.all([
+        savedWorkerPromise,
+        inductionPromise,
       ])
-
-      let companySites: CompanySiteRow[] = []
-      if (allSitesResult.error) {
-        console.error(allSitesResult.error)
-      } else {
-        companySites = (allSitesResult.data || []) as CompanySiteRow[]
-      }
-
-      if (site && typeof window !== 'undefined') {
-        setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
-
-        if (!companySites.find((item) => item.id === site.id)) {
-          companySites = [site, ...companySites]
-        }
-      }
-
-      const siteNameById = new Map<string, string>()
-      companySites.forEach((s) => siteNameById.set(s.id, s.site_name || 'Site'))
-
-      if (visitorsResult.error) {
-        console.error(visitorsResult.error)
-        setVisitorsToday([])
-      } else {
-        const mappedVisitors: SiteVisitorCard[] = ((visitorsResult.data || []) as SiteVisitorRow[]).map(
-          (visitor) => ({
-            id: visitor.id,
-            siteId: visitor.site_id,
-            siteName: siteNameById.get(visitor.site_id) || 'Site',
-            fullName: visitor.full_name || 'Visitor',
-            phone: visitor.phone || '—',
-            photo: visitor.photo || '',
-            status: visitor.status === 'OUT' ? 'OUT' : 'IN',
-            signedInAt: visitor.signed_in_at || visitor.created_at || '',
-            signedOutAt: visitor.signed_out_at || '',
-            distanceFromSite: visitor.distance_from_site_m,
-            locationAccuracy: visitor.location_accuracy_m,
-          })
-        )
-        setVisitorsToday(mappedVisitors)
-      }
-
-      const attendanceByWorker = new Map<
-        string,
-        {
-          status: 'IN' | 'OUT'
-          created_at: string
-        }
-      >()
-
-      if (attendanceResult.error) {
-        console.error(attendanceResult.error)
-      } else {
-        for (const attendance of (attendanceResult.data || []) as SiteAttendanceRow[]) {
-          if (!attendanceByWorker.has(attendance.worker_id)) {
-            attendanceByWorker.set(attendance.worker_id, {
-              status: attendance.status,
-              created_at: attendance.created_at,
-            })
-          }
-        }
-      }
 
       const inductionByWorker = new Map<
         string,
@@ -706,12 +649,13 @@ export default function CompanyPage() {
               workerMap.set(worker.id, worker)
             }
 
+            // Render workers immediately — siteStatus defaults to OUT and is
+            // patched below once attendancePromise resolves
             const merged: SavedWorkerCard[] = savedList
               .map((savedItem) => {
                 const worker = workerMap.get(savedItem.worker_id)
                 if (!worker) return null
 
-                const attendance = attendanceByWorker.get(savedItem.worker_id)
                 const induction = inductionByWorker.get(savedItem.worker_id)
 
                 return {
@@ -727,8 +671,8 @@ export default function CompanyPage() {
                   rightToWorkExpiry: worker.right_to_work_expiry ?? '',
                   cscsVerificationStatus:
                     worker.cscs_verification_status ?? 'self_declared',
-                  siteStatus: attendance?.status ?? 'OUT',
-                  lastAttendanceAt: attendance?.created_at ?? '',
+                  siteStatus: 'OUT' as const,
+                  lastAttendanceAt: '',
                   inductionStatus: induction?.status ?? 'none',
                   inductionRequestId: induction?.id ?? '',
                 }
@@ -740,8 +684,100 @@ export default function CompanyPage() {
         }
       }
 
+      // Workers list is now visible — clear the loading indicator
       setLoadingWorkers(false)
 
+      // === BACKGROUND: attendance + site/visitors/scans ===
+      // All of these have been running in parallel since they were created above;
+      // we just await them now that workers are already on screen
+      const [attendanceResult, site, allSitesResult, visitorsResult, scanResult] =
+        await Promise.all([
+          attendancePromise,
+          sitePromise,
+          allSitesPromise,
+          visitorsPromise,
+          scanPromise,
+        ])
+
+      // Patch worker attendance status in-place
+      const attendanceByWorker = new Map<
+        string,
+        {
+          status: 'IN' | 'OUT'
+          created_at: string
+        }
+      >()
+
+      if (attendanceResult.error) {
+        console.error(attendanceResult.error)
+      } else {
+        for (const attendance of (attendanceResult.data || []) as SiteAttendanceRow[]) {
+          if (!attendanceByWorker.has(attendance.worker_id)) {
+            attendanceByWorker.set(attendance.worker_id, {
+              status: attendance.status,
+              created_at: attendance.created_at,
+            })
+          }
+        }
+
+        if (attendanceByWorker.size > 0) {
+          setSavedWorkers((current) =>
+            current.map((worker) => {
+              const attendance = attendanceByWorker.get(worker.workerId)
+              if (!attendance) return worker
+              return {
+                ...worker,
+                siteStatus: attendance.status,
+                lastAttendanceAt: attendance.created_at,
+              }
+            })
+          )
+        }
+      }
+
+      // Process sites
+      let companySites: CompanySiteRow[] = []
+      if (allSitesResult.error) {
+        console.error(allSitesResult.error)
+      } else {
+        companySites = (allSitesResult.data || []) as CompanySiteRow[]
+      }
+
+      if (site && typeof window !== 'undefined') {
+        setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
+
+        if (!companySites.find((item) => item.id === site.id)) {
+          companySites = [site, ...companySites]
+        }
+      }
+
+      const siteNameById = new Map<string, string>()
+      companySites.forEach((s) => siteNameById.set(s.id, s.site_name || 'Site'))
+
+      // Process visitors
+      if (visitorsResult.error) {
+        console.error(visitorsResult.error)
+        setVisitorsToday([])
+      } else {
+        const mappedVisitors: SiteVisitorCard[] = ((visitorsResult.data || []) as SiteVisitorRow[]).map(
+          (visitor) => ({
+            id: visitor.id,
+            siteId: visitor.site_id,
+            siteName: siteNameById.get(visitor.site_id) || 'Site',
+            fullName: visitor.full_name || 'Visitor',
+            phone: visitor.phone || '—',
+            photo: visitor.photo || '',
+            status: visitor.status === 'OUT' ? 'OUT' : 'IN',
+            signedInAt: visitor.signed_in_at || visitor.created_at || '',
+            signedOutAt: visitor.signed_out_at || '',
+            distanceFromSite: visitor.distance_from_site_m,
+            locationAccuracy: visitor.location_accuracy_m,
+          })
+        )
+        setVisitorsToday(mappedVisitors)
+      }
+
+      // Process scans
       if (scanResult.error) {
         console.error(scanResult.error)
         setRealScansToday(0)
