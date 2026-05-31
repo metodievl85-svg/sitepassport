@@ -571,7 +571,7 @@ export default function CompanyPage() {
           .order('created_at', { ascending: false }),
         supabase
           .from('saved_workers')
-          .select('id, company_id, worker_id, created_at, workers(id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status)')
+          .select('id, company_id, worker_id, created_at')
           .eq('company_id', currentCompanyId)
           .order('created_at', { ascending: false }),
         supabase
@@ -685,38 +685,59 @@ export default function CompanyPage() {
         console.error(savedResult.error)
         setSavedWorkers([])
       } else {
-        const savedList = (savedResult.data || []) as (SavedWorkerRow & { workers: WorkerRow[] })[]
+        const savedList = (savedResult.data || []) as SavedWorkerRow[]
 
-        const merged: SavedWorkerCard[] = savedList
-          .map((savedItem) => {
-            const worker = savedItem.workers?.[0] ?? null
-            if (!worker) return null
+        if (savedList.length === 0) {
+          setSavedWorkers([])
+        } else {
+          const workerIds = savedList.map((item) => item.worker_id)
 
-            const attendance = attendanceByWorker.get(savedItem.worker_id)
-            const induction = inductionByWorker.get(savedItem.worker_id)
+          const { data: workerRows, error: workersError } = await supabase
+            .from('workers')
+            .select('id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status')
+            .in('id', workerIds)
 
-            return {
-              savedId: savedItem.id,
-              savedAt: savedItem.created_at,
-              workerId: savedItem.worker_id,
-              userId: worker.user_id ?? '',
-              fullName: worker.full_name ?? '',
-              role: worker.role ?? '',
-              company: worker.company ?? '',
-              photo: worker.photo ?? '',
-              cscsExpiry: worker.cscs_expiry ?? '',
-              rightToWorkExpiry: worker.right_to_work_expiry ?? '',
-              cscsVerificationStatus:
-                worker.cscs_verification_status ?? 'self_declared',
-              siteStatus: attendance?.status ?? 'OUT',
-              lastAttendanceAt: attendance?.created_at ?? '',
-              inductionStatus: induction?.status ?? 'none',
-              inductionRequestId: induction?.id ?? '',
+          if (workersError) {
+            console.error(workersError)
+            setSavedWorkers([])
+          } else {
+            const workerMap = new Map<string, WorkerRow>()
+            for (const worker of (workerRows || []) as WorkerRow[]) {
+              workerMap.set(worker.id, worker)
             }
-          })
-          .filter(Boolean) as SavedWorkerCard[]
 
-        setSavedWorkers(merged)
+            const merged: SavedWorkerCard[] = savedList
+              .map((savedItem) => {
+                const worker = workerMap.get(savedItem.worker_id)
+                if (!worker) return null
+
+                const attendance = attendanceByWorker.get(savedItem.worker_id)
+                const induction = inductionByWorker.get(savedItem.worker_id)
+
+                return {
+                  savedId: savedItem.id,
+                  savedAt: savedItem.created_at,
+                  workerId: savedItem.worker_id,
+                  userId: worker.user_id ?? '',
+                  fullName: worker.full_name ?? '',
+                  role: worker.role ?? '',
+                  company: worker.company ?? '',
+                  photo: worker.photo ?? '',
+                  cscsExpiry: worker.cscs_expiry ?? '',
+                  rightToWorkExpiry: worker.right_to_work_expiry ?? '',
+                  cscsVerificationStatus:
+                    worker.cscs_verification_status ?? 'self_declared',
+                  siteStatus: attendance?.status ?? 'OUT',
+                  lastAttendanceAt: attendance?.created_at ?? '',
+                  inductionStatus: induction?.status ?? 'none',
+                  inductionRequestId: induction?.id ?? '',
+                }
+              })
+              .filter(Boolean) as SavedWorkerCard[]
+
+            setSavedWorkers(merged)
+          }
+        }
       }
 
       setLoadingWorkers(false)
