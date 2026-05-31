@@ -106,10 +106,13 @@ export default function EditWorkerPage() {
   const workerId = Array.isArray(params.id) ? params.id[0] : params.id
 
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
+  const photoPreviewUrlRef = useRef<string>('')
 
   const [loaded, setLoaded] = useState(false)
   const [form, setForm] = useState<WorkerForm | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [workerUserId, setWorkerUserId] = useState('')
   const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
 
   useEffect(() => {
@@ -119,6 +122,7 @@ export default function EditWorkerPage() {
 
   useEffect(() => {
     return () => {
+      if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
       Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
         URL.revokeObjectURL(url)
       })
@@ -151,6 +155,7 @@ export default function EditWorkerPage() {
         console.error(qualificationsError)
       }
 
+      setWorkerUserId(workerRow.user_id ?? '')
       setForm(mapWorkerToForm(workerRow, qualificationRows ?? []))
     } finally {
       setLoaded(true)
@@ -172,32 +177,23 @@ export default function EditWorkerPage() {
 
   function handlePhotoChange(e: ChangeEvent<HTMLInputElement>) {
     if (!form) return
-
     const file = e.target.files?.[0]
-
     if (!file) return
 
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      const result = typeof reader.result === 'string' ? reader.result : ''
-
-      setForm({
-        ...form,
-        photo: result,
-      })
-    }
-
-    reader.readAsDataURL(file)
+    if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
+    photoPreviewUrlRef.current = URL.createObjectURL(file)
+    setPhotoFile(file)
+    e.target.value = ''
   }
 
   function removePhoto() {
     if (!form) return
-
-    setForm({
-      ...form,
-      photo: '',
-    })
+    if (photoPreviewUrlRef.current) {
+      URL.revokeObjectURL(photoPreviewUrlRef.current)
+      photoPreviewUrlRef.current = ''
+    }
+    setPhotoFile(null)
+    setForm({ ...form, photo: '' })
   }
 
   function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
@@ -302,6 +298,22 @@ export default function EditWorkerPage() {
     try {
       setIsSaving(true)
 
+      let photoUrl = form.photo
+      if (photoFile && workerUserId) {
+        const ext = photoFile.type.includes('png') ? 'png' : 'jpg'
+        const path = `${workerUserId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('worker-photos')
+          .upload(path, photoFile, { contentType: photoFile.type || 'image/jpeg', upsert: false })
+        if (uploadError) {
+          console.error(uploadError)
+          alert(`Photo upload failed: ${uploadError.message}`)
+          return
+        }
+        const { data: urlData } = supabase.storage.from('worker-photos').getPublicUrl(path)
+        photoUrl = urlData.publicUrl
+      }
+
       const { error: workerError } = await supabase
         .from('workers')
         .update({
@@ -314,7 +326,7 @@ export default function EditWorkerPage() {
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
           notes: form.notes.trim(),
-          photo: form.photo,
+          photo: photoUrl,
         })
         .eq('id', form.id)
 
@@ -439,9 +451,9 @@ export default function EditWorkerPage() {
                 <label>CSCS card image</label>
 
                 <div className="photo-upload-box">
-                  {form.photo ? (
+                  {(photoPreviewUrlRef.current || form.photo) ? (
                     <img
-                      src={form.photo}
+                      src={photoPreviewUrlRef.current || form.photo}
                       alt={form.fullName || 'CSCS card image'}
                       className="photo-preview"
                     />
