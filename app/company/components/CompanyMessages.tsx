@@ -26,13 +26,12 @@ type Message = {
 
 type Props = {
   companyId: string
+  workers: WorkerEntry[]
 }
 
-export default function CompanyMessages({ companyId }: Props) {
-  const [workers, setWorkers] = useState<WorkerEntry[]>([])
+export default function CompanyMessages({ companyId, workers }: Props) {
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
-  const [loadingWorkers, setLoadingWorkers] = useState(true)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [messageText, setMessageText] = useState('')
   const [sending, setSending] = useState(false)
@@ -62,49 +61,7 @@ export default function CompanyMessages({ companyId }: Props) {
 
     setAccessToken(session.access_token)
 
-    await Promise.all([loadWorkers(), loadMessages(session.access_token)])
-  }
-
-  async function loadWorkers() {
-    try {
-      setLoadingWorkers(true)
-
-      const { data: savedRows, error: savedError } = await supabase
-        .from('saved_workers')
-        .select('worker_id')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false })
-
-      if (savedError || !savedRows?.length) {
-        setWorkers([])
-        return
-      }
-
-      const workerIds = savedRows.map((r) => r.worker_id)
-
-      const { data: workerRows, error: workersError } = await supabase
-        .from('workers')
-        .select('id, user_id, full_name, role')
-        .in('id', workerIds)
-
-      if (workersError) {
-        setWorkers([])
-        return
-      }
-
-      setWorkers(
-        (workerRows || [])
-          .filter((w) => w.user_id)
-          .map((w) => ({
-            workerId: w.id,
-            userId: w.user_id as string,
-            fullName: w.full_name ?? 'Operative',
-            role: w.role ?? '',
-          }))
-      )
-    } finally {
-      setLoadingWorkers(false)
-    }
+    await loadMessages(session.access_token)
   }
 
   async function loadMessages(token: string) {
@@ -259,11 +216,7 @@ export default function CompanyMessages({ companyId }: Props) {
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {loadingWorkers ? (
-              <div style={{ padding: 16, color: '#5a6f96', fontSize: 14, fontWeight: 700 }}>
-                Loading...
-              </div>
-            ) : workers.length === 0 ? (
+            {workers.length === 0 ? (
               <div style={{ padding: 16, color: '#5a6f96', fontSize: 14, fontWeight: 700 }}>
                 No saved operatives.
               </div>

@@ -22,6 +22,7 @@ type SavedWorkerRow = {
 
 type WorkerRow = {
   id: string
+  user_id?: string | null
   full_name: string | null
   role: string | null
   company: string | null
@@ -101,6 +102,7 @@ type SavedWorkerCard = {
   savedId: string
   savedAt: string
   workerId: string
+  userId: string
   fullName: string
   role: string
   company: string
@@ -493,49 +495,6 @@ export default function CompanyPage() {
     return newSite as CompanySiteRow
   }
 
-  async function loadVisitorsToday(currentCompanyId: string, sites: CompanySiteRow[]) {
-    const { todayStart, tomorrowStart } = getTodayRange()
-
-    const siteNameById = new Map<string, string>()
-    sites.forEach((site) => {
-      siteNameById.set(site.id, site.site_name || 'Site')
-    })
-
-    const { data: visitorRows, error: visitorError } = await supabase
-      .from('site_visitors')
-      .select(
-        'id, company_id, site_id, full_name, phone, photo, status, signed_in_at, signed_out_at, created_at, distance_from_site_m, location_accuracy_m'
-      )
-      .eq('company_id', currentCompanyId)
-      .gte('signed_in_at', todayStart.toISOString())
-      .lt('signed_in_at', tomorrowStart.toISOString())
-      .order('signed_in_at', { ascending: false })
-
-    if (visitorError) {
-      console.error(visitorError)
-      setVisitorsToday([])
-      return
-    }
-
-    const mappedVisitors: SiteVisitorCard[] = ((visitorRows || []) as SiteVisitorRow[]).map(
-      (visitor) => ({
-        id: visitor.id,
-        siteId: visitor.site_id,
-        siteName: siteNameById.get(visitor.site_id) || 'Site',
-        fullName: visitor.full_name || 'Visitor',
-        phone: visitor.phone || '—',
-        photo: visitor.photo || '',
-        status: visitor.status === 'OUT' ? 'OUT' : 'IN',
-        signedInAt: visitor.signed_in_at || visitor.created_at || '',
-        signedOutAt: visitor.signed_out_at || '',
-        distanceFromSite: visitor.distance_from_site_m,
-        locationAccuracy: visitor.location_accuracy_m,
-      })
-    )
-
-    setVisitorsToday(mappedVisitors)
-  }
-
   async function loadCompanyDashboard() {
     try {
       setLoading(true)
@@ -601,7 +560,73 @@ export default function CompanyPage() {
         }
       }
 
-      await loadVisitorsToday(currentCompanyId, companySites)
+      const ninetyDaysAgo = new Date()
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+      const { todayStart, tomorrowStart } = getTodayRange()
+
+      const siteNameById = new Map<string, string>()
+      companySites.forEach((s) => siteNameById.set(s.id, s.site_name || 'Site'))
+
+      const [
+        attendanceResult,
+        inductionResult,
+        savedResult,
+        visitorsResult,
+        scanResult,
+      ] = await Promise.all([
+        supabase
+          .from('site_attendance')
+          .select('worker_id, status, created_at')
+          .eq('company_id', currentCompanyId)
+          .gte('created_at', ninetyDaysAgo.toISOString())
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('induction_requests')
+          .select('id, company_id, worker_id, status, created_at, opened_at, completed_at, induction_url')
+          .eq('company_id', currentCompanyId)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('saved_workers')
+          .select('id, company_id, worker_id, created_at')
+          .eq('company_id', currentCompanyId)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('site_visitors')
+          .select('id, company_id, site_id, full_name, phone, photo, status, signed_in_at, signed_out_at, created_at, distance_from_site_m, location_accuracy_m')
+          .eq('company_id', currentCompanyId)
+          .gte('signed_in_at', todayStart.toISOString())
+          .lt('signed_in_at', tomorrowStart.toISOString())
+          .order('signed_in_at', { ascending: false }),
+        supabase
+          .from('scan_logs')
+          .select('id, company_id, worker_id, scanned_at')
+          .eq('company_id', currentCompanyId)
+          .gte('scanned_at', todayStart.toISOString())
+          .lt('scanned_at', tomorrowStart.toISOString())
+          .order('scanned_at', { ascending: false }),
+      ])
+
+      if (visitorsResult.error) {
+        console.error(visitorsResult.error)
+        setVisitorsToday([])
+      } else {
+        const mappedVisitors: SiteVisitorCard[] = ((visitorsResult.data || []) as SiteVisitorRow[]).map(
+          (visitor) => ({
+            id: visitor.id,
+            siteId: visitor.site_id,
+            siteName: siteNameById.get(visitor.site_id) || 'Site',
+            fullName: visitor.full_name || 'Visitor',
+            phone: visitor.phone || '—',
+            photo: visitor.photo || '',
+            status: visitor.status === 'OUT' ? 'OUT' : 'IN',
+            signedInAt: visitor.signed_in_at || visitor.created_at || '',
+            signedOutAt: visitor.signed_out_at || '',
+            distanceFromSite: visitor.distance_from_site_m,
+            locationAccuracy: visitor.location_accuracy_m,
+          })
+        )
+        setVisitorsToday(mappedVisitors)
+      }
 
       const attendanceByWorker = new Map<
         string,
@@ -611,23 +636,17 @@ export default function CompanyPage() {
         }
       >()
 
-      const { data: attendanceRows, error: attendanceError } = await supabase
-        .from('site_attendance')
-        .select('id, company_id, worker_id, site_id, status, created_at')
-        .eq('company_id', currentCompanyId)
-        .order('created_at', { ascending: false })
-
-      if (attendanceError) {
-        console.error(attendanceError)
+      if (attendanceResult.error) {
+        console.error(attendanceResult.error)
       } else {
-        ;((attendanceRows || []) as SiteAttendanceRow[]).forEach((attendance) => {
+        for (const attendance of (attendanceResult.data || []) as SiteAttendanceRow[]) {
           if (!attendanceByWorker.has(attendance.worker_id)) {
             attendanceByWorker.set(attendance.worker_id, {
               status: attendance.status,
               created_at: attendance.created_at,
             })
           }
-        })
+        }
       }
 
       const inductionByWorker = new Map<
@@ -639,16 +658,10 @@ export default function CompanyPage() {
         }
       >()
 
-      const { data: inductionRows, error: inductionError } = await supabase
-        .from('induction_requests')
-        .select('id, company_id, worker_id, status, created_at, opened_at, completed_at, induction_url')
-        .eq('company_id', currentCompanyId)
-        .order('created_at', { ascending: false })
-
-      if (inductionError) {
-        console.error(inductionError)
+      if (inductionResult.error) {
+        console.error(inductionResult.error)
       } else {
-        ;((inductionRows || []) as InductionRequestRow[]).forEach((request) => {
+        for (const request of (inductionResult.data || []) as InductionRequestRow[]) {
           if (!inductionByWorker.has(request.worker_id)) {
             const safeStatus: InductionStatus =
               request.status === 'completed'
@@ -663,20 +676,14 @@ export default function CompanyPage() {
               created_at: request.created_at,
             })
           }
-        })
+        }
       }
 
-      const { data: savedRows, error: savedError } = await supabase
-        .from('saved_workers')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('created_at', { ascending: false })
-
-      if (savedError) {
-        console.error(savedError)
+      if (savedResult.error) {
+        console.error(savedResult.error)
         setSavedWorkers([])
       } else {
-        const savedList = (savedRows || []) as SavedWorkerRow[]
+        const savedList = (savedResult.data || []) as SavedWorkerRow[]
 
         if (savedList.length === 0) {
           setSavedWorkers([])
@@ -686,7 +693,7 @@ export default function CompanyPage() {
           const { data: workerRows, error: workersError } = await supabase
             .from('workers')
             .select(
-              'id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status'
+              'id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status'
             )
             .in('id', workerIds)
 
@@ -696,9 +703,9 @@ export default function CompanyPage() {
           } else {
             const workerMap = new Map<string, WorkerRow>()
 
-            ;((workerRows || []) as WorkerRow[]).forEach((worker) => {
+            for (const worker of (workerRows || []) as WorkerRow[]) {
               workerMap.set(worker.id, worker)
-            })
+            }
 
             const merged: SavedWorkerCard[] = savedList
               .map((savedItem) => {
@@ -712,6 +719,7 @@ export default function CompanyPage() {
                   savedId: savedItem.id,
                   savedAt: savedItem.created_at,
                   workerId: worker.id,
+                  userId: worker.user_id ?? '',
                   fullName: worker.full_name ?? '',
                   role: worker.role ?? '',
                   company: worker.company ?? '',
@@ -733,22 +741,12 @@ export default function CompanyPage() {
         }
       }
 
-      const { todayStart, tomorrowStart } = getTodayRange()
-
-      const { data: scanRows, error: scanError } = await supabase
-        .from('scan_logs')
-        .select('id, company_id, worker_id, scanned_at')
-        .eq('company_id', currentCompanyId)
-        .gte('scanned_at', todayStart.toISOString())
-        .lt('scanned_at', tomorrowStart.toISOString())
-        .order('scanned_at', { ascending: false })
-
-      if (scanError) {
-        console.error(scanError)
+      if (scanResult.error) {
+        console.error(scanResult.error)
         setRealScansToday(0)
         setRealActiveWorkersToday(0)
       } else {
-        const scans = (scanRows || []) as ScanLogRow[]
+        const scans = (scanResult.data || []) as ScanLogRow[]
         setRealScansToday(scans.length)
         setRealActiveWorkersToday(new Set(scans.map((item) => item.worker_id)).size)
       }
@@ -1772,7 +1770,17 @@ export default function CompanyPage() {
         </section>
 
         <div id="messages">
-          <CompanyMessages companyId={companyId} />
+          <CompanyMessages
+            companyId={companyId}
+            workers={savedWorkers
+              .filter((w) => w.userId)
+              .map((w) => ({
+                workerId: w.workerId,
+                userId: w.userId,
+                fullName: w.fullName,
+                role: w.role,
+              }))}
+          />
         </div>
       </div>
 
