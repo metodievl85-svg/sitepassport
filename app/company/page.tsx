@@ -394,6 +394,7 @@ export default function CompanyPage() {
   const [realScansToday, setRealScansToday] = useState(0)
   const [realActiveWorkersToday, setRealActiveWorkersToday] = useState(0)
   const [siteLink, setSiteLink] = useState('')
+  const [loadingWorkers, setLoadingWorkers] = useState(true)
 
   usePushNotifications(companyId)
 
@@ -498,6 +499,7 @@ export default function CompanyPage() {
   async function loadCompanyDashboard() {
     try {
       setLoading(true)
+      setLoadingWorkers(true)
 
       const {
         data: { session },
@@ -528,52 +530,34 @@ export default function CompanyPage() {
 
       const currentCompanyId = profile.id
       // await runEndOfDayAutoSignOut(currentCompanyId)
-      const profileCompanyName = profile.company_name || ''
-      const profileInductionLink = profile.induction_url || ''
-
       setCompanyId(currentCompanyId)
-      setCompanyName(profileCompanyName)
-      setCompanyNameDraft(profileCompanyName)
-      setInductionLink(profileInductionLink)
+      setCompanyName(profile.company_name || '')
+      setCompanyNameDraft(profile.company_name || '')
+      setInductionLink(profile.induction_url || '')
 
-      const site = await getOrCreateCompanySite(currentCompanyId)
-
-      let companySites: CompanySiteRow[] = []
-
-      const { data: allSites, error: allSitesError } = await supabase
-        .from('company_sites')
-        .select('id, company_id, site_name, site_qr_token, created_at')
-        .eq('company_id', currentCompanyId)
-        .order('created_at', { ascending: true })
-
-      if (allSitesError) {
-        console.error(allSitesError)
-      } else {
-        companySites = (allSites || []) as CompanySiteRow[]
-      }
-
-      if (site && typeof window !== 'undefined') {
-        setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
-
-        if (!companySites.find((item) => item.id === site.id)) {
-          companySites = [site, ...companySites]
-        }
-      }
+      // Unlock the page — hero, stats and settings render immediately while data loads
+      setLoading(false)
 
       const ninetyDaysAgo = new Date()
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
       const { todayStart, tomorrowStart } = getTodayRange()
 
-      const siteNameById = new Map<string, string>()
-      companySites.forEach((s) => siteNameById.set(s.id, s.site_name || 'Site'))
-
+      // All remaining queries fire in parallel — site setup, attendance, workers, visitors, scans
       const [
+        site,
+        allSitesResult,
         attendanceResult,
         inductionResult,
         savedResult,
         visitorsResult,
         scanResult,
       ] = await Promise.all([
+        getOrCreateCompanySite(currentCompanyId),
+        supabase
+          .from('company_sites')
+          .select('id, company_id, site_name, site_qr_token, created_at')
+          .eq('company_id', currentCompanyId)
+          .order('created_at', { ascending: true }),
         supabase
           .from('site_attendance')
           .select('worker_id, status, created_at')
@@ -587,7 +571,7 @@ export default function CompanyPage() {
           .order('created_at', { ascending: false }),
         supabase
           .from('saved_workers')
-          .select('id, company_id, worker_id, created_at')
+          .select('id, company_id, worker_id, created_at, workers(id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status)')
           .eq('company_id', currentCompanyId)
           .order('created_at', { ascending: false }),
         supabase
@@ -605,6 +589,24 @@ export default function CompanyPage() {
           .lt('scanned_at', tomorrowStart.toISOString())
           .order('scanned_at', { ascending: false }),
       ])
+
+      let companySites: CompanySiteRow[] = []
+      if (allSitesResult.error) {
+        console.error(allSitesResult.error)
+      } else {
+        companySites = (allSitesResult.data || []) as CompanySiteRow[]
+      }
+
+      if (site && typeof window !== 'undefined') {
+        setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
+
+        if (!companySites.find((item) => item.id === site.id)) {
+          companySites = [site, ...companySites]
+        }
+      }
+
+      const siteNameById = new Map<string, string>()
+      companySites.forEach((s) => siteNameById.set(s.id, s.site_name || 'Site'))
 
       if (visitorsResult.error) {
         console.error(visitorsResult.error)
@@ -683,63 +685,41 @@ export default function CompanyPage() {
         console.error(savedResult.error)
         setSavedWorkers([])
       } else {
-        const savedList = (savedResult.data || []) as SavedWorkerRow[]
+        const savedList = (savedResult.data || []) as (SavedWorkerRow & { workers: WorkerRow[] })[]
 
-        if (savedList.length === 0) {
-          setSavedWorkers([])
-        } else {
-          const workerIds = savedList.map((item) => item.worker_id)
+        const merged: SavedWorkerCard[] = savedList
+          .map((savedItem) => {
+            const worker = savedItem.workers?.[0] ?? null
+            if (!worker) return null
 
-          const { data: workerRows, error: workersError } = await supabase
-            .from('workers')
-            .select(
-              'id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status'
-            )
-            .in('id', workerIds)
+            const attendance = attendanceByWorker.get(savedItem.worker_id)
+            const induction = inductionByWorker.get(savedItem.worker_id)
 
-          if (workersError) {
-            console.error(workersError)
-            setSavedWorkers([])
-          } else {
-            const workerMap = new Map<string, WorkerRow>()
-
-            for (const worker of (workerRows || []) as WorkerRow[]) {
-              workerMap.set(worker.id, worker)
+            return {
+              savedId: savedItem.id,
+              savedAt: savedItem.created_at,
+              workerId: savedItem.worker_id,
+              userId: worker.user_id ?? '',
+              fullName: worker.full_name ?? '',
+              role: worker.role ?? '',
+              company: worker.company ?? '',
+              photo: worker.photo ?? '',
+              cscsExpiry: worker.cscs_expiry ?? '',
+              rightToWorkExpiry: worker.right_to_work_expiry ?? '',
+              cscsVerificationStatus:
+                worker.cscs_verification_status ?? 'self_declared',
+              siteStatus: attendance?.status ?? 'OUT',
+              lastAttendanceAt: attendance?.created_at ?? '',
+              inductionStatus: induction?.status ?? 'none',
+              inductionRequestId: induction?.id ?? '',
             }
+          })
+          .filter(Boolean) as SavedWorkerCard[]
 
-            const merged: SavedWorkerCard[] = savedList
-              .map((savedItem) => {
-                const worker = workerMap.get(savedItem.worker_id)
-                if (!worker) return null
-
-                const attendance = attendanceByWorker.get(worker.id)
-                const induction = inductionByWorker.get(worker.id)
-
-                return {
-                  savedId: savedItem.id,
-                  savedAt: savedItem.created_at,
-                  workerId: worker.id,
-                  userId: worker.user_id ?? '',
-                  fullName: worker.full_name ?? '',
-                  role: worker.role ?? '',
-                  company: worker.company ?? '',
-                  photo: worker.photo ?? '',
-                  cscsExpiry: worker.cscs_expiry ?? '',
-                  rightToWorkExpiry: worker.right_to_work_expiry ?? '',
-                  cscsVerificationStatus:
-                    worker.cscs_verification_status ?? 'self_declared',
-                  siteStatus: attendance?.status ?? 'OUT',
-                  lastAttendanceAt: attendance?.created_at ?? '',
-                  inductionStatus: induction?.status ?? 'none',
-                  inductionRequestId: induction?.id ?? '',
-                }
-              })
-              .filter(Boolean) as SavedWorkerCard[]
-
-            setSavedWorkers(merged)
-          }
-        }
+        setSavedWorkers(merged)
       }
+
+      setLoadingWorkers(false)
 
       if (scanResult.error) {
         console.error(scanResult.error)
@@ -752,6 +732,7 @@ export default function CompanyPage() {
       }
     } finally {
       setLoading(false)
+      setLoadingWorkers(false)
     }
   }
 
@@ -1539,7 +1520,11 @@ export default function CompanyPage() {
             </button>
           </div>
 
-          {savedWorkers.length === 0 ? (
+          {loadingWorkers ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#5a6f96', fontWeight: 700 }}>
+              Loading operatives...
+            </div>
+          ) : savedWorkers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, border: '2px dashed #d7e1ef', borderRadius: 20 }}>
               <h3>No operatives yet</h3>
               <Link href="/scan" className="btn btn-primary">
