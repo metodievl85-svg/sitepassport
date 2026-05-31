@@ -497,9 +497,6 @@ export default function CompanyPage() {
   }
 
   async function loadCompanyDashboard() {
-    const t0 = performance.now()
-    const elapsed = () => `+${((performance.now() - t0) / 1000).toFixed(2)}s`
-
     try {
       setLoading(true)
       setLoadingWorkers(true)
@@ -540,14 +537,11 @@ export default function CompanyPage() {
 
       // Unlock the page — hero, stats and settings render immediately while data loads
       setLoading(false)
-      console.log(`[workers ${elapsed()}] page unlocked (auth + profile done)`)
 
       const ninetyDaysAgo = new Date()
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
       const { todayStart, tomorrowStart } = getTodayRange()
 
-      // NOTE: Supabase query builders are lazy — no network call fires until awaited.
-      // Only sitePromise (real async fn) starts a network call immediately.
       const savedWorkerPromise = supabase
         .from('saved_workers')
         .select('id, company_id, worker_id, created_at')
@@ -592,13 +586,10 @@ export default function CompanyPage() {
         .order('scanned_at', { ascending: false })
 
       // === WORKERS CRITICAL PATH ===
-      // saved_workers and induction_requests network calls fire here (lazy builders)
-      console.log(`[workers ${elapsed()}] firing saved_workers + induction_requests`)
       const [savedResult, inductionResult] = await Promise.all([
         savedWorkerPromise,
         inductionPromise,
       ])
-      console.log(`[workers ${elapsed()}] saved_workers resolved (${savedResult.data?.length ?? 'err'} rows), inductions resolved (${inductionResult.data?.length ?? 'err'} rows)`)
 
       const inductionByWorker = new Map<
         string,
@@ -641,12 +632,11 @@ export default function CompanyPage() {
         } else {
           const workerIds = savedList.map((item) => item.worker_id)
 
-          console.log(`[workers ${elapsed()}] firing workers fetch (${workerIds.length} IDs)`)
           const { data: workerRows, error: workersError } = await supabase
             .from('workers')
             .select('id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status')
             .in('id', workerIds)
-          console.log(`[workers ${elapsed()}] workers fetch resolved (${workerRows?.length ?? 'err'} rows)`)
+            .limit(50)
 
           if (workersError) {
             console.error(workersError)
@@ -687,20 +677,15 @@ export default function CompanyPage() {
               })
               .filter(Boolean) as SavedWorkerCard[]
 
-            console.log(`[workers ${elapsed()}] calling setSavedWorkers (${merged.length} workers)`)
             setSavedWorkers(merged)
           }
         }
       }
 
       // Workers list is now visible — clear the loading indicator
-      console.log(`[workers ${elapsed()}] calling setLoadingWorkers(false) — workers should appear now`)
       setLoadingWorkers(false)
 
       // === BACKGROUND: attendance + site/visitors/scans ===
-      // NOTE: These Supabase builders haven't fired yet — they start here.
-      // Only sitePromise started earlier (real async fn called on line 565).
-      console.log(`[workers ${elapsed()}] firing background queries (attendance, allSites, visitors, scans)`)
       const [attendanceResult, site, allSitesResult, visitorsResult, scanResult] =
         await Promise.all([
           attendancePromise,
