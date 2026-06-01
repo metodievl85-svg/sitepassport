@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
+import LandingPage from './landing/page'
 
 export default function HomePage() {
   const router = useRouter()
+  const [showLanding, setShowLanding] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -14,7 +16,7 @@ export default function HomePage() {
       } = await supabase.auth.getSession()
 
       if (!session) {
-        router.replace('/login')
+        setShowLanding(true)
         return
       }
 
@@ -44,6 +46,8 @@ export default function HomePage() {
 
     load()
   }, [router])
+
+  if (showLanding) return <LandingPage />
 
   return (
     <main className="page-shell">
