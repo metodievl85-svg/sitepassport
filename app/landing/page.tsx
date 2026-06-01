@@ -12,8 +12,8 @@ export const metadata = {
 export default function LandingPage() {
   return (
     <>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
         :root {
           --black: #08090c;
           --surface: #0f1117;
@@ -207,7 +207,7 @@ export default function LandingPage() {
             <h1 className="l-h1">Can you prove every operative is <em>compliant</em> right now?</h1>
             <p className="l-hero-sub">NekaID is the digital passport that gives site managers instant visibility of credentials, inductions, and attendance — on any site, from any device.</p>
             <div className="l-btns">
-              <Link href="/register" className="l-btn-blue">Get started free</Link>
+              <Link href="/login" className="l-btn-blue">Get started free</Link>
               <Link href="#how" className="l-btn-ghost">See how it works</Link>
             </div>
             <div className="l-trust">
@@ -320,7 +320,7 @@ export default function LandingPage() {
           <div className="l-cdm-inner">
             <h2>CDM 2015 requires proof that every worker was inducted.</h2>
             <p>If an HSE inspector visits your site and you cannot demonstrate that every person has been inducted, you face an improvement notice — or in serious cases, prosecution. NekaID gives you that evidence instantly, for every operative, on every site.</p>
-            <Link href="/register" className="l-btn-white">Start protecting your site today</Link>
+            <Link href="/login" className="l-btn-white">Start protecting your site today</Link>
           </div>
         </div>
 
@@ -457,7 +457,7 @@ export default function LandingPage() {
           <div className="l-cta-inner">
             <h2 className="l-h2">Your site. Your workers.<br />Fully compliant.</h2>
             <p>Join construction teams across the UK who&apos;ve replaced paper processes with NekaID. Setup takes under ten minutes.</p>
-            <Link href="/register" className="l-btn-blue" style={{ padding: '0.9rem 2.25rem', fontSize: '1rem' }}>Get started free</Link>
+            <Link href="/login" className="l-btn-blue" style={{ padding: '0.9rem 2.25rem', fontSize: '1rem' }}>Get started free</Link>
           </div>
         </div>
 
