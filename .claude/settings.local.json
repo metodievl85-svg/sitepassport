@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\('c:\\\\Users\\\\metod\\\\myapp\\\\public\\\\nekaid-logo.png'\\); Write-Output \"Width: $\\($img.Width\\)px, Height: $\\($img.Height\\)px, Ratio: $\\([math]::Round\\($img.Width / $img.Height, 2\\)\\):1\"; $img.Dispose\\(\\))"
+      "PowerShell(Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\('c:\\\\Users\\\\metod\\\\myapp\\\\public\\\\nekaid-logo.png'\\); Write-Output \"Width: $\\($img.Width\\)px, Height: $\\($img.Height\\)px, Ratio: $\\([math]::Round\\($img.Width / $img.Height, 2\\)\\):1\"; $img.Dispose\\(\\))",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
     ]
   }
 }

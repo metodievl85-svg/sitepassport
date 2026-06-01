@@ -386,7 +386,7 @@ export default function LandingPage() {
                   <li className="blue">QR code profile</li>
                   <li className="blue">Credential storage</li>
                 </ul>
-                <Link href="/register?plan=starter" className="l-plan-btn btn-outline-blue">Create free account</Link>
+                <Link href="/login" className="l-plan-btn btn-outline-blue">Create free account</Link>
               </div>
               <div className="l-plan">
                 <div className="l-plan-name">Pro</div>
@@ -399,7 +399,7 @@ export default function LandingPage() {
                   <li className="blue">Push notifications</li>
                   <li className="blue">Live site dashboard</li>
                 </ul>
-                <Link href="/register?plan=pro" className="l-plan-btn btn-solid-blue">Get started</Link>
+                <Link href="/login" className="l-plan-btn btn-solid-blue">Get started</Link>
               </div>
               <div className="l-plan featured">
                 <div className="l-plan-badge badge-blue">Most popular</div>
@@ -413,7 +413,7 @@ export default function LandingPage() {
                   <li className="blue">Expiry alerts</li>
                   <li className="blue">Priority support</li>
                 </ul>
-                <Link href="/register?plan=business" className="l-plan-btn btn-solid-blue">Get started</Link>
+                <Link href="/login" className="l-plan-btn btn-solid-blue">Get started</Link>
               </div>
               <div className="l-plan">
                 <div className="l-plan-name">Enterprise</div>
@@ -426,7 +426,7 @@ export default function LandingPage() {
                   <li className="blue">Custom features available</li>
                   <li className="blue">Onboarding support</li>
                 </ul>
-                <Link href="/register?plan=enterprise" className="l-plan-btn btn-solid-blue">Get started</Link>
+                <Link href="/login" className="l-plan-btn btn-solid-blue">Get started</Link>
               </div>
               <div className="l-plan agency">
                 <div className="l-plan-badge badge-teal">For agencies</div>
@@ -440,7 +440,7 @@ export default function LandingPage() {
                   <li className="teal">Works across all client sites</li>
                   <li className="teal">Worker placement tracking</li>
                 </ul>
-                <Link href="/register?plan=agency" className="l-plan-btn btn-solid-teal">Get started</Link>
+                <Link href="/login" className="l-plan-btn btn-solid-teal">Get started</Link>
               </div>
             </div>
             <div className="l-roi">
