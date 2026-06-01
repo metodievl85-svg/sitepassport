@@ -4,11 +4,6 @@
 
 import Link from 'next/link'
 
-export const metadata = {
-  title: 'NekaID — Digital Passport for UK Construction',
-  description: 'Replace paper induction forms with digital operative passports. GPS attendance, credential tracking, and CDM 2015 compliant records — built for UK construction.',
-}
-
 export default function LandingPage() {
   return (
     <>
