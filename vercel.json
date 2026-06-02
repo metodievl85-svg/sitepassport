@@ -7,6 +7,10 @@
     {
       "path": "/api/auto-signout",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/check-expiring-credentials",
+      "schedule": "0 8 * * *"
     }
   ]
 }
