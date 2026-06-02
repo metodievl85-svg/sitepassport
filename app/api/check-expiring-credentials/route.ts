@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   const in7  = new Date(today); in7.setDate(today.getDate() + 7)
   const fmt = (d: Date) => d.toISOString().split('T')[0]
 
-  const { data: expiring, error } = await supabase
+  const { data: qualifications, error } = await supabase
     .from('qualifications')
     .select('id, name, expiry, worker_id, workers(full_name)')
     .in('expiry', [fmt(in30), fmt(in7)])
@@ -34,20 +34,42 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if (!expiring || expiring.length === 0) {
-    return NextResponse.json({ sent: 0 })
+  type Alert = { worker_id: string; workerName: string; credentialName: string; expiry: string; daysLeft: number }
+  const alerts: Alert[] = []
+
+  for (const q of qualifications ?? []) {
+    alerts.push({
+      worker_id: q.worker_id,
+      workerName: (q.workers as any)?.full_name ?? 'An operative',
+      credentialName: q.name,
+      expiry: q.expiry,
+      daysLeft: q.expiry === fmt(in7) ? 7 : 30,
+    })
   }
+
+  const { data: workers } = await supabase
+    .from('workers')
+    .select('id, full_name, cscs_expiry, right_to_work_expiry')
+    .or(`cscs_expiry.in.(${fmt(in30)},${fmt(in7)}),right_to_work_expiry.in.(${fmt(in30)},${fmt(in7)})`)
+
+  for (const w of workers ?? []) {
+    if (w.cscs_expiry && [fmt(in30), fmt(in7)].includes(w.cscs_expiry)) {
+      alerts.push({ worker_id: w.id, workerName: w.full_name ?? 'An operative', credentialName: 'CSCS Card', expiry: w.cscs_expiry, daysLeft: w.cscs_expiry === fmt(in7) ? 7 : 30 })
+    }
+    if (w.right_to_work_expiry && [fmt(in30), fmt(in7)].includes(w.right_to_work_expiry)) {
+      alerts.push({ worker_id: w.id, workerName: w.full_name ?? 'An operative', credentialName: 'Right to Work', expiry: w.right_to_work_expiry, daysLeft: w.right_to_work_expiry === fmt(in7) ? 7 : 30 })
+    }
+  }
+
+  if (alerts.length === 0) return NextResponse.json({ sent: 0 })
 
   let sent = 0
 
-  for (const q of expiring) {
-    const workerName = (q.workers as any)?.full_name ?? 'An operative'
-    const daysLeft = q.expiry === fmt(in7) ? 7 : 30
-
+  for (const alert of alerts) {
     const { data: savedRows } = await supabase
       .from('saved_workers')
       .select('company_id')
-      .eq('worker_id', q.worker_id)
+      .eq('worker_id', alert.worker_id)
 
     if (!savedRows || savedRows.length === 0) continue
 
@@ -60,8 +82,8 @@ export async function GET(req: Request) {
 
     if (!managers || managers.length === 0) continue
 
-    const title = `Credential expiring in ${daysLeft} days`
-    const body  = `${workerName} — ${q.name} expires on ${q.expiry}`
+    const title = `Credential expiring in ${alert.daysLeft} days`
+    const body  = `${alert.workerName} — ${alert.credentialName} expires on ${alert.expiry}`
 
     for (const manager of managers) {
       const { data: subs } = await supabase
@@ -92,10 +114,10 @@ export async function GET(req: Request) {
           body: JSON.stringify({
             from: 'NekaID <info@nekaid.co.uk>',
             to: manager.email,
-            subject: `${title} — ${workerName}`,
+            subject: `${title} — ${alert.workerName}`,
             html: `
               <p>Hi ${manager.full_name},</p>
-              <p><strong>${workerName}</strong>'s <strong>${q.name}</strong> expires on <strong>${q.expiry}</strong> (${daysLeft} days from today).</p>
+              <p><strong>${alert.workerName}</strong>'s <strong>${alert.credentialName}</strong> expires on <strong>${alert.expiry}</strong> (${alert.daysLeft} days from today).</p>
               <p>Please ask them to upload a renewed credential as soon as possible.</p>
               <p><a href="https://nekaid.co.uk/company">View dashboard →</a></p>
               <p style="color:#888;font-size:12px;">NekaID · nekaid.co.uk</p>
@@ -109,5 +131,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ sent, total: expiring.length })
+  return NextResponse.json({ sent, total: alerts.length })
 }
