@@ -22,19 +22,11 @@ export async function GET(req: Request) {
   const today = new Date()
   const in30 = new Date(today); in30.setDate(today.getDate() + 30)
   const in7  = new Date(today); in7.setDate(today.getDate() + 7)
-
   const fmt = (d: Date) => d.toISOString().split('T')[0]
 
-  // Find qualifications expiring in 30 or 7 days
   const { data: expiring, error } = await supabase
     .from('qualifications')
-    .select(`
-      id, name, expiry, worker_id,
-      workers!inner(full_name),
-      saved_workers!inner(company_id,
-        profiles!inner(id, full_name, email)
-      )
-    `)
+    .select('id, name, expiry, worker_id, workers(full_name)')
     .in('expiry', [fmt(in30), fmt(in7)])
 
   if (error) {
@@ -51,55 +43,69 @@ export async function GET(req: Request) {
   for (const q of expiring) {
     const workerName = (q.workers as any)?.full_name ?? 'An operative'
     const daysLeft = q.expiry === fmt(in7) ? 7 : 30
-    const manager = (q.saved_workers as any)?.[0]?.profiles
-    if (!manager) continue
+
+    const { data: savedRows } = await supabase
+      .from('saved_workers')
+      .select('company_id')
+      .eq('worker_id', q.worker_id)
+
+    if (!savedRows || savedRows.length === 0) continue
+
+    const companyIds = savedRows.map((r: any) => r.company_id)
+
+    const { data: managers } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', companyIds)
+
+    if (!managers || managers.length === 0) continue
 
     const title = `Credential expiring in ${daysLeft} days`
     const body  = `${workerName} — ${q.name} expires on ${q.expiry}`
 
-    // Push notification to manager
-    const { data: subs } = await supabase
-      .from('push_subscriptions')
-      .select('subscription')
-      .eq('user_id', manager.id)
+    for (const manager of managers) {
+      const { data: subs } = await supabase
+        .from('push_subscriptions')
+        .select('subscription')
+        .eq('user_id', manager.id)
 
-    if (subs && subs.length > 0) {
-      for (const row of subs) {
-        try {
-          await webpush.sendNotification(
-            row.subscription,
-            JSON.stringify({ title, body, url: '/company' })
-          )
-        } catch (e) {
-          console.error('Push failed:', e)
+      if (subs && subs.length > 0) {
+        for (const row of subs) {
+          try {
+            await webpush.sendNotification(
+              row.subscription,
+              JSON.stringify({ title, body, url: '/company' })
+            )
+          } catch (e) {
+            console.error('Push failed:', e)
+          }
         }
       }
-    }
 
-    // Email to manager via Resend
-    try {
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'NekaID <info@nekaid.co.uk>',
-          to: manager.email,
-          subject: `${title} — ${workerName}`,
-          html: `
-            <p>Hi ${manager.full_name},</p>
-            <p><strong>${workerName}</strong>'s <strong>${q.name}</strong> expires on <strong>${q.expiry}</strong> (${daysLeft} days from today).</p>
-            <p>Please ask them to upload a renewed credential as soon as possible.</p>
-            <p><a href="https://nekaid.co.uk/company">View dashboard →</a></p>
-            <p style="color:#888;font-size:12px;">NekaID · nekaid.co.uk</p>
-          `,
-        }),
-      })
-      sent++
-    } catch (e) {
-      console.error('Email failed:', e)
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'NekaID <info@nekaid.co.uk>',
+            to: manager.email,
+            subject: `${title} — ${workerName}`,
+            html: `
+              <p>Hi ${manager.full_name},</p>
+              <p><strong>${workerName}</strong>'s <strong>${q.name}</strong> expires on <strong>${q.expiry}</strong> (${daysLeft} days from today).</p>
+              <p>Please ask them to upload a renewed credential as soon as possible.</p>
+              <p><a href="https://nekaid.co.uk/company">View dashboard →</a></p>
+              <p style="color:#888;font-size:12px;">NekaID · nekaid.co.uk</p>
+            `,
+          }),
+        })
+        sent++
+      } catch (e) {
+        console.error('Email failed:', e)
+      }
     }
   }
 
