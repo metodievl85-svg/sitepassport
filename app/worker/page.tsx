@@ -59,7 +59,7 @@ type SiteLocationRow = {
   allowed_radius_m: number | string | null
 }
 
-function SitePassportLogo() {
+function NekaIDLogo() {
   return (
     <div
       className="worker-brand-logo"
@@ -312,9 +312,9 @@ export default function WorkerPage() {
         setInductionRequest(latestInduction)
       }
 
-      const savedSiteId = localStorage.getItem('sitepassport_last_site_id') || ''
-      const savedCompanyId = localStorage.getItem('sitepassport_last_company_id') || ''
-      const savedSiteName = localStorage.getItem('sitepassport_last_site_name') || ''
+      const savedSiteId = localStorage.getItem('nekaid_last_site_id') || ''
+      const savedCompanyId = localStorage.getItem('nekaid_last_company_id') || ''
+      const savedSiteName = localStorage.getItem('nekaid_last_site_name') || ''
 
       if (savedSiteId && savedCompanyId) {
         setRememberedSite({
@@ -559,9 +559,9 @@ export default function WorkerPage() {
   }
 
   function clearRememberedSite() {
-    localStorage.removeItem('sitepassport_last_site_id')
-    localStorage.removeItem('sitepassport_last_company_id')
-    localStorage.removeItem('sitepassport_last_site_name')
+    localStorage.removeItem('nekaid_last_site_id')
+    localStorage.removeItem('nekaid_last_company_id')
+    localStorage.removeItem('nekaid_last_site_name')
     setRememberedSite(null)
     setAttendanceStatus('OUT')
     setAttendanceMessage('Site removed. Scan a site QR to choose another site.')
@@ -837,7 +837,7 @@ export default function WorkerPage() {
         <div className="container">
           <section className="hero worker-hero">
             <div style={{ minWidth: 0 }}>
-              <SitePassportLogo />
+              <NekaIDLogo />
               <h1>My Passport</h1>
               <p>Your operative account is active and ready to set up.</p>
               <p
@@ -882,7 +882,7 @@ export default function WorkerPage() {
       <div className="container">
         <section className="hero worker-hero">
           <div style={{ minWidth: 0 }}>
-            <SitePassportLogo />
+            <NekaIDLogo />
             <h1>My Passport</h1>
             <p>Your personal operative passport, ready for site checks and sharing.</p>
             <p

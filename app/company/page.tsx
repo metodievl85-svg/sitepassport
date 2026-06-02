@@ -207,7 +207,7 @@ function getTodayRange() {
 function getCscsBadgeStyle(status: string) {
   if (status === 'verified') {
     return {
-      text: 'CSCS: SitePassport checked',
+      text: 'CSCS: NekaID checked',
       background: '#eef3ff',
       color: '#243caa',
       border: '1px solid #cdd9ff',
@@ -339,7 +339,7 @@ function getInductionButtonStyle(status: InductionStatus) {
   }
 }
 
-function SitePassportLogo() {
+function NekaIDLogo() {
   return (
     <div
       className="company-brand-logo"
@@ -1430,7 +1430,7 @@ export default function CompanyPage() {
             }}
           >
             <div>
-              <SitePassportLogo />
+              <NekaIDLogo />
               <h1
                 style={{
                   fontSize: 'clamp(24px, 3vw, 34px)',

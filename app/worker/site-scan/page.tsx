@@ -93,7 +93,7 @@ export default function WorkerSiteScanPage() {
         const sitePath = extractSitePath(decodedText)
 
         if (!sitePath) {
-          setScanError('This is not a valid SitePassport site QR code.')
+          setScanError('This is not a valid NekaID site QR code.')
           return
         }
 
@@ -156,7 +156,7 @@ export default function WorkerSiteScanPage() {
         <section className="card" style={{ marginBottom: 24 }}>
           <h2 className="section-title">Camera scanner</h2>
           <p className="section-subtitle">
-            Allow camera access, then point your phone at the SitePassport site QR
+            Allow camera access, then point your phone at the NekaID site QR
             code.
           </p>
 
@@ -212,7 +212,7 @@ export default function WorkerSiteScanPage() {
           <h2 className="section-title">How it works</h2>
           <p className="section-subtitle" style={{ marginBottom: 0 }}>
             The manager or company dashboard shows the site QR. You scan it here,
-            then SitePassport opens the correct site page where you can sign IN or
+            then NekaID opens the correct site page where you can sign IN or
             sign OUT.
           </p>
         </section>

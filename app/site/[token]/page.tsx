@@ -140,9 +140,9 @@ export default function SiteAttendancePage() {
       const currentSite = siteRow as CompanySite
       setSite(currentSite)
 
-      localStorage.setItem('sitepassport_last_site_id', currentSite.id)
-      localStorage.setItem('sitepassport_last_company_id', currentSite.company_id)
-      localStorage.setItem('sitepassport_last_site_name', currentSite.site_name)
+      localStorage.setItem('nekaid_last_site_id', currentSite.id)
+      localStorage.setItem('nekaid_last_company_id', currentSite.company_id)
+      localStorage.setItem('nekaid_last_site_name', currentSite.site_name)
 
       const {
         data: { session },

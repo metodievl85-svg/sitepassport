@@ -16,7 +16,7 @@ type CompanySiteRow = {
   allowed_radius_m: number | null
 }
 
-function SitePassportLogo() {
+function NekaIDLogo() {
   return (
     <div
       style={{
@@ -268,7 +268,7 @@ export default function CompanySiteLocationPage() {
             }}
           >
             <div>
-              <SitePassportLogo />
+              <NekaIDLogo />
               <h1
                 style={{
                   fontSize: 'clamp(24px, 3vw, 34px)',
@@ -302,7 +302,7 @@ export default function CompanySiteLocationPage() {
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <SitePassportLogo />
+            <NekaIDLogo />
 
             <h1
               style={{
