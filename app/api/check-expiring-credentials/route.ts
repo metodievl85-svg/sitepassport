@@ -105,7 +105,7 @@ export async function GET(req: Request) {
       }
 
       try {
-        await fetch('https://api.resend.com/emails', {
+        const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -124,9 +124,11 @@ export async function GET(req: Request) {
             `,
           }),
         })
-        sent++
+        const resendBody = await resendRes.json()
+        console.log('Resend response:', resendRes.status, JSON.stringify(resendBody))
+        if (resendRes.ok) { sent++ } else { console.error('Resend error:', JSON.stringify(resendBody)) }
       } catch (e) {
-        console.error('Email failed:', e)
+        console.error('Email failed:', JSON.stringify(e))
       }
     }
   }
