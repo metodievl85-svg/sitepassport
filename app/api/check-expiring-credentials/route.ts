@@ -77,7 +77,7 @@ export async function GET(req: Request) {
 
     const { data: managers } = await supabase
       .from('profiles')
-      .select('id, full_name, email')
+      .select('id, company_name, email')
       .in('id', companyIds)
 
     if (!managers || managers.length === 0) continue
@@ -116,7 +116,7 @@ export async function GET(req: Request) {
             to: manager.email,
             subject: `${title} — ${alert.workerName}`,
             html: `
-              <p>Hi ${manager.full_name},</p>
+              <p>Hi ${manager.company_name},</p>
               <p><strong>${alert.workerName}</strong>'s <strong>${alert.credentialName}</strong> expires on <strong>${alert.expiry}</strong> (${alert.daysLeft} days from today).</p>
               <p>Please ask them to upload a renewed credential as soon as possible.</p>
               <p><a href="https://nekaid.co.uk/company">View dashboard →</a></p>
