@@ -178,7 +178,7 @@ export default function PrintSiteQrPage() {
       <section className="print-sheet">
         <NekaIDLogo />
 
-        <div className="poster-label">NekaID site attendance</div>
+        <div className="poster-label">NekaID SITE ATTENDANCE</div>
 
         <div className="company-name">{companyName || 'Company name'}</div>
 
@@ -248,7 +248,6 @@ export default function PrintSiteQrPage() {
           font-size: 12px;
           font-weight: 900;
           letter-spacing: 1.3px;
-          text-transform: uppercase;
           margin-bottom: 12px;
         }
 
