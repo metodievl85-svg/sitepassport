@@ -180,6 +180,42 @@ export default function LandingPage() {
         .l-footer-links a { font-size: 0.78rem; color: var(--muted2); transition: color 0.2s; }
         .l-footer-links a:hover { color: var(--muted); }
         .l-footer-copy { font-size: 0.72rem; color: var(--muted2); }
+
+        @media (max-width: 768px) {
+          .l-nav { padding: 1rem 1.25rem; }
+          .l-nav-links a:not(.l-nav-cta) { display: none; }
+
+          .l-hero { grid-template-columns: 1fr; min-height: auto; }
+          .l-hero-left { padding: 4rem 1.25rem 2rem; }
+          .l-hero-right { display: none; }
+
+          .l-problem-strip { padding: 3rem 1.25rem; }
+          .l-problems { grid-template-columns: 1fr 1fr; }
+
+          .l-cdm { padding: 3rem 1.25rem; }
+
+          .l-features { padding: 4rem 1.25rem; }
+          .l-feat-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+          .l-how { padding: 4rem 1.25rem; }
+          .l-steps { grid-template-columns: 1fr 1fr; gap: 2rem; }
+          .l-steps::before { display: none; }
+
+          .l-pricing { padding: 4rem 1.25rem; }
+          .l-plans { grid-template-columns: 1fr; gap: 0.75rem; }
+
+          .l-cta { padding: 4rem 1.25rem; }
+
+          .l-footer { padding: 1.5rem 1.25rem; flex-direction: column; align-items: flex-start; gap: 1rem; }
+          .l-footer-links { flex-wrap: wrap; gap: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+          .l-problems { grid-template-columns: 1fr; }
+          .l-feat-grid { grid-template-columns: 1fr; }
+          .l-steps { grid-template-columns: 1fr; }
+          .l-trust { gap: 1.25rem; }
+        }
       `}</style>
 
       <div className="landing">
