@@ -14,11 +14,11 @@ type CompanySiteRow = {
   created_at: string
 }
 
-function SitePassportLogo() {
+function NekaIDLogo() {
   return (
     <img
-      src="/sitepassport-logo.png"
-      alt="SitePassport"
+      src="/nekaid-logo.png"
+      alt="NekaID"
       style={{
         display: 'block',
         width: 'min(260px, 100%)',
@@ -176,9 +176,9 @@ export default function PrintSiteQrPage() {
       </div>
 
       <section className="print-sheet">
-        <SitePassportLogo />
+        <NekaIDLogo />
 
-        <div className="poster-label">SitePassport site attendance</div>
+        <div className="poster-label">NekaID site attendance</div>
 
         <div className="company-name">{companyName || 'Company name'}</div>
 
@@ -198,7 +198,7 @@ export default function PrintSiteQrPage() {
 
         <div className="instructions">
           <div>
-            <strong>1.</strong> Open SitePassport on your phone.
+            <strong>1.</strong> Open NekaID on your phone.
           </div>
           <div>
             <strong>2.</strong> Tap “Scan site QR”.
