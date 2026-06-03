@@ -22,7 +22,7 @@ type WorkerRow = {
 }
 
 type AttendanceStatus = 'IN' | 'OUT'
-type VisitorStep = 'choice' | 'operative' | 'visitor' | 'visitorDone'
+type VisitorStep = 'choice' | 'operative' | 'visitorChoice' | 'visitor' | 'visitorOut' | 'visitorSignedOut' | 'visitorDone'
 
 type LocationCheck = {
   latitude: number
@@ -107,6 +107,9 @@ export default function SiteAttendancePage() {
   const [visitorPhoto, setVisitorPhoto] = useState('')
   const [visitorMessage, setVisitorMessage] = useState('')
   const [visitorLocationCheck, setVisitorLocationCheck] = useState<LocationCheck | null>(null)
+
+  const [visitorOutPhone, setVisitorOutPhone] = useState('')
+  const [visitorOutMessage, setVisitorOutMessage] = useState('')
 
   useEffect(() => {
     void loadSite()
@@ -434,6 +437,58 @@ export default function SiteAttendancePage() {
     }
   }
 
+  async function handleVisitorSignOut() {
+    if (!site) return
+
+    const cleanPhone = visitorOutPhone.trim()
+
+    if (!cleanPhone) {
+      setVisitorOutMessage('Please enter the phone number you used when signing in.')
+      return
+    }
+
+    try {
+      setSaving(true)
+      setVisitorOutMessage('')
+
+      const { data: existing, error: findError } = await supabase
+        .from('site_visitors')
+        .select('id')
+        .eq('site_id', site.id)
+        .eq('phone', cleanPhone)
+        .eq('status', 'IN')
+        .order('signed_in_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (findError) {
+        console.error(findError)
+        setVisitorOutMessage('Could not look up your sign-in record. Please try again.')
+        return
+      }
+
+      if (!existing) {
+        setVisitorOutMessage('No active sign-in found for that phone number at this site.')
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from('site_visitors')
+        .update({ status: 'OUT', signed_out_at: new Date().toISOString() })
+        .eq('id', existing.id)
+
+      if (updateError) {
+        console.error(updateError)
+        setVisitorOutMessage('Could not sign you out. Please try again.')
+        return
+      }
+
+      setStep('visitorSignedOut')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <main className="page-shell">
@@ -511,7 +566,7 @@ export default function SiteAttendancePage() {
               <button
                 type="button"
                 onClick={() => {
-                  setStep('visitor')
+                  setStep('visitorChoice')
                   setVisitorMessage('')
                   setVisitorLocationCheck(null)
                 }}
@@ -548,6 +603,67 @@ export default function SiteAttendancePage() {
                 {message}
               </div>
             ) : null}
+          </section>
+        ) : null}
+
+        {site && step === 'visitorChoice' ? (
+          <section className="card">
+            <h2 className="section-title">Visitor — sign in or out?</h2>
+            <p className="section-subtitle">
+              Choose whether you are arriving on site or leaving.
+            </p>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: 18,
+                marginTop: 24,
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('visitor')
+                  setVisitorMessage('')
+                  setVisitorLocationCheck(null)
+                }}
+                className="btn btn-primary"
+                style={{ minHeight: 74, fontSize: 20, fontWeight: 900 }}
+              >
+                Sign IN
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('visitorOut')
+                  setVisitorOutPhone('')
+                  setVisitorOutMessage('')
+                }}
+                style={{
+                  minHeight: 74,
+                  border: '1px solid #b42318',
+                  borderRadius: 18,
+                  background: '#b42318',
+                  color: '#ffffff',
+                  fontSize: 20,
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                }}
+              >
+                Sign OUT
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStep('choice')}
+              className="btn btn-outline"
+              style={{ width: '100%', minHeight: 54, marginTop: 18 }}
+            >
+              Back
+            </button>
           </section>
         ) : null}
 
@@ -835,6 +951,143 @@ export default function SiteAttendancePage() {
                 marginTop: 22,
                 fontSize: 18,
                 fontWeight: 900,
+              }}
+            >
+              Done
+            </button>
+          </section>
+        ) : null}
+
+        {site && step === 'visitorOut' ? (
+          <section className="card">
+            <h2 className="section-title">Visitor sign out</h2>
+            <p className="section-subtitle">
+              Enter the phone number you used when signing in.
+            </p>
+
+            <div style={{ marginTop: 24 }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: '#09154b',
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1,
+                }}
+              >
+                Phone number
+              </label>
+
+              <input
+                type="tel"
+                value={visitorOutPhone}
+                onChange={(e) => setVisitorOutPhone(e.target.value)}
+                placeholder="Enter phone number"
+                style={{
+                  width: '100%',
+                  minHeight: 54,
+                  border: '1px solid #d7e0ec',
+                  borderRadius: 16,
+                  padding: '0 16px',
+                  background: '#ffffff',
+                  color: '#09154b',
+                  fontSize: 17,
+                  fontWeight: 800,
+                }}
+              />
+            </div>
+
+            {visitorOutMessage ? (
+              <div
+                style={{
+                  border: '1px solid #d7e0ec',
+                  borderRadius: 18,
+                  padding: 16,
+                  background: '#f8fbff',
+                  color: '#09154b',
+                  fontWeight: 800,
+                  marginTop: 20,
+                  lineHeight: 1.45,
+                }}
+              >
+                {visitorOutMessage}
+              </div>
+            ) : null}
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+              <button
+                type="button"
+                onClick={() => void handleVisitorSignOut()}
+                disabled={saving}
+                style={{
+                  flex: '1 1 220px',
+                  minHeight: 58,
+                  border: '1px solid #b42318',
+                  borderRadius: 18,
+                  background: '#b42318',
+                  color: '#ffffff',
+                  fontSize: 18,
+                  fontWeight: 900,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.65 : 1,
+                }}
+              >
+                {saving ? 'Signing out...' : 'Sign OUT'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('visitorChoice')
+                  setVisitorOutMessage('')
+                }}
+                disabled={saving}
+                className="btn btn-outline"
+                style={{
+                  flex: '1 1 160px',
+                  minHeight: 58,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.65 : 1,
+                }}
+              >
+                Back
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        {site && step === 'visitorSignedOut' ? (
+          <section
+            className="card"
+            style={{ border: '1px solid #ffccc7', background: '#fff1f0' }}
+          >
+            <h2 className="section-title" style={{ color: '#b42318' }}>
+              Visitor signed out
+            </h2>
+
+            <p className="section-subtitle" style={{ marginBottom: 22 }}>
+              You have been signed out of {site.site_name}.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setVisitorOutPhone('')
+                setVisitorOutMessage('')
+                setStep('choice')
+              }}
+              style={{
+                width: '100%',
+                minHeight: 58,
+                border: '1px solid #b42318',
+                borderRadius: 18,
+                background: '#b42318',
+                color: '#ffffff',
+                fontSize: 18,
+                fontWeight: 900,
+                cursor: 'pointer',
               }}
             >
               Done
