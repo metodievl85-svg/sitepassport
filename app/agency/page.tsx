@@ -14,6 +14,8 @@ type AgencyWorker = {
   fullName: string
   photo: string
   userId: string
+  trade: string
+  company: string
   cscsExpiry: string
   rightToWorkExpiry: string
   complianceStatus: ComplianceStatus
@@ -79,7 +81,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('worker_id, added_at, workers(id, full_name, photo, cscs_expiry, right_to_work_expiry, user_id)')
+        .select('worker_id, added_at, workers(id, full_name, photo, cscs_expiry, right_to_work_expiry, user_id, role, company)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -120,6 +122,8 @@ export default function AgencyPage() {
             fullName: (w.full_name as string) ?? '',
             photo: (w.photo as string) ?? '',
             userId: (w.user_id as string) ?? '',
+            trade: (w.role as string) ?? '',
+            company: (w.company as string) ?? '',
             cscsExpiry: (w.cscs_expiry as string) ?? '',
             rightToWorkExpiry: (w.right_to_work_expiry as string) ?? '',
             complianceStatus: getComplianceStatus([w.cscs_expiry, w.right_to_work_expiry, ...quals]),
@@ -138,11 +142,15 @@ export default function AgencyPage() {
     router.push('/login')
   }
 
-  const filteredWorkers = workers.filter(
-    (w) =>
-      !search.trim() ||
-      w.fullName.toLowerCase().includes(search.trim().toLowerCase())
-  )
+  const filteredWorkers = workers.filter((w) => {
+    const term = search.trim().toLowerCase()
+    if (!term) return true
+    return (
+      w.fullName.toLowerCase().includes(term) ||
+      w.trade.toLowerCase().includes(term) ||
+      w.company.toLowerCase().includes(term)
+    )
+  })
 
   const expiringSoonCount = workers.filter((w) => w.complianceStatus === 'expiring').length
   const expiredCount = workers.filter((w) => w.complianceStatus === 'expired').length
@@ -278,7 +286,7 @@ export default function AgencyPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name..."
+            placeholder="Search by name, trade or company..."
             style={{
               width: '100%',
               minHeight: 48,
@@ -382,6 +390,11 @@ export default function AgencyPage() {
                       >
                         {worker.fullName || 'Unnamed'}
                       </div>
+                      {(worker.trade || worker.company) && (
+                        <div style={{ fontSize: 13, color: '#62779a', fontWeight: 700, marginTop: 2 }}>
+                          {[worker.trade, worker.company].filter(Boolean).join(' • ')}
+                        </div>
+                      )}
                       <span
                         style={{
                           display: 'inline-flex',
