@@ -43,32 +43,25 @@ async function registerPush(userId: string, workerId: string) {
     const subscriptionJson = subscription.toJSON()
     if (!subscriptionJson.keys?.p256dh || !subscriptionJson.keys?.auth) return
 
-    const { data: existing } = await supabase
+    const endpoint = subscription.endpoint
+
+    // Remove any stale rows for this user on a different endpoint (e.g. old domain)
+    await supabase
       .from('push_subscriptions')
-      .select('id, endpoint')
+      .delete()
       .eq('user_id', userId)
-      .maybeSingle()
+      .neq('endpoint', endpoint)
 
-    if (existing?.endpoint === subscription.endpoint) return
-
-    if (existing) {
-      await supabase
-        .from('push_subscriptions')
-        .update({
-          endpoint: subscription.endpoint,
-          p256dh: subscriptionJson.keys.p256dh,
-          auth: subscriptionJson.keys.auth,
-        })
-        .eq('user_id', userId)
-    } else {
-      await supabase.from('push_subscriptions').insert({
+    await supabase.from('push_subscriptions').upsert(
+      {
         user_id: userId,
         ...(workerId ? { worker_id: workerId } : {}),
-        endpoint: subscription.endpoint,
+        endpoint,
         p256dh: subscriptionJson.keys.p256dh,
         auth: subscriptionJson.keys.auth,
-      })
-    }
+      },
+      { onConflict: 'endpoint' }
+    )
   } catch (err) {
     console.error('Push registration error:', err)
   }
