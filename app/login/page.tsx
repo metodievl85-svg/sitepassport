@@ -199,6 +199,11 @@ export default function LoginPage() {
       return
     }
 
+    if (profile.role === 'agency') {
+      router.replace('/agency')
+      return
+    }
+
     setError('Invalid account role.')
   }
 
