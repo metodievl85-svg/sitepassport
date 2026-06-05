@@ -6,16 +6,16 @@ type Tier = { n: string; l: string; m: number; y: number; pop?: boolean; f: stri
 
 const DATA: Record<'site' | 'agency', Tier[]> = {
   site: [
-    { n: 'Small', l: 'Up to 25 workers', m: 49, y: 41, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts'] },
-    { n: 'Medium', l: 'Up to 75 workers', m: 79, y: 66, pop: true, f: ['Everything in Small', 'Two-way messaging', 'Photo & drawing sharing', 'Priority support'] },
-    { n: 'Large', l: 'Up to 250 workers', m: 139, y: 115, f: ['Everything in Medium', 'Multi-crew dashboard', 'Full compliance export', 'Audit trail'] },
-    { n: 'Unlimited', l: 'No worker cap', m: 249, y: 207, f: ['Everything in Large', 'No limits', 'Megaproject ready', 'Dedicated onboarding'] },
+    { n: 'Small', l: 'Up to 25 workers', m: 49, y: 41, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts', 'Two-way messaging', 'Photo & drawing sharing'] },
+    { n: 'Medium', l: 'Up to 75 workers', m: 79, y: 66, pop: true, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts', 'Two-way messaging', 'Photo & drawing sharing'] },
+    { n: 'Large', l: 'Up to 250 workers', m: 139, y: 115, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts', 'Two-way messaging', 'Photo & drawing sharing'] },
+    { n: 'Unlimited', l: 'No worker cap', m: 249, y: 207, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts', 'Two-way messaging', 'Photo & drawing sharing', 'Custom branding'] },
   ],
   agency: [
-    { n: 'Small', l: 'Up to 50 workers', m: 79, y: 66, f: ['Full data on one scan', 'CSCS, quals, NI, bank', 'Place & pay ready', 'Worker consent built in'] },
-    { n: 'Medium', l: 'Up to 150 workers', m: 149, y: 124, pop: true, f: ['Everything in Small', 'Multi-site placements', 'Bulk worker import', 'Priority support'] },
-    { n: 'Large', l: 'Up to 500 workers', m: 299, y: 249, f: ['Everything in Medium', 'Workforce analytics', 'Compliance reporting', 'Account manager'] },
-    { n: 'Enterprise', l: 'Unlimited workforce', m: 499, y: 415, f: ['Everything in Large', 'No limits', 'Custom integrations', 'Dedicated onboarding'] },
+    { n: 'Small', l: 'Up to 50 workers', m: 79, y: 66, f: ['Full data on one scan', 'CSCS, quals, NI, bank', 'Digital inductions', 'Two-way messaging', 'Photo & drawing sharing', 'Expiry alerts'] },
+    { n: 'Medium', l: 'Up to 150 workers', m: 149, y: 124, pop: true, f: ['Full data on one scan', 'CSCS, quals, NI, bank', 'Digital inductions', 'Two-way messaging', 'Photo & drawing sharing', 'Expiry alerts'] },
+    { n: 'Large', l: 'Up to 500 workers', m: 299, y: 249, f: ['Full data on one scan', 'CSCS, quals, NI, bank', 'Digital inductions', 'Two-way messaging', 'Photo & drawing sharing', 'Expiry alerts'] },
+    { n: 'Enterprise', l: 'Unlimited workforce', m: 499, y: 415, f: ['Full data on one scan', 'CSCS, quals, NI, bank', 'Digital inductions', 'Two-way messaging', 'Photo & drawing sharing', 'Expiry alerts', 'Custom branding'] },
   ],
 }
 
