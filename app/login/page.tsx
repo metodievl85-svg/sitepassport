@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 
 type Mode = 'login' | 'signup' | 'forgot'
-type Role = 'worker' | 'company'
+type Role = 'worker' | 'company' | 'agency'
 
 function NekaIDLogo({ dark = false }: { dark?: boolean }) {
   return (
@@ -108,6 +108,11 @@ export default function LoginPage() {
 
         if (profile.role === 'worker') {
           router.replace('/worker')
+          return
+        }
+
+        if (profile.role === 'agency') {
+          router.replace('/agency')
           return
         }
 
@@ -557,6 +562,14 @@ export default function LoginPage() {
                       onClick={() => setRole('company')}
                     >
                       Company
+                    </button>
+
+                    <button
+                      type="button"
+                      className={role === 'agency' ? 'btn btn-secondary' : 'btn btn-primary'}
+                      onClick={() => setRole('agency')}
+                    >
+                      Agency
                     </button>
                   </div>
                 </div>

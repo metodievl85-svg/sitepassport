@@ -41,6 +41,11 @@ export default function HomePage() {
         return
       }
 
+      if (profile.role === 'agency') {
+        router.replace('/agency')
+        return
+      }
+
       router.replace('/login')
     }
 
