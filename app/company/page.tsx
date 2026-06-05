@@ -1817,6 +1817,7 @@ export default function CompanyPage() {
                 userId: w.userId,
                 fullName: w.fullName,
                 role: w.role,
+                photo: w.photo ?? undefined,
               }))}
           />
         </div>

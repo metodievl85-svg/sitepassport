@@ -161,7 +161,8 @@ export default function AgencyPage() {
       workerId: w.workerId,
       userId: w.userId,
       fullName: w.fullName,
-      role: '',
+      role: w.trade,
+      photo: w.photo ?? undefined,
     }))
 
   if (loading) {
