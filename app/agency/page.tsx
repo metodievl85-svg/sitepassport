@@ -486,7 +486,24 @@ export default function AgencyPage() {
             <p style={{ margin: 0 }}>{email}</p>
           </div>
           <div className="hero-actions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <button type="button" className="btn btn-outline" onClick={handleLogout}>
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: 'white',
+                padding: '9px 18px',
+                borderRadius: '10px',
+                fontSize: '14px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
+                letterSpacing: '0.01em',
+              }}
+            >
               Sign out
             </button>
             <AgencyDashboardMenu onMessages={handleScrollToMessages} />

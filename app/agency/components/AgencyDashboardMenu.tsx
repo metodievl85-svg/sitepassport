@@ -26,20 +26,22 @@ export default function AgencyDashboardMenu({ onMessages }: Props) {
         onClick={() => setOpen((c) => !c)}
         style={{
           width: '100%',
-          minHeight: 54,
-          padding: '0 18px',
-          borderRadius: 16,
-          border: '1px solid #d7e1ef',
-          background: '#ffffff',
-          color: '#09154b',
-          fontSize: 16,
-          fontWeight: 900,
-          cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 12,
-          boxShadow: '0 10px 28px rgba(9, 21, 75, 0.08)',
+          background: 'rgba(255,255,255,0.12)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          color: 'white',
+          padding: '9px 18px',
+          borderRadius: '10px',
+          fontSize: '14px',
+          fontWeight: 500,
+          cursor: 'pointer',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
+          letterSpacing: '0.01em',
         }}
       >
         <span>Dashboard menu</span>
