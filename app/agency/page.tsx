@@ -635,12 +635,19 @@ export default function AgencyPage() {
                             <span style={{ fontSize: 13, color: '#aaa' }}>No active placement</span>
                           )}
                           <button
-                            type="button"
-                            className="btn btn-outline"
-                            style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}
                             onClick={() => openPlacementModal(worker.workerId, worker.fullName)}
+                            style={{
+                              fontSize: 12,
+                              padding: '5px 14px',
+                              borderRadius: 6,
+                              border: '1px solid #ccc',
+                              background: '#fff',
+                              color: '#333',
+                              cursor: 'pointer',
+                              marginTop: 6,
+                            }}
                           >
-                            {p ? 'Update' : 'Set Placement'}
+                            {p ? 'Update Placement' : 'Set Placement'}
                           </button>
                         </div>
                       )
