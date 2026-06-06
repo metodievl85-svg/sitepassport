@@ -612,7 +612,7 @@ export default function AgencyPage() {
                       const isOngoing = p && !p.end_date
                       const isEnded = p && p.end_date && new Date(p.end_date) < new Date()
                       return (
-                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eee', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
                           {p ? (
                             <div style={{ fontSize: 13, color: '#444', lineHeight: 1.4 }}>
                               <span style={{ fontWeight: 600 }}>{p.company_name}</span>
