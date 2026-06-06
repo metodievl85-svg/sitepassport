@@ -1,12 +1,22 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import CompanyMessages from '../company/components/CompanyMessages'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
+
+type PlacementRow = {
+  id: string
+  worker_id: string
+  company_name: string
+  site_name: string
+  start_date: string
+  end_date: string | null
+}
 
 type AgencyWorker = {
   workerId: string
@@ -53,6 +63,11 @@ export default function AgencyPage() {
   const [addLinkLoading, setAddLinkLoading] = useState(false)
   const [addLinkError, setAddLinkError] = useState('')
   const [addLinkSuccess, setAddLinkSuccess] = useState('')
+  const [placements, setPlacements] = useState<PlacementRow[]>([])
+  const [placementModal, setPlacementModal] = useState<{ workerId: string; workerName: string } | null>(null)
+  const [placementForm, setPlacementForm] = useState({ company_name: '', site_name: '', start_date: '', end_date: '' })
+  const [placementLoading, setPlacementLoading] = useState(false)
+  const [placementError, setPlacementError] = useState('')
 
   useEffect(() => {
     void load()
@@ -138,6 +153,14 @@ export default function AgencyPage() {
         .filter(Boolean) as AgencyWorker[]
 
       setWorkers(mapped)
+
+      if (workerIds.length > 0) {
+        const { data: pData } = await supabase
+          .from('agency_placements')
+          .select('*')
+          .eq('agency_id', currentAgencyId)
+        setPlacements(pData || [])
+      }
     } finally {
       setLoading(false)
     }
@@ -205,6 +228,58 @@ export default function AgencyPage() {
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  const getPlacement = (workerId: string) => placements.find((p) => p.worker_id === workerId) || null
+
+  const openPlacementModal = (workerId: string, workerName: string) => {
+    const existing = getPlacement(workerId)
+    setPlacementForm({
+      company_name: existing?.company_name || '',
+      site_name: existing?.site_name || '',
+      start_date: existing?.start_date || '',
+      end_date: existing?.end_date || '',
+    })
+    setPlacementError('')
+    setPlacementModal({ workerId, workerName })
+  }
+
+  const savePlacement = async () => {
+    if (!placementModal) return
+    if (!placementForm.company_name.trim() || !placementForm.site_name.trim() || !placementForm.start_date) {
+      setPlacementError('Company, site and start date are required.')
+      return
+    }
+    setPlacementLoading(true)
+    setPlacementError('')
+    const { error } = await supabase
+      .from('agency_placements')
+      .upsert({
+        agency_id: agencyId,
+        worker_id: placementModal.workerId,
+        company_name: placementForm.company_name.trim(),
+        site_name: placementForm.site_name.trim(),
+        start_date: placementForm.start_date,
+        end_date: placementForm.end_date || null,
+      }, { onConflict: 'agency_id,worker_id' })
+    setPlacementLoading(false)
+    if (error) { setPlacementError(error.message); return }
+    const { data: pData } = await supabase
+      .from('agency_placements')
+      .select('*')
+      .eq('agency_id', agencyId)
+    setPlacements(pData || [])
+    setPlacementModal(null)
+  }
+
+  const clearPlacement = async (workerId: string) => {
+    await supabase
+      .from('agency_placements')
+      .delete()
+      .eq('agency_id', agencyId)
+      .eq('worker_id', workerId)
+    setPlacements((prev) => prev.filter((p) => p.worker_id !== workerId))
+    setPlacementModal(null)
   }
 
   const filteredWorkers = workers.filter((w) => {
@@ -444,15 +519,13 @@ export default function AgencyPage() {
                   <div
                     key={worker.workerId}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 14,
                       padding: '12px 16px',
                       border: '1px solid #d7e1ef',
                       borderRadius: 16,
                       background: '#fbfdff',
                     }}
                   >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     {(worker.facePhoto || worker.photo) ? (
                       <img
                         src={worker.facePhoto || worker.photo}
@@ -533,6 +606,45 @@ export default function AgencyPage() {
                     >
                       View passport
                     </Link>
+                    </div>
+                    {(() => {
+                      const p = getPlacement(worker.workerId)
+                      const isOngoing = p && !p.end_date
+                      const isEnded = p && p.end_date && new Date(p.end_date) < new Date()
+                      return (
+                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                          {p ? (
+                            <div style={{ fontSize: 13, color: '#444', lineHeight: 1.4 }}>
+                              <span style={{ fontWeight: 600 }}>{p.company_name}</span>
+                              {' · '}{p.site_name}
+                              {' · '}
+                              <span style={{
+                                display: 'inline-block',
+                                padding: '1px 7px',
+                                borderRadius: 99,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                background: isOngoing ? '#e6f4ea' : '#f0f0f0',
+                                color: isOngoing ? '#2e7d32' : '#666',
+                                marginLeft: 2,
+                              }}>
+                                {isOngoing ? 'Ongoing' : isEnded ? 'Ended' : 'Active'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 13, color: '#aaa' }}>No active placement</span>
+                          )}
+                          <button
+                            type="button"
+                            className="btn btn-outline"
+                            style={{ fontSize: 12, padding: '4px 12px', whiteSpace: 'nowrap' }}
+                            onClick={() => openPlacementModal(worker.workerId, worker.fullName)}
+                          >
+                            {p ? 'Update' : 'Set Placement'}
+                          </button>
+                        </div>
+                      )
+                    })()}
                   </div>
                 )
               })}
@@ -545,6 +657,71 @@ export default function AgencyPage() {
         </div>
 
       </div>
+
+      {placementModal && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div className="card" style={{ width: '100%', maxWidth: 440, padding: 28, borderRadius: 16, position: 'relative' }}>
+            <button onClick={() => setPlacementModal(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#999' }}>✕</button>
+            <h3 style={{ marginBottom: 18, fontSize: 17 }}>Set Placement — {placementModal.workerName}</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label className="meta-label">Company Name *</label>
+                <input
+                  className="input"
+                  placeholder="e.g. Barratt Homes"
+                  value={placementForm.company_name}
+                  onChange={(e) => setPlacementForm((f) => ({ ...f, company_name: e.target.value }))}
+                  style={{ width: '100%', marginTop: 4 }}
+                />
+              </div>
+              <div>
+                <label className="meta-label">Site Name *</label>
+                <input
+                  className="input"
+                  placeholder="e.g. Paddington Square"
+                  value={placementForm.site_name}
+                  onChange={(e) => setPlacementForm((f) => ({ ...f, site_name: e.target.value }))}
+                  style={{ width: '100%', marginTop: 4 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <label className="meta-label">Start Date *</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={placementForm.start_date}
+                    onChange={(e) => setPlacementForm((f) => ({ ...f, start_date: e.target.value }))}
+                    style={{ width: '100%', marginTop: 4 }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="meta-label">End Date (optional)</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={placementForm.end_date}
+                    onChange={(e) => setPlacementForm((f) => ({ ...f, end_date: e.target.value }))}
+                    style={{ width: '100%', marginTop: 4 }}
+                  />
+                </div>
+              </div>
+              {placementError && <p style={{ color: 'red', fontSize: 13, margin: 0 }}>{placementError}</p>}
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <button type="button" className="btn" style={{ flex: 1 }} onClick={() => void savePlacement()} disabled={placementLoading}>
+                  {placementLoading ? 'Saving...' : 'Save Placement'}
+                </button>
+                {getPlacement(placementModal.workerId) && (
+                  <button type="button" className="btn btn-outline" style={{ flex: 1, color: '#c00' }} onClick={() => void clearPlacement(placementModal.workerId)}>
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </main>
   )
 }
