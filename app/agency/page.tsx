@@ -490,17 +490,15 @@ export default function AgencyPage() {
               type="button"
               onClick={handleLogout}
               style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.3)',
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.35)',
                 color: 'white',
                 padding: '9px 18px',
                 borderRadius: '10px',
                 fontSize: '14px',
                 fontWeight: 500,
                 cursor: 'pointer',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.2)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1)',
                 letterSpacing: '0.01em',
               }}
             >
