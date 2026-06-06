@@ -6,9 +6,10 @@ import CompanyDashboardMenu from './CompanyDashboardMenu'
 type Props = {
   email: string
   handleLogout: () => void
+  onAddOperative: () => void
 }
 
-export default function CompanyHero({ email, handleLogout }: Props) {
+export default function CompanyHero({ email, handleLogout, onAddOperative }: Props) {
   const isRigby = email === 'leroy.smith@rigbyandrigby.com'
 
   return (
@@ -174,7 +175,7 @@ export default function CompanyHero({ email, handleLogout }: Props) {
           Logout
         </button>
 
-        <CompanyDashboardMenu />
+        <CompanyDashboardMenu onAddOperative={onAddOperative} />
       </div>
 
       {isRigby && (

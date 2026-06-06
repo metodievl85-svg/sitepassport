@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-export default function CompanyDashboardMenu() {
+type Props = { onAddOperative: () => void }
+
+export default function CompanyDashboardMenu({ onAddOperative }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -19,23 +21,45 @@ export default function CompanyDashboardMenu() {
 
       {open ? (
         <div className="company-dashboard-menu-panel">
+          <button
+            type="button"
+            className="company-dashboard-menu-link"
+            onClick={() => { onAddOperative(); setOpen(false) }}
+            style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900 }}
+          >
+            Add Operative
+          </button>
+
           <a
             href="#messages"
             className="company-dashboard-menu-link"
             onClick={() => setOpen(false)}
+            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
           >
             Messages
           </a>
 
-          <Link href="/company/attendance-settings" className="company-dashboard-menu-link">
+          <Link
+            href="/company/attendance-settings"
+            className="company-dashboard-menu-link"
+            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
+          >
             Attendance settings
           </Link>
 
-          <Link href="/company/site-location" className="company-dashboard-menu-link">
+          <Link
+            href="/company/site-location"
+            className="company-dashboard-menu-link"
+            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
+          >
             Site location
           </Link>
 
-          <Link href="/company/print-qr" className="company-dashboard-menu-link">
+          <Link
+            href="/company/print-qr"
+            className="company-dashboard-menu-link"
+            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
+          >
             Print site QR
           </Link>
         </div>

@@ -49,6 +49,10 @@ export default function AgencyPage() {
   const [agencyId, setAgencyId] = useState('')
   const [workers, setWorkers] = useState<AgencyWorker[]>([])
   const [search, setSearch] = useState('')
+  const [addLink, setAddLink] = useState('')
+  const [addLinkLoading, setAddLinkLoading] = useState(false)
+  const [addLinkError, setAddLinkError] = useState('')
+  const [addLinkSuccess, setAddLinkSuccess] = useState('')
 
   useEffect(() => {
     void load()
@@ -136,6 +140,65 @@ export default function AgencyPage() {
       setWorkers(mapped)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleAddOperative() {
+    const input = addLink.trim()
+    if (!input) return
+
+    setAddLinkError('')
+    setAddLinkSuccess('')
+    setAddLinkLoading(true)
+
+    try {
+      let workerId = input
+      const urlMatch = input.match(/\/scan\/([a-f0-9-]{36})/i)
+      if (urlMatch) workerId = urlMatch[1]
+
+      if (!workerId.match(/^[a-f0-9-]{36}$/i)) {
+        setAddLinkError('Invalid link. Please paste the full worker passport link.')
+        return
+      }
+
+      const { data: workerRow, error: workerError } = await supabase
+        .from('workers')
+        .select('id, full_name, role, company, photo')
+        .eq('id', workerId)
+        .maybeSingle()
+
+      if (workerError || !workerRow) {
+        setAddLinkError('Operative not found. Please check the link and try again.')
+        return
+      }
+
+      const { data: existing } = await supabase
+        .from('agency_workers')
+        .select('id')
+        .eq('agency_id', agencyId)
+        .eq('worker_id', workerId)
+        .maybeSingle()
+
+      if (existing) {
+        setAddLinkError('This operative is already in your workforce.')
+        return
+      }
+
+      const { error: insertError } = await supabase
+        .from('agency_workers')
+        .insert({ agency_id: agencyId, worker_id: workerRow.id })
+
+      if (insertError) {
+        console.error(insertError)
+        setAddLinkError('Could not add operative. Please try again.')
+        return
+      }
+
+      setAddLinkSuccess(`${workerRow.full_name} added to your workforce.`)
+      setAddLink('')
+      await load()
+    } finally {
+      setAddLinkLoading(false)
     }
   }
 
@@ -281,6 +344,46 @@ export default function AgencyPage() {
         </div>
 
         <section className="card" style={{ marginBottom: 24 }}>
+          <h2 className="section-title">Add Operative</h2>
+          <p className="section-subtitle">
+            Ask the operative to share their passport link from the NekaID app, then paste it below.
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
+            <input
+              value={addLink}
+              onChange={(e) => { setAddLink(e.target.value); setAddLinkError(''); setAddLinkSuccess('') }}
+              placeholder="Paste operative passport link here..."
+              style={{
+                flex: 1,
+                minWidth: 0,
+                minHeight: 48,
+                borderRadius: 14,
+                border: '1px solid #d7e1ef',
+                padding: '0 14px',
+                fontSize: 15,
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void handleAddOperative()}
+              disabled={addLinkLoading || !addLink.trim()}
+              style={{ whiteSpace: 'nowrap', opacity: addLinkLoading || !addLink.trim() ? 0.6 : 1 }}
+            >
+              {addLinkLoading ? 'Adding...' : 'Add Operative'}
+            </button>
+          </div>
+          {addLinkError && (
+            <p style={{ marginTop: 10, color: '#b42318', fontWeight: 700, fontSize: 14 }}>{addLinkError}</p>
+          )}
+          {addLinkSuccess && (
+            <p style={{ marginTop: 10, color: '#167342', fontWeight: 700, fontSize: 14 }}>{addLinkSuccess}</p>
+          )}
+        </section>
+
+        <section className="card" style={{ marginBottom: 24 }}>
           <h2 className="section-title">Your operatives</h2>
           <p className="section-subtitle">
             Search and review compliance across your agency workforce.
@@ -350,9 +453,9 @@ export default function AgencyPage() {
                       background: '#fbfdff',
                     }}
                   >
-                    {worker.photo ? (
+                    {(worker.facePhoto || worker.photo) ? (
                       <img
-                        src={worker.photo}
+                        src={worker.facePhoto || worker.photo}
                         alt={worker.fullName}
                         style={{
                           width: 48,

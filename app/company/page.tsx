@@ -389,6 +389,11 @@ export default function CompanyPage() {
   const [signingOutVisitorId, setSigningOutVisitorId] = useState<string | null>(null)
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [addOperativeOpen, setAddOperativeOpen] = useState(false)
+  const [addLink, setAddLink] = useState('')
+  const [addLinkLoading, setAddLinkLoading] = useState(false)
+  const [addLinkError, setAddLinkError] = useState('')
+  const [addLinkSuccess, setAddLinkSuccess] = useState('')
   const [filter, setFilter] = useState<FilterValue>('all')
   const [sortBy, setSortBy] = useState<SortValue>('newest')
   const [removingId, setRemovingId] = useState<string | null>(null)
@@ -1015,6 +1020,55 @@ export default function CompanyPage() {
     router.push('/login')
   }
 
+  async function handleAddOperative() {
+    const input = addLink.trim()
+    if (!input) return
+    setAddLinkError('')
+    setAddLinkSuccess('')
+    setAddLinkLoading(true)
+    try {
+      let workerId = input
+      const urlMatch = input.match(/\/scan\/([a-f0-9-]{36})/i)
+      if (urlMatch) workerId = urlMatch[1]
+      if (!workerId.match(/^[a-f0-9-]{36}$/i)) {
+        setAddLinkError('Invalid link. Please paste the full worker passport link.')
+        return
+      }
+      const { data: workerRow, error: workerError } = await supabase
+        .from('workers')
+        .select('id, full_name')
+        .eq('id', workerId)
+        .maybeSingle()
+      if (workerError || !workerRow) {
+        setAddLinkError('Operative not found. Please check the link and try again.')
+        return
+      }
+      const { data: existing } = await supabase
+        .from('saved_workers')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('worker_id', workerId)
+        .maybeSingle()
+      if (existing) {
+        setAddLinkError('This operative is already saved to your dashboard.')
+        return
+      }
+      const { error: insertError } = await supabase
+        .from('saved_workers')
+        .insert({ company_id: companyId, worker_id: workerRow.id })
+      if (insertError) {
+        console.error(insertError)
+        setAddLinkError('Could not add operative. Please try again.')
+        return
+      }
+      setAddLinkSuccess(`${workerRow.full_name} added to your dashboard.`)
+      setAddLink('')
+      await loadCompanyDashboard()
+    } finally {
+      setAddLinkLoading(false)
+    }
+  }
+
   async function handleRemoveSavedWorker(savedId: string) {
     const confirmed = window.confirm('Remove this operative from your company dashboard?')
     if (!confirmed) return
@@ -1420,6 +1474,55 @@ export default function CompanyPage() {
     )
   }
 
+  function AddOperativeModal() {
+    if (!addOperativeOpen) return null
+    return createPortal(
+      <div
+        onClick={() => { setAddOperativeOpen(false); setAddLink(''); setAddLinkError(''); setAddLinkSuccess('') }}
+        style={{ position: 'fixed', inset: 0, zIndex: 999999, background: 'rgba(3,10,35,0.68)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{ width: 'min(560px, 100%)', background: '#ffffff', borderRadius: 28, border: '1px solid #d7e1ef', boxShadow: '0 30px 90px rgba(3,10,35,0.35)', padding: 28, position: 'relative' }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: '#09154b' }}>Add Operative</h2>
+              <p style={{ margin: '8px 0 0', color: '#5a6f96', fontSize: 15, lineHeight: 1.45 }}>
+                Ask the operative to share their passport link from the NekaID app, then paste it below.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setAddOperativeOpen(false); setAddLink(''); setAddLinkError(''); setAddLinkSuccess('') }}
+              style={{ minWidth: 44, minHeight: 44, borderRadius: 14, border: '1px solid #d7e1ef', background: '#ffffff', color: '#09154b', fontSize: 22, fontWeight: 900, cursor: 'pointer', flexShrink: 0 }}
+            >×</button>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <input
+              value={addLink}
+              onChange={(e) => { setAddLink(e.target.value); setAddLinkError(''); setAddLinkSuccess('') }}
+              placeholder="Paste operative passport link here..."
+              style={{ flex: 1, minWidth: 0, minHeight: 48, borderRadius: 14, border: '1px solid #d7e1ef', padding: '0 14px', fontSize: 15, fontFamily: 'inherit', outline: 'none' }}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void handleAddOperative()}
+              disabled={addLinkLoading || !addLink.trim()}
+              style={{ whiteSpace: 'nowrap', opacity: addLinkLoading || !addLink.trim() ? 0.6 : 1 }}
+            >
+              {addLinkLoading ? 'Adding...' : 'Add Operative'}
+            </button>
+          </div>
+          {addLinkError && <p style={{ marginTop: 10, color: '#b42318', fontWeight: 700, fontSize: 14 }}>{addLinkError}</p>}
+          {addLinkSuccess && <p style={{ marginTop: 10, color: '#167342', fontWeight: 700, fontSize: 14 }}>{addLinkSuccess}</p>}
+        </div>
+      </div>,
+      typeof window !== 'undefined' ? document.body : document.createElement('div')
+    )
+  }
+
   if (loading) {
     return (
       <main className="page-shell">
@@ -1455,9 +1558,10 @@ export default function CompanyPage() {
   return (
     <main className="page-shell">
       <VisitorsModal />
+      <AddOperativeModal />
 
       <div className="container">
-        <CompanyHero email={email} handleLogout={handleLogout} />
+        <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => setAddOperativeOpen(true)} />
 
         <CompanyStats
           savedWorkersCount={savedWorkers.length}
@@ -1471,7 +1575,6 @@ export default function CompanyPage() {
           onExpiringSoonClick={() => setFilter('expiring')}
           onExpiredClick={() => setFilter('expired')}
         />
-<CompanyDashboardMenu />
         <CompanySettings
           companyName={companyName}
           companyNameDraft={companyNameDraft}

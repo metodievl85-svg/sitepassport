@@ -204,6 +204,7 @@ export default function PublicWorkerPage() {
   const [isSaved, setIsSaved] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [userRole, setUserRole] = useState<string>('')
 
   useEffect(() => {
     function handleResize() {
@@ -233,45 +234,46 @@ export default function PublicWorkerPage() {
 
   async function checkCompanyUser() {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
+      const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user || !workerId) {
         setIsCompanyUser(false)
         setCompanyId(null)
         setIsSaved(false)
         return
       }
-
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, role')
         .eq('id', session.user.id)
         .single()
-
-      if (profileError || !profile || profile.role !== 'company') {
+      if (profileError || !profile || (profile.role !== 'company' && profile.role !== 'agency')) {
         setIsCompanyUser(false)
         setCompanyId(null)
         setIsSaved(false)
         return
       }
-
       setIsCompanyUser(true)
       setCompanyId(profile.id)
-
-      const { data: savedWorker, error: savedError } = await supabase
-        .from('saved_workers')
-        .select('id')
-        .eq('company_id', profile.id)
-        .eq('worker_id', workerId)
-        .maybeSingle()
-
-      if (savedError) {
-        console.error(savedError)
+      setUserRole(profile.role)
+      if (profile.role === 'company') {
+        const { data: savedWorker, error: savedError } = await supabase
+          .from('saved_workers')
+          .select('id')
+          .eq('company_id', profile.id)
+          .eq('worker_id', workerId)
+          .maybeSingle()
+        if (savedError) console.error(savedError)
+        setIsSaved(!!savedWorker)
+      } else if (profile.role === 'agency') {
+        const { data: agencyWorker, error: agencyError } = await supabase
+          .from('agency_workers')
+          .select('id')
+          .eq('agency_id', profile.id)
+          .eq('worker_id', workerId)
+          .maybeSingle()
+        if (agencyError) console.error(agencyError)
+        setIsSaved(!!agencyWorker)
       }
-
-      setIsSaved(!!savedWorker)
     } catch (error) {
       console.error(error)
       setIsCompanyUser(false)
@@ -339,23 +341,29 @@ export default function PublicWorkerPage() {
 
   async function handleSaveWorker() {
     if (!companyId || !workerId || isSaved || isSaving) return
-
     try {
       setIsSaving(true)
-
-      const { error } = await supabase.from('saved_workers').insert({
-        company_id: companyId,
-        worker_id: workerId,
-      })
-
-      if (error) {
-        console.error(error)
-        alert('Could not save operative.')
-        return
+      if (userRole === 'agency') {
+        const { data: workerRow } = await supabase
+          .from('workers')
+          .select('id')
+          .eq('id', workerId)
+          .maybeSingle()
+        if (!workerRow) { alert('Operative not found.'); return }
+        const { error } = await supabase.from('agency_workers').insert({
+          agency_id: companyId,
+          worker_id: workerId,
+        })
+        if (error) { console.error(error); alert('Could not add operative.'); return }
+      } else {
+        const { error } = await supabase.from('saved_workers').insert({
+          company_id: companyId,
+          worker_id: workerId,
+        })
+        if (error) { console.error(error); alert('Could not save operative.'); return }
       }
-
       setIsSaved(true)
-      alert('Operative saved successfully.')
+      alert(userRole === 'agency' ? 'Operative added to your agency.' : 'Operative saved successfully.')
     } finally {
       setIsSaving(false)
     }
@@ -432,11 +440,11 @@ export default function PublicWorkerPage() {
                 onClick={handleSaveWorker}
                 disabled={isSaved || isSaving}
               >
-                {isSaved ? 'Saved ✓' : isSaving ? 'Saving...' : 'Save operative'}
+                {isSaved ? 'Added ✓' : isSaving ? 'Adding...' : 'Add Operative'}
               </button>
 
-              <Link href="/company" className="btn btn-outline">
-                Company dashboard
+              <Link href={userRole === 'agency' ? '/agency' : '/company'} className="btn btn-outline">
+                {userRole === 'agency' ? 'Agency dashboard' : 'Company dashboard'}
               </Link>
             </div>
           ) : null}
