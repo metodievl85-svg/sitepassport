@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import jsPDF from 'jspdf'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import CompanyMessages from '../company/components/CompanyMessages'
+import AgencyDashboardMenu from './components/AgencyDashboardMenu'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
 
@@ -70,6 +71,11 @@ export default function AgencyPage() {
   const [placementLoading, setPlacementLoading] = useState(false)
   const [placementError, setPlacementError] = useState('')
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
+  const messagesRef = useRef<HTMLDivElement>(null)
+
+  const handleScrollToMessages = () => {
+    messagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   useEffect(() => {
     void load()
@@ -479,10 +485,11 @@ export default function AgencyPage() {
             </h1>
             <p style={{ margin: 0 }}>{email}</p>
           </div>
-          <div className="hero-actions">
+          <div className="hero-actions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button type="button" className="btn btn-outline" onClick={handleLogout}>
               Sign out
             </button>
+            <AgencyDashboardMenu onMessages={handleScrollToMessages} />
           </div>
         </section>
 
@@ -834,7 +841,7 @@ export default function AgencyPage() {
           )}
         </section>
 
-        <div id="messages">
+        <div id="messages" ref={messagesRef}>
           <CompanyMessages companyId={agencyId} workers={messageWorkers} />
         </div>
 
