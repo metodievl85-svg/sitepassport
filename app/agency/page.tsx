@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -68,6 +68,8 @@ export default function AgencyPage() {
   const [placementForm, setPlacementForm] = useState({ company_name: '', site_name: '', start_date: '', end_date: '' })
   const [placementLoading, setPlacementLoading] = useState(false)
   const [placementError, setPlacementError] = useState('')
+  const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
+  const operativeListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     void load()
@@ -282,6 +284,13 @@ export default function AgencyPage() {
     setPlacementModal(null)
   }
 
+  const handleComplianceFilter = (filter: 'expiring' | 'expired') => {
+    setComplianceFilter((prev) => (prev === filter ? 'all' : filter))
+    setTimeout(() => {
+      operativeListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 50)
+  }
+
   const filteredWorkers = workers.filter((w) => {
     const term = search.trim().toLowerCase()
     if (!term) return true
@@ -290,6 +299,18 @@ export default function AgencyPage() {
       w.trade.toLowerCase().includes(term) ||
       w.company.toLowerCase().includes(term)
     )
+  })
+
+  const displayedWorkers = filteredWorkers.filter((w) => {
+    if (complianceFilter === 'all') return true
+    const now = new Date()
+    const in30 = new Date(); in30.setDate(in30.getDate() + 30)
+    const dates = [w.cscsExpiry, w.rightToWorkExpiry].filter(Boolean).map((d) => new Date(d!))
+    const isExpired = dates.some((d) => d < now)
+    const isExpiringSoon = !isExpired && dates.some((d) => d <= in30)
+    if (complianceFilter === 'expired') return isExpired
+    if (complianceFilter === 'expiring') return isExpiringSoon
+    return true
   })
 
   const expiringSoonCount = workers.filter((w) => w.complianceStatus === 'expiring').length
@@ -373,8 +394,11 @@ export default function AgencyPage() {
 
           <div
             className="card"
+            onClick={() => handleComplianceFilter('expiring')}
             style={{
               padding: 20,
+              cursor: 'pointer',
+              outline: complianceFilter === 'expiring' ? '2px solid #f59e0b' : 'none',
               background: expiringSoonCount > 0 ? '#fff8ea' : undefined,
               boxShadow: expiringSoonCount > 0
                 ? '0 18px 50px rgba(15,23,42,0.05), 0 0 0 1px #efd6ac'
@@ -396,8 +420,11 @@ export default function AgencyPage() {
 
           <div
             className="card"
+            onClick={() => handleComplianceFilter('expired')}
             style={{
               padding: 20,
+              cursor: 'pointer',
+              outline: complianceFilter === 'expired' ? '2px solid #dc2626' : 'none',
               background: expiredCount > 0 ? '#fff1f1' : undefined,
               boxShadow: expiredCount > 0
                 ? '0 18px 50px rgba(15,23,42,0.05), 0 0 0 1px #efc1c1'
@@ -466,7 +493,7 @@ export default function AgencyPage() {
 
           <input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setComplianceFilter('all') }}
             placeholder="Search by name, trade or company..."
             style={{
               width: '100%',
@@ -481,6 +508,13 @@ export default function AgencyPage() {
             }}
           />
 
+          {complianceFilter !== 'all' && (
+            <div style={{ marginBottom: 12, padding: '8px 14px', background: complianceFilter === 'expired' ? '#fef2f2' : '#fffbeb', borderRadius: 8, fontSize: 13, color: complianceFilter === 'expired' ? '#dc2626' : '#92400e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Showing {complianceFilter === 'expired' ? 'expired' : 'expiring soon'} operatives only</span>
+              <button onClick={() => setComplianceFilter('all')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'inherit', fontWeight: 600 }}>Clear filter ✕</button>
+            </div>
+          )}
+
           {workers.length === 0 ? (
             <div
               style={{
@@ -494,13 +528,13 @@ export default function AgencyPage() {
             >
               No operatives added yet.
             </div>
-          ) : filteredWorkers.length === 0 ? (
+          ) : displayedWorkers.length === 0 ? (
             <div style={{ padding: 24, textAlign: 'center', color: '#5a6f96', fontWeight: 700 }}>
               No results for &ldquo;{search}&rdquo;
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {filteredWorkers.map((worker) => {
+            <div ref={operativeListRef} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {displayedWorkers.map((worker) => {
                 const badge =
                   worker.complianceStatus === 'expired'
                     ? { label: 'Expired', bg: '#fff1f1', color: '#b42318', border: '1px solid #efc1c1' }
