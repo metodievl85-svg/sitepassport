@@ -43,6 +43,9 @@ export default function EditWorkerPassportPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const cameraStreamRef = useRef<MediaStream | null>(null)
+  const faceVideoRef = useRef<HTMLVideoElement | null>(null)
+  const faceCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const faceCameraStreamRef = useRef<MediaStream | null>(null)
   const photoPreviewUrlRef = useRef<string>('')
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
 
@@ -53,6 +56,9 @@ export default function EditWorkerPassportPage() {
   const [cameraOpen, setCameraOpen] = useState(false)
   const [cameraError, setCameraError] = useState('')
   const [photoCaptured, setPhotoCaptured] = useState(false)
+  const [faceCameraOpen, setFaceCameraOpen] = useState(false)
+  const [faceCameraError, setFaceCameraError] = useState('')
+  const [facePhotoCaptured, setFacePhotoCaptured] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
   const facePhotoPreviewUrlRef = useRef<string>('')
@@ -172,6 +178,11 @@ export default function EditWorkerPassportPage() {
         URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
         facePhotoPreviewUrlRef.current = ''
       }
+      stopFaceCamera()
+      if (faceCameraStreamRef.current) {
+        faceCameraStreamRef.current.getTracks().forEach((track) => track.stop())
+        faceCameraStreamRef.current = null
+      }
     }
   }, [router])
 
@@ -243,6 +254,71 @@ export default function EditWorkerPassportPage() {
     }
 
     setCameraOpen(false)
+  }
+
+  async function startFaceCamera() {
+    try {
+      setFaceCameraError('')
+      setFacePhotoCaptured(false)
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setFaceCameraError('Camera not supported. Please use upload instead.')
+        return
+      }
+      setFaceCameraOpen(true)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1080 }, height: { ideal: 1080 } },
+        audio: false,
+      })
+      faceCameraStreamRef.current = stream
+      setTimeout(() => {
+        const video = faceVideoRef.current
+        if (!video) { setFaceCameraError('Camera preview could not start.'); return }
+        video.srcObject = stream
+        video.muted = true
+        video.playsInline = true
+        video.onloadedmetadata = () => {
+          video.play().catch(() => setFaceCameraError('Camera preview could not play.'))
+        }
+      }, 250)
+    } catch {
+      setFaceCameraError('Could not open camera. Please allow camera permission or use upload.')
+      setFaceCameraOpen(false)
+    }
+  }
+
+  function stopFaceCamera() {
+    if (faceCameraStreamRef.current) {
+      faceCameraStreamRef.current.getTracks().forEach((track) => track.stop())
+      faceCameraStreamRef.current = null
+    }
+    if (faceVideoRef.current) { faceVideoRef.current.srcObject = null }
+    setFaceCameraOpen(false)
+  }
+
+  async function captureFacePhoto() {
+    const video = faceVideoRef.current
+    const canvas = faceCanvasRef.current
+    if (!video || !canvas) { setFaceCameraError('Camera not ready.'); return }
+    const size = Math.min(video.videoWidth, video.videoHeight)
+    if (!size) { setFaceCameraError('Camera still loading.'); return }
+    canvas.width = 600
+    canvas.height = 600
+    const context = canvas.getContext('2d')
+    if (!context) { setFaceCameraError('Could not capture photo.'); return }
+    const sx = (video.videoWidth - size) / 2
+    const sy = (video.videoHeight - size) / 2
+    context.drawImage(video, sx, sy, size, size, 0, 0, 600, 600)
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92))
+    if (!blob) { setFaceCameraError('Could not capture photo.'); return }
+    if (facePhotoPreviewUrlRef.current) URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
+    const previewUrl = URL.createObjectURL(blob)
+    facePhotoPreviewUrlRef.current = previewUrl
+    const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' })
+    setFacePhotoFile(file)
+    setForm((prev) => ({ ...prev, facePhoto: previewUrl }))
+    setFacePhotoCaptured(true)
+    setFaceCameraError('')
+    stopFaceCamera()
   }
 
   async function capturePhoto() {
@@ -626,32 +702,57 @@ export default function EditWorkerPassportPage() {
             <div className="form-grid-1" style={{ marginBottom: 20 }}>
               <div className="field">
                 <label>Profile photo (selfie)</label>
-                <div className="photo-upload-box">
-                  {form.facePhoto ? (
-                    <img
-                      src={form.facePhoto}
-                      alt="Selfie preview"
-                      className="photo-preview"
-                      style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <div
-                      className="photo-preview-placeholder"
-                      style={{ fontSize: 16, padding: 16, textAlign: 'center', lineHeight: 1.4 }}
-                    >
-                      No selfie uploaded
+                <div style={{ border: '1px solid #d7e0ec', borderRadius: 28, background: '#fbfdff', padding: 22, overflow: 'hidden' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24, alignItems: 'start' }}>
+                    <div style={{ border: '1px solid #d7e0ec', borderRadius: 22, background: '#ffffff', padding: 14, minWidth: 0 }}>
+                      {faceCameraOpen ? (
+                        <div style={{ position: 'relative', width: '100%', aspectRatio: '1 / 1', borderRadius: '50%', overflow: 'hidden', background: '#08153d', border: '1px solid #d7e0ec' }}>
+                          <video ref={faceVideoRef} playsInline muted autoPlay style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        </div>
+                      ) : form.facePhoto ? (
+                        <img src={form.facePhoto} alt="Selfie preview" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block', borderRadius: '50%', border: '1px solid #d7e0ec' }} />
+                      ) : (
+                        <div style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '50%', border: '1px dashed #c7d5e6', background: '#eef3ff', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 20, color: '#16307f', fontSize: 16, fontWeight: 800, lineHeight: 1.4 }}>
+                          No selfie uploaded
+                        </div>
+                      )}
+                      <canvas ref={faceCanvasRef} style={{ display: 'none' }} />
                     </div>
-                  )}
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="user"
-                      onChange={handleFacePhotoChange}
-                    />
-                    <p style={{ margin: '12px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.6 }}>
-                      Take a clear selfie of your face. This is your profile photo used in messages.
-                    </p>
+                    <div style={{ minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                      {!faceCameraOpen ? (
+                        <>
+                          <button type="button" className="btn btn-primary" onClick={startFaceCamera} style={{ width: '100%', marginBottom: 12 }}>
+                            {form.facePhoto ? 'Retake selfie' : 'Take selfie'}
+                          </button>
+                          {facePhotoCaptured && form.facePhoto ? (
+                            <div style={{ border: '1px solid #9dd7b5', background: '#ecfdf3', color: '#027a48', borderRadius: 16, padding: '12px 14px', fontSize: 16, fontWeight: 900, lineHeight: 1.45, marginBottom: 12 }}>
+                              Selfie captured. Press Save changes at the bottom.
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                          <button type="button" className="btn btn-primary" onClick={captureFacePhoto}>Capture</button>
+                          <button type="button" className="btn btn-outline" onClick={stopFaceCamera}>Cancel</button>
+                        </div>
+                      )}
+                      <input
+                        id="selfie-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFacePhotoChange}
+                        style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+                      />
+                      <label htmlFor="selfie-upload" className="btn btn-secondary" style={{ width: '100%', cursor: 'pointer' }}>
+                        Upload selfie photo
+                      </label>
+                      {faceCameraError ? (
+                        <p style={{ margin: '14px 0 0', color: '#b42318', fontSize: 16, lineHeight: 1.5, fontWeight: 800 }}>{faceCameraError}</p>
+                      ) : null}
+                      <p style={{ margin: '16px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.65 }}>
+                        Take a clear selfie of your face. This is your profile photo used in messages.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
