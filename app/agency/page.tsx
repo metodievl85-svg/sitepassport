@@ -292,12 +292,11 @@ export default function AgencyPage() {
     }, 50)
   }
 
-  const exportPDF = () => {
+  const downloadOperativePDF = (w: AgencyWorker) => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const pageWidth = 210
     const margin = 16
     const contentWidth = pageWidth - margin * 2
-    let y = 0
 
     // HEADER
     doc.setFillColor(30, 64, 175)
@@ -305,99 +304,108 @@ export default function AgencyPage() {
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(18)
     doc.setFont('helvetica', 'bold')
-    doc.text('Workforce Compliance Report', margin, 14)
+    doc.text('Operative Passport', margin, 14)
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.text(email || 'Agency', margin, 22)
+    doc.text(email || '', margin, 22)
     doc.text(`Exported: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, margin, 28)
     doc.setFontSize(8)
     doc.text('Powered by NekaID — nekaid.co.uk', pageWidth - margin, 28, { align: 'right' })
-    y = 44
 
-    const fmtDate = (d: string | null | undefined) =>
-      d ? new Date(d).toLocaleDateString('en-GB') : '—'
+    // OPERATIVE CARD
+    let y = 44
 
-    // OPERATIVE CARDS
-    for (const w of workers) {
-      const now = new Date()
-      const in30 = new Date(); in30.setDate(in30.getDate() + 30)
-      const expiryDates = [w.cscsExpiry, w.rightToWorkExpiry].filter(Boolean).map((d) => new Date(d!))
-      const isExpired = expiryDates.some((d) => d < now)
-      const isExpiringSoon = !isExpired && expiryDates.some((d) => d <= in30)
-      const statusLabel = isExpired ? 'EXPIRED' : isExpiringSoon ? 'EXPIRING SOON' : 'VALID'
-      const [sr, sg, sb]: [number, number, number] = isExpired ? [220, 38, 38] : isExpiringSoon ? [217, 119, 6] : [22, 163, 74]
+    const now = new Date()
+    const in30 = new Date(); in30.setDate(in30.getDate() + 30)
+    const expiryDates = [w.cscsExpiry, w.rightToWorkExpiry].filter(Boolean).map((d) => new Date(d!))
+    const isExpired = expiryDates.some((d) => d < now)
+    const isExpiringSoon = !isExpired && expiryDates.some((d) => d <= in30)
+    const statusLabel = isExpired ? 'EXPIRED' : isExpiringSoon ? 'EXPIRING SOON' : 'VALID'
+    const [sr, sg, sb]: [number, number, number] = isExpired ? [220, 38, 38] : isExpiringSoon ? [217, 119, 6] : [22, 163, 74]
 
-      const cardHeight = 52
-      if (y + cardHeight > 280) { doc.addPage(); y = 16 }
+    const cardHeight = 72
+    doc.setFillColor(248, 250, 252)
+    doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'F')
+    doc.setDrawColor(220, 220, 220)
+    doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'S')
 
-      doc.setFillColor(248, 250, 252)
-      doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'F')
-      doc.setDrawColor(220, 220, 220)
-      doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'S')
+    // Status badge
+    doc.setFillColor(sr, sg, sb)
+    doc.roundedRect(pageWidth - margin - 28, y + 6, 26, 7, 2, 2, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(6.5)
+    doc.setFont('helvetica', 'bold')
+    doc.text(statusLabel, pageWidth - margin - 15, y + 11.2, { align: 'center' })
 
-      doc.setFillColor(sr, sg, sb)
-      doc.roundedRect(pageWidth - margin - 28, y + 6, 26, 7, 2, 2, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(6.5)
-      doc.setFont('helvetica', 'bold')
-      doc.text(statusLabel, pageWidth - margin - 15, y + 11.2, { align: 'center' })
+    // Name
+    doc.setTextColor(15, 23, 42)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text(w.fullName, margin + 4, y + 13)
 
-      doc.setTextColor(15, 23, 42)
-      doc.setFontSize(12)
-      doc.setFont('helvetica', 'bold')
-      doc.text(w.fullName, margin + 4, y + 11)
+    // Trade · Company
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 116, 139)
+    doc.text(`${w.trade || '—'}  ·  ${w.company || '—'}`, margin + 4, y + 20)
 
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 116, 139)
-      doc.text(`${w.trade || '—'}  ·  ${w.company || '—'}`, margin + 4, y + 18)
+    // Divider
+    doc.setDrawColor(226, 232, 240)
+    doc.line(margin + 4, y + 24, margin + contentWidth - 4, y + 24)
 
-      doc.setDrawColor(226, 232, 240)
-      doc.line(margin + 4, y + 21, margin + contentWidth - 4, y + 21)
+    const col1 = margin + 4
+    const col2 = margin + 65
+    const col3 = margin + 124
 
-      const col1 = margin + 4
-      const col2 = margin + 60
-      const col3 = margin + 118
+    const fmtDate = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString('en-GB') : '—'
 
-      doc.setFontSize(8)
-      doc.setTextColor(100, 116, 139)
-      doc.setFont('helvetica', 'normal')
-      doc.text('CSCS EXPIRY', col1, y + 27)
-      doc.text('RIGHT TO WORK EXPIRY', col2, y + 27)
-      doc.text('CURRENT PLACEMENT', col3, y + 27)
+    doc.setFontSize(7.5)
+    doc.setTextColor(100, 116, 139)
+    doc.setFont('helvetica', 'normal')
+    doc.text('CSCS EXPIRY', col1, y + 31)
+    doc.text('RIGHT TO WORK EXPIRY', col2, y + 31)
+    doc.text('CURRENT PLACEMENT', col3, y + 31)
 
-      doc.setTextColor(15, 23, 42)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.text(fmtDate(w.cscsExpiry), col1, y + 33)
-      doc.text(fmtDate(w.rightToWorkExpiry), col2, y + 33)
+    doc.setTextColor(15, 23, 42)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.text(fmtDate(w.cscsExpiry), col1, y + 38)
+    doc.text(fmtDate(w.rightToWorkExpiry), col2, y + 38)
 
-      const placement = placements.find((p) => p.worker_id === w.workerId)
-      const placementText = placement ? `${placement.company_name} · ${placement.site_name}` : '—'
-      doc.text(placementText, col3, y + 33)
+    const placement = placements.find((p) => p.worker_id === w.workerId)
+    const placementText = placement ? `${placement.company_name} · ${placement.site_name}` : '—'
+    doc.text(placementText, col3, y + 38)
 
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(100, 116, 139)
-      doc.text('QUALIFICATIONS', col1, y + 41)
-      doc.setTextColor(15, 23, 42)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(8.5)
-      doc.text('—', col1, y + 47)
+    // Email & Phone (not on AgencyWorker — show dashes)
+    doc.setFontSize(7.5)
+    doc.setTextColor(100, 116, 139)
+    doc.setFont('helvetica', 'normal')
+    doc.text('EMAIL', col1, y + 47)
+    doc.text('PHONE', col2, y + 47)
+    doc.setTextColor(15, 23, 42)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(9)
+    doc.text('—', col1, y + 54)
+    doc.text('—', col2, y + 54)
 
-      y += cardHeight + 6
-    }
+    // Qualifications
+    doc.setFontSize(7.5)
+    doc.setTextColor(100, 116, 139)
+    doc.setFont('helvetica', 'normal')
+    doc.text('QUALIFICATIONS', col1, y + 63)
+    doc.setTextColor(15, 23, 42)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.text('—', col1, y + 70)
 
-    // FOOTER
+    // Footer
     doc.setFontSize(7.5)
     doc.setTextColor(148, 163, 184)
     doc.setFont('helvetica', 'normal')
-    doc.text(
-      `NekaID Workforce Report  ·  ${workers.length} operative${workers.length !== 1 ? 's' : ''}  ·  nekaid.co.uk`,
-      pageWidth / 2, 292, { align: 'center' }
-    )
+    doc.text('NekaID Operative Passport  ·  nekaid.co.uk', pageWidth / 2, 292, { align: 'center' })
 
-    doc.save(`NekaID-Workforce-${new Date().toISOString().slice(0, 10)}.pdf`)
+    const safeName = w.fullName.replace(/\s+/g, '-')
+    doc.save(`NekaID-${safeName}-${new Date().toISOString().slice(0, 10)}.pdf`)
   }
 
   const filteredWorkers = workers.filter((w) => {
@@ -595,24 +603,7 @@ export default function AgencyPage() {
         </section>
 
         <section className="card" style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 4 }}>
-            <h2 className="section-title" style={{ margin: 0 }}>Your operatives</h2>
-            <button
-              onClick={exportPDF}
-              style={{
-                fontSize: 13,
-                padding: '8px 18px',
-                borderRadius: 8,
-                border: '1px solid #1e40af',
-                background: '#1e40af',
-                color: '#fff',
-                cursor: 'pointer',
-                fontWeight: 600,
-              }}
-            >
-              Export PDF
-            </button>
-          </div>
+          <h2 className="section-title">Your operatives</h2>
           <p className="section-subtitle">
             Search and review compliance across your agency workforce.
           </p>
@@ -752,20 +743,37 @@ export default function AgencyPage() {
                       </span>
                     </div>
 
-                    <Link
-                      href={`/scan/${worker.workerId}`}
-                      className="btn btn-secondary"
-                      style={{
-                        fontSize: 14,
-                        padding: '0 16px',
-                        minHeight: 40,
-                        borderRadius: 12,
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                      }}
-                    >
-                      View passport
-                    </Link>
+                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                      <Link
+                        href={`/scan/${worker.workerId}`}
+                        className="btn btn-secondary"
+                        style={{
+                          fontSize: 14,
+                          padding: '0 16px',
+                          minHeight: 40,
+                          borderRadius: 12,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        View passport
+                      </Link>
+                      <button
+                        onClick={() => downloadOperativePDF(worker)}
+                        style={{
+                          fontSize: 13,
+                          padding: '6px 14px',
+                          borderRadius: 8,
+                          border: '1px solid #1e40af',
+                          background: '#1e40af',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Download PDF
+                      </button>
+                    </div>
                     </div>
                     {(() => {
                       const p = getPlacement(worker.workerId)
