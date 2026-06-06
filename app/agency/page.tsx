@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import jsPDF from 'jspdf'
 import Link from 'next/link'
@@ -70,7 +70,6 @@ export default function AgencyPage() {
   const [placementLoading, setPlacementLoading] = useState(false)
   const [placementError, setPlacementError] = useState('')
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
-  const operativeListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     void load()
@@ -283,13 +282,6 @@ export default function AgencyPage() {
       .eq('worker_id', workerId)
     setPlacements((prev) => prev.filter((p) => p.worker_id !== workerId))
     setPlacementModal(null)
-  }
-
-  const handleComplianceFilter = (filter: 'expiring' | 'expired') => {
-    setComplianceFilter((prev) => (prev === filter ? 'all' : filter))
-    setTimeout(() => {
-      operativeListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
   }
 
   const downloadOperativePDF = (w: AgencyWorker) => {
@@ -511,11 +503,8 @@ export default function AgencyPage() {
 
           <div
             className="card"
-            onClick={() => handleComplianceFilter('expiring')}
             style={{
               padding: 20,
-              cursor: 'pointer',
-              outline: complianceFilter === 'expiring' ? '2px solid #f59e0b' : 'none',
               background: expiringSoonCount > 0 ? '#fff8ea' : undefined,
               boxShadow: expiringSoonCount > 0
                 ? '0 18px 50px rgba(15,23,42,0.05), 0 0 0 1px #efd6ac'
@@ -537,11 +526,8 @@ export default function AgencyPage() {
 
           <div
             className="card"
-            onClick={() => handleComplianceFilter('expired')}
             style={{
               padding: 20,
-              cursor: 'pointer',
-              outline: complianceFilter === 'expired' ? '2px solid #dc2626' : 'none',
               background: expiredCount > 0 ? '#fff1f1' : undefined,
               boxShadow: expiredCount > 0
                 ? '0 18px 50px rgba(15,23,42,0.05), 0 0 0 1px #efc1c1'
@@ -625,12 +611,35 @@ export default function AgencyPage() {
             }}
           />
 
-          {complianceFilter !== 'all' && (
-            <div style={{ marginBottom: 12, padding: '8px 14px', background: complianceFilter === 'expired' ? '#fef2f2' : '#fffbeb', borderRadius: 8, fontSize: 13, color: complianceFilter === 'expired' ? '#dc2626' : '#92400e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Showing {complianceFilter === 'expired' ? 'expired' : 'expiring soon'} operatives only</span>
-              <button onClick={() => setComplianceFilter('all')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'inherit', fontWeight: 600 }}>Clear filter ✕</button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+            {(['all', 'expiring', 'expired'] as const).map(f => {
+              const labels = { all: 'All', expiring: 'Expiring Soon', expired: 'Expired' }
+              const isActive = complianceFilter === f
+              return (
+                <button
+                  key={f}
+                  onClick={() => setComplianceFilter(f)}
+                  style={{
+                    padding: '8px 20px',
+                    borderRadius: 99,
+                    border: '2px solid',
+                    borderColor: isActive
+                      ? f === 'expired' ? '#dc2626' : f === 'expiring' ? '#d97706' : '#1e40af'
+                      : '#e2e8f0',
+                    background: isActive
+                      ? f === 'expired' ? '#dc2626' : f === 'expiring' ? '#d97706' : '#1e40af'
+                      : '#fff',
+                    color: isActive ? '#fff' : '#64748b',
+                    fontWeight: 600,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {labels[f]}
+                </button>
+              )
+            })}
+          </div>
 
           {workers.length === 0 ? (
             <div
@@ -646,11 +655,9 @@ export default function AgencyPage() {
               No operatives added yet.
             </div>
           ) : displayedWorkers.length === 0 ? (
-            <div style={{ padding: 24, textAlign: 'center', color: '#5a6f96', fontWeight: 700 }}>
-              No results for &ldquo;{search}&rdquo;
-            </div>
+            <p style={{ color: '#94a3b8', fontSize: 14, padding: '24px 0' }}>No operatives match this filter.</p>
           ) : (
-            <div ref={operativeListRef} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {displayedWorkers.map((worker) => {
                 const badge =
                   worker.complianceStatus === 'expired'
