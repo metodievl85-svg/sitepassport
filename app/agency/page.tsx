@@ -498,8 +498,7 @@ export default function AgencyPage() {
                 fontSize: '14px',
                 fontWeight: 500,
                 cursor: 'pointer',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.1)',
-                letterSpacing: '0.01em',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
               }}
             >
               Sign out
