@@ -490,15 +490,14 @@ export default function AgencyPage() {
               type="button"
               onClick={handleLogout}
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.35)',
+                background: 'transparent',
+                border: '2px solid rgba(255,255,255,0.7)',
                 color: 'white',
-                padding: '9px 18px',
-                borderRadius: '10px',
+                padding: '8px 20px',
+                borderRadius: '99px',
                 fontSize: '14px',
                 fontWeight: 500,
                 cursor: 'pointer',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25)',
               }}
             >
               Sign out
