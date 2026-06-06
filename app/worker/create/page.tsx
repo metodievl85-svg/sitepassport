@@ -49,6 +49,7 @@ function createEmptyForm() {
     rightToWorkExpiry: '',
     notes: '',
     photo: '',
+    facePhoto: '',
     qualifications: [createEmptyQualification()] as Qualification[],
   }
 }
@@ -62,6 +63,8 @@ export default function CreateWorkerPassportPage() {
   const [accountEmail, setAccountEmail] = useState('')
   const [form, setForm] = useState(createEmptyForm())
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
+  const facePhotoPreviewUrlRef = useRef<string>('')
   const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
   const photoPreviewUrlRef = useRef<string>('')
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
@@ -126,6 +129,10 @@ export default function CreateWorkerPassportPage() {
         URL.revokeObjectURL(url)
       })
       qualPhotoPreviewUrlsRef.current = {}
+      if (facePhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
+        facePhotoPreviewUrlRef.current = ''
+      }
     }
   }, [router])
 
@@ -148,6 +155,18 @@ export default function CreateWorkerPassportPage() {
     photoPreviewUrlRef.current = previewUrl
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
+  }
+
+  function handleFacePhotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (facePhotoPreviewUrlRef.current) {
+      URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
+    }
+    const previewUrl = URL.createObjectURL(file)
+    facePhotoPreviewUrlRef.current = previewUrl
+    setFacePhotoFile(file)
+    setForm((prev) => ({ ...prev, facePhoto: previewUrl }))
   }
 
   function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
@@ -253,6 +272,26 @@ export default function CreateWorkerPassportPage() {
         photoUrl = urlData.publicUrl
       }
 
+      let facePhotoUrl = ''
+      if (facePhotoFile) {
+        const facePath = `${userId}/face-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+        const { error: faceUploadError } = await supabase.storage
+          .from('worker-photos')
+          .upload(facePath, facePhotoFile, {
+            contentType: facePhotoFile.type || 'image/jpeg',
+            upsert: false,
+          })
+        if (faceUploadError) {
+          alert(`Selfie upload failed: ${faceUploadError.message}`)
+          setSaving(false)
+          return
+        }
+        const { data: faceUrlData } = supabase.storage
+          .from('worker-photos')
+          .getPublicUrl(facePath)
+        facePhotoUrl = faceUrlData.publicUrl
+      }
+
       const { data: insertedWorker, error: workerError } = await supabase
         .from('workers')
         .insert([
@@ -268,6 +307,7 @@ export default function CreateWorkerPassportPage() {
             right_to_work_expiry: form.rightToWorkExpiry || null,
             notes: form.notes.trim(),
             photo: photoUrl,
+            face_photo: facePhotoUrl,
           },
         ])
         .select()
@@ -339,6 +379,10 @@ export default function CreateWorkerPassportPage() {
         URL.revokeObjectURL(url)
       })
       qualPhotoPreviewUrlsRef.current = {}
+      if (facePhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
+        facePhotoPreviewUrlRef.current = ''
+      }
 
       router.replace('/worker')
     } catch (error) {
@@ -366,7 +410,7 @@ export default function CreateWorkerPassportPage() {
       <div className="container">
         <section className="hero">
           <div>
-            <div className="brand">SITEPASSPORT</div>
+            <div className="brand">NekaID</div>
             <h1>Create my passport</h1>
             <p>Set up your operative passport details.</p>
             <p style={{ marginTop: 10, color: '#4d648c', fontWeight: 700 }}>
@@ -388,6 +432,40 @@ export default function CreateWorkerPassportPage() {
           </p>
 
           <form onSubmit={handleSubmit}>
+            <div className="form-grid-1" style={{ marginBottom: 20 }}>
+              <div className="field">
+                <label>Profile photo (selfie)</label>
+                <div className="photo-upload-box">
+                  {form.facePhoto ? (
+                    <img
+                      src={form.facePhoto}
+                      alt="Selfie preview"
+                      className="photo-preview"
+                      style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div
+                      className="photo-preview-placeholder"
+                      style={{ fontSize: 16, padding: 16, textAlign: 'center', lineHeight: 1.4 }}
+                    >
+                      No selfie uploaded
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="user"
+                      onChange={handleFacePhotoChange}
+                    />
+                    <p style={{ margin: '12px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.6 }}>
+                      Take a clear selfie of your face. This is your profile photo used in messages.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="form-grid-1" style={{ marginBottom: 20 }}>
               <div className="field">
                 <label>CSCS card image</label>

@@ -13,6 +13,7 @@ type AgencyWorker = {
   addedAt: string
   fullName: string
   photo: string
+  facePhoto: string
   userId: string
   trade: string
   company: string
@@ -81,7 +82,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('worker_id, added_at, workers(id, full_name, photo, cscs_expiry, right_to_work_expiry, user_id, role, company)')
+        .select('worker_id, added_at, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -121,6 +122,7 @@ export default function AgencyPage() {
             addedAt: row.added_at as string,
             fullName: (w.full_name as string) ?? '',
             photo: (w.photo as string) ?? '',
+            facePhoto: (w.face_photo as string) ?? '',
             userId: (w.user_id as string) ?? '',
             trade: (w.role as string) ?? '',
             company: (w.company as string) ?? '',
@@ -162,7 +164,7 @@ export default function AgencyPage() {
       userId: w.userId,
       fullName: w.fullName,
       role: w.trade,
-      photo: w.photo ?? undefined,
+      photo: w.facePhoto || w.photo || undefined,
     }))
 
   if (loading) {

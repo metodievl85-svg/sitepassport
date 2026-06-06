@@ -27,6 +27,7 @@ type WorkerRow = {
   role: string | null
   company: string | null
   photo: string | null
+  face_photo: string | null
   cscs_expiry: string | null
   right_to_work_expiry: string | null
   cscs_verification_status: string | null
@@ -107,6 +108,7 @@ type SavedWorkerCard = {
   role: string
   company: string
   photo: string
+  facePhoto: string
   cscsExpiry: string
   rightToWorkExpiry: string
   cscsVerificationStatus: string
@@ -634,7 +636,7 @@ export default function CompanyPage() {
 
           const { data: workerRows, error: workersError } = await supabase
             .from('workers')
-            .select('id, user_id, full_name, role, company, photo, cscs_expiry, right_to_work_expiry, cscs_verification_status')
+            .select('id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status')
             .in('id', workerIds)
             .limit(50)
 
@@ -665,6 +667,7 @@ export default function CompanyPage() {
                   role: worker.role ?? '',
                   company: worker.company ?? '',
                   photo: worker.photo ?? '',
+                  facePhoto: worker.face_photo ?? '',
                   cscsExpiry: worker.cscs_expiry ?? '',
                   rightToWorkExpiry: worker.right_to_work_expiry ?? '',
                   cscsVerificationStatus:
@@ -1817,7 +1820,7 @@ export default function CompanyPage() {
                 userId: w.userId,
                 fullName: w.fullName,
                 role: w.role,
-                photo: w.photo ?? undefined,
+                photo: w.facePhoto || w.photo || undefined,
               }))}
           />
         </div>
