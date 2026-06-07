@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Html5Qrcode } from 'html5-qrcode'
+import { supabase } from '../lib/supabase'
 
 export default function ScanPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function ScanPage() {
   const [status, setStatus] = useState('Starting camera...')
   const [error, setError] = useState('')
   const [isScanning, setIsScanning] = useState(false)
+  const [dashboardRoute, setDashboardRoute] = useState('/company')
 
   const readerId = 'nekaid-qr-reader'
 
@@ -129,6 +131,23 @@ export default function ScanPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    async function checkRole() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user) return
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+        if (profile?.role === 'agency') setDashboardRoute('/agency')
+        else setDashboardRoute('/company')
+      } catch {}
+    }
+    checkRole()
+  }, [])
+
   return (
     <main className="scan-page">
       <section className="scan-card">
@@ -170,7 +189,7 @@ export default function ScanPage() {
           <button
             type="button"
             className="hero-action secondary"
-            onClick={() => router.push('/company')}
+            onClick={() => router.push(dashboardRoute)}
           >
             Back to dashboard
           </button>
