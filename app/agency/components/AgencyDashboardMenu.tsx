@@ -25,15 +25,17 @@ export default function AgencyDashboardMenu({ onMessages }: Props) {
         type="button"
         onClick={() => setOpen((c) => !c)}
         style={{
-          background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.5)',
-          color: 'rgba(255,255,255,0.85)',
+          background: 'rgba(255,255,255,0.12)',
+          border: '1.5px solid rgba(255,255,255,0.6)',
+          color: '#ffffff',
           borderRadius: '999px',
-          padding: '6px 16px',
+          padding: '7px 18px',
           fontSize: '13px',
-          fontWeight: 400,
+          fontWeight: 600,
           cursor: 'pointer',
-          letterSpacing: '0.02em',
+          letterSpacing: '0.03em',
+          whiteSpace: 'nowrap',
+          backdropFilter: 'blur(8px)',
         }}
       >
         <span>Dashboard menu</span>
