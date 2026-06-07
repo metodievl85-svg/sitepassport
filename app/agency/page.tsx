@@ -491,25 +491,26 @@ export default function AgencyPage() {
               top: '16px',
               right: '24px',
               display: 'flex',
+              flexDirection: 'column',
               gap: '8px',
-              alignItems: 'center',
+              width: '180px',
             }}
           >
             <button
               type="button"
               onClick={handleLogout}
               style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: '1.5px solid rgba(255,255,255,0.6)',
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.4)',
                 color: '#ffffff',
-                borderRadius: '999px',
-                padding: '7px 18px',
-                fontSize: '13px',
-                fontWeight: 600,
+                borderRadius: '8px',
+                padding: '10px 16px',
+                fontSize: '14px',
+                fontWeight: 500,
                 cursor: 'pointer',
-                letterSpacing: '0.03em',
+                width: '100%',
+                textAlign: 'center',
                 whiteSpace: 'nowrap',
-                backdropFilter: 'blur(8px)',
               }}
             >
               Sign out
