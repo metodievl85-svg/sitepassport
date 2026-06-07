@@ -191,7 +191,7 @@ export default function CompanyHero({ email, handleLogout, onAddOperative }: Pro
           <span
             style={{
               color: 'rgba(255, 255, 255, 0.7)',
-              fontSize: '12px',
+              fontSize: '15px',
               fontWeight: 500,
             }}
           >
@@ -209,9 +209,9 @@ export default function CompanyHero({ email, handleLogout, onAddOperative }: Pro
               alt="NekaID"
               style={{
                 display: 'block',
-                height: '80px',
+                height: '120px',
                 width: 'auto',
-                marginTop: '-28px',
+                marginTop: '-42px',
               }}
             />
           </div>
