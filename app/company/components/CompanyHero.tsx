@@ -44,9 +44,10 @@ export default function CompanyHero({ email, handleLogout, onAddOperative }: Pro
             src="/rigby-logo.svg"
             alt="Rigby & Rigby"
             style={{
-              height: '80px',
+              height: '140px',
               width: 'auto',
               display: 'block',
+              marginTop: '24px',
             }}
           />
         ) : (
