@@ -41,12 +41,11 @@ export default function CompanyHero({ email, handleLogout, onAddOperative }: Pro
       >
         {isRigby ? (
           <img
-            src="/rigby-logo.png"
+            src="/rigby-logo.svg"
             alt="Rigby & Rigby"
             style={{
-              height: '50px',
+              height: '36px',
               width: 'auto',
-              maxWidth: '400px',
               display: 'block',
             }}
           />
