@@ -458,7 +458,7 @@ export default function AgencyPage() {
     <main className="page-shell">
       <div className="container">
 
-        <section className="hero" style={{ marginBottom: 24 }}>
+        <section className="hero" style={{ marginBottom: 24, position: 'relative' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div
               style={{
@@ -485,21 +485,29 @@ export default function AgencyPage() {
             </h1>
             <p style={{ margin: 0 }}>{email}</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '24px',
+              display: 'flex',
+              gap: '8px',
+              alignItems: 'center',
+            }}
+          >
             <button
               type="button"
               onClick={handleLogout}
               style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.35)',
-                color: '#fff',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.5)',
+                color: 'rgba(255,255,255,0.85)',
                 borderRadius: '999px',
-                padding: '8px 20px',
-                fontSize: '14px',
-                fontWeight: 500,
+                padding: '6px 16px',
+                fontSize: '13px',
+                fontWeight: 400,
                 cursor: 'pointer',
-                backdropFilter: 'blur(6px)',
-                whiteSpace: 'nowrap',
+                letterSpacing: '0.02em',
               }}
             >
               Sign out
