@@ -21,6 +21,7 @@ type PlacementRow = {
 }
 
 type AgencyWorker = {
+  agencyWorkerId: string
   workerId: string
   addedAt: string
   fullName: string
@@ -32,6 +33,8 @@ type AgencyWorker = {
   cscsExpiry: string
   rightToWorkExpiry: string
   complianceStatus: ComplianceStatus
+  status: string
+  notes: string
 }
 
 function getComplianceStatus(expiries: (string | null | undefined)[]): ComplianceStatus {
@@ -72,6 +75,8 @@ export default function AgencyPage() {
   const [placementError, setPlacementError] = useState('')
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
   const messagesRef = useRef<HTMLDivElement>(null)
+  const [statusMap, setStatusMap] = useState<Record<string, string>>({})
+  const [notesMap, setNotesMap] = useState<Record<string, string>>({})
 
   const handleScrollToMessages = () => {
     messagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -109,7 +114,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('worker_id, added_at, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company)')
+        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -145,8 +150,11 @@ export default function AgencyPage() {
           if (!w) return null
           const quals = qualsByWorker.get(row.worker_id as string) ?? []
           return {
+            agencyWorkerId: row.id as string,
             workerId: row.worker_id as string,
             addedAt: row.added_at as string,
+            status: (row.status as string) ?? '',
+            notes: (row.notes as string) ?? '',
             fullName: (w.full_name as string) ?? '',
             photo: (w.photo as string) ?? '',
             facePhoto: (w.face_photo as string) ?? '',
@@ -161,6 +169,15 @@ export default function AgencyPage() {
         .filter(Boolean) as AgencyWorker[]
 
       setWorkers(mapped)
+
+      const initStatus: Record<string, string> = {}
+      const initNotes: Record<string, string> = {}
+      for (const w of mapped) {
+        initStatus[w.agencyWorkerId] = w.status || 'Active'
+        initNotes[w.agencyWorkerId] = w.notes || ''
+      }
+      setStatusMap(initStatus)
+      setNotesMap(initNotes)
 
       if (workerIds.length > 0) {
         const { data: pData } = await supabase
@@ -236,6 +253,22 @@ export default function AgencyPage() {
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  async function saveStatus(agencyWorkerId: string, newStatus: string) {
+    setStatusMap(prev => ({ ...prev, [agencyWorkerId]: newStatus }))
+    await supabase
+      .from('agency_workers')
+      .update({ status: newStatus })
+      .eq('id', agencyWorkerId)
+  }
+
+  async function saveNotes(agencyWorkerId: string, value: string) {
+    setNotesMap(prev => ({ ...prev, [agencyWorkerId]: value }))
+    await supabase
+      .from('agency_workers')
+      .update({ notes: value })
+      .eq('id', agencyWorkerId)
   }
 
   const getPlacement = (workerId: string) => placements.find((p) => p.worker_id === workerId) || null
@@ -496,26 +529,7 @@ export default function AgencyPage() {
               width: '180px',
             }}
           >
-            <button
-              type="button"
-              onClick={handleLogout}
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.4)',
-                color: '#ffffff',
-                borderRadius: '8px',
-                padding: '10px 16px',
-                fontSize: '14px',
-                fontWeight: 500,
-                cursor: 'pointer',
-                width: '100%',
-                textAlign: 'center',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Sign out
-            </button>
-            <AgencyDashboardMenu onMessages={handleScrollToMessages} />
+            <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
           </div>
         </section>
 
@@ -784,6 +798,25 @@ export default function AgencyPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                      <select
+                        value={statusMap[worker.agencyWorkerId] ?? 'Active'}
+                        onChange={e => void saveStatus(worker.agencyWorkerId, e.target.value)}
+                        style={{
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '999px',
+                          padding: '4px 12px',
+                          fontSize: '13px',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          color: statusMap[worker.agencyWorkerId] === 'Inactive' ? '#64748b' :
+                                 statusMap[worker.agencyWorkerId] === 'Unavailable' ? '#dc2626' : '#16a34a',
+                          background: '#fff',
+                        }}
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Unavailable">Unavailable</option>
+                      </select>
                       <Link
                         href={`/scan/${worker.workerId}`}
                         className="btn btn-secondary"
@@ -860,6 +893,24 @@ export default function AgencyPage() {
                         </div>
                       )
                     })()}
+                    <input
+                      type="text"
+                      placeholder="Internal notes (agency eyes only)..."
+                      value={notesMap[worker.agencyWorkerId] ?? ''}
+                      onChange={e => setNotesMap(prev => ({ ...prev, [worker.agencyWorkerId]: e.target.value }))}
+                      onBlur={e => void saveNotes(worker.agencyWorkerId, e.target.value)}
+                      style={{
+                        width: '100%',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '8px 12px',
+                        fontSize: '13px',
+                        color: '#475569',
+                        marginTop: '8px',
+                        outline: 'none',
+                        background: '#f8fafc',
+                      }}
+                    />
                   </div>
                 )
               })}
