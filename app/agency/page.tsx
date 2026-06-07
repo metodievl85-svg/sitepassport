@@ -485,19 +485,21 @@ export default function AgencyPage() {
             </h1>
             <p style={{ margin: 0 }}>{email}</p>
           </div>
-          <div className="hero-actions" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <button
               type="button"
               onClick={handleLogout}
               style={{
-                background: 'transparent',
-                border: '2px solid rgba(255,255,255,0.7)',
-                color: 'white',
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.35)',
+                color: '#fff',
+                borderRadius: '999px',
                 padding: '8px 20px',
-                borderRadius: '99px',
                 fontSize: '14px',
                 fontWeight: 500,
                 cursor: 'pointer',
+                backdropFilter: 'blur(6px)',
+                whiteSpace: 'nowrap',
               }}
             >
               Sign out
