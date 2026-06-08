@@ -25,7 +25,7 @@ body.nk-landing > footer{display:none !important}
 body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 .nkx{
-  --bg:#0c0b0a;--bg-2:#131110;--bg-3:#1a1715;--gold:#c9a86a;--gold-bright:#e2c489;--gold-deep:#9c7e44;
+  --bg:#0c0b0a;--bg-2:#131110;--bg-3:#1a1715;--gold:#16307f;--gold-bright:#2a4a9f;--gold-deep:#0f2060;
   --cream:#f3efe6;--cream-dim:#cfc8ba;--muted:#938c80;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.16);--ok:#7fb98a;
   background:var(--bg);color:var(--cream);font-family:'DM Sans',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
 }
@@ -35,7 +35,7 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
 .nkx .kk{font-family:'DM Sans';font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
 .nkx .lbtn{display:inline-flex;align-items:center;gap:9px;font-family:'DM Sans';font-weight:600;font-size:14.5px;border-radius:2px;padding:14px 26px;cursor:pointer;border:0;min-height:auto;box-shadow:none;transition:.3s ease;letter-spacing:.01em}
-.nkx .lbtn-gold{background:var(--gold);color:#1a1510}
+.nkx .lbtn-gold{background:var(--gold);color:#ffffff}
 .nkx .lbtn-gold:hover{background:var(--gold-bright);transform:translateY(-2px)}
 .nkx .lbtn-line{background:transparent;color:var(--cream);border:1px solid var(--line-2)}
 .nkx .lbtn-line:hover{border-color:var(--gold);color:var(--gold)}
@@ -48,7 +48,7 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx .nav-links{display:flex;align-items:center;gap:38px;font-size:14.5px;color:var(--cream-dim)}
 .nkx .nav-links a:not(.lbtn):hover{color:var(--gold)}
 .nkx .lhero{position:relative;padding:96px 0 90px}
-.nkx .hero-glow{position:absolute;top:-160px;right:-120px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,106,.12),transparent 62%);pointer-events:none}
+.nkx .hero-glow{position:absolute;top:-160px;right:-120px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(22,48,127,.12),transparent 62%);pointer-events:none}
 .nkx .hero-in{position:relative;display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
 .nkx .tagline{display:inline-flex;align-items:center;gap:10px;margin-bottom:30px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-dim)}
 .nkx .tagline .ln{width:34px;height:1px;background:var(--gold)}
@@ -60,14 +60,14 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx .hero-foot b{color:var(--cream);font-weight:500;font-family:'Fraunces',serif;font-size:22px;display:block;margin-bottom:2px}
 .nkx .hero-foot .sep{width:1px;height:34px;background:var(--line)}
 .nkx .cardwrap{perspective:1600px}
-.nkx .cred{position:relative;width:100%;max-width:400px;margin:0 auto;aspect-ratio:1.586/1;border-radius:18px;background:linear-gradient(150deg,#211c16 0%,#15110d 55%,#0d0a08 100%);border:1px solid rgba(201,168,106,.28);box-shadow:0 50px 90px -40px rgba(0,0,0,.9),0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between;transform:rotateY(-13deg) rotateX(6deg);transition:transform .6s ease;overflow:hidden}
+.nkx .cred{position:relative;width:100%;max-width:400px;margin:0 auto;aspect-ratio:1.586/1;border-radius:18px;background:linear-gradient(150deg,#0a2a7a 0%,#0d1f5c 55%,#061244 100%);border:1px solid rgba(255,255,255,.15);box-shadow:0 50px 90px -40px rgba(0,0,0,.9),0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between;transform:rotateY(-13deg) rotateX(6deg);transition:transform .6s ease;overflow:hidden}
 .nkx .cardwrap:hover .cred{transform:rotateY(-6deg) rotateX(3deg)}
-.nkx .cred::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(226,196,137,.10) 47%,transparent 60%);pointer-events:none}
+.nkx .cred::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(22,48,127,.10) 47%,transparent 60%);pointer-events:none}
 .nkx .cred-top{display:flex;justify-content:space-between;align-items:flex-start}
 .nkx .cred-top .lbl{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-weight:600}
 .nkx .cred-top .vf{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ok);display:flex;align-items:center;gap:5px}
 .nkx .cred-top .vf::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
-.nkx .chip{width:48px;height:36px;border-radius:7px;background:linear-gradient(135deg,#e2c489,#9c7e44);position:relative;box-shadow:inset 0 1px 2px rgba(255,255,255,.5)}
+.nkx .chip{width:48px;height:36px;border-radius:7px;background:linear-gradient(135deg,#2a4a9f,#0f2060);position:relative;box-shadow:inset 0 1px 2px rgba(255,255,255,.5)}
 .nkx .chip::before,.nkx .chip::after{content:"";position:absolute;left:8px;right:8px;height:1px;background:rgba(60,40,15,.5)}
 .nkx .chip::before{top:12px}.nkx .chip::after{top:22px}
 .nkx .cred-name{font-family:'Fraunces',serif;font-size:25px;font-weight:500;color:var(--cream);margin-bottom:3px}
@@ -121,7 +121,7 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
 .nkx .t{background:var(--bg);padding:38px 28px;display:flex;flex-direction:column;position:relative;transition:.35s}
 .nkx .t:hover{background:var(--bg-2)}
-.nkx .t.pop{background:linear-gradient(180deg,rgba(201,168,106,.07),var(--bg) 40%);box-shadow:inset 0 2px 0 var(--gold)}
+.nkx .t.pop{background:linear-gradient(180deg,rgba(22,48,127,.07),var(--bg) 40%);box-shadow:inset 0 2px 0 #16307f}
 .nkx .t .pop-l{position:absolute;top:18px;right:22px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
 .nkx .t .tn{font-family:'Fraunces',serif;font-size:23px;font-weight:500}
 .nkx .t .tl{font-size:13px;color:var(--muted);margin-top:5px;min-height:19px}
@@ -138,7 +138,7 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx .director p b{color:var(--cream);font-weight:500}
 .nkx .pnote{text-align:center;color:var(--muted);font-size:13px;margin-top:30px;letter-spacing:.01em}
 .nkx .cta{padding:140px 0;text-align:center;position:relative}
-.nkx .cta-glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(201,168,106,.10),transparent 65%);pointer-events:none}
+.nkx .cta-glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(22,48,127,.10),transparent 65%);pointer-events:none}
 .nkx .cta h2{font-size:clamp(34px,5vw,62px);position:relative}
 .nkx .cta h2 em{font-style:italic;color:var(--gold)}
 .nkx .cta p{color:var(--cream-dim);font-size:18px;margin:24px auto 38px;max-width:460px;position:relative}
@@ -199,8 +199,7 @@ export default function LandingPage() {
         <div className="wrap nav-in">
           <div className="lbrand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/nekaid-logo.png" alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-            <span className="wm">Neka<b>ID</b></span>
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '32px', width: 'auto', display: 'block' }} />
           </div>
           <div className="nav-links">
             <a href="#why">Why NekaID</a>
@@ -233,25 +232,34 @@ export default function LandingPage() {
 
           <div className="cardwrap rv in">
             <div className="cred">
-              <div className="cred-top">
-                <div><div className="lbl">NekaID · Worker Passport</div></div>
-                <div className="vf">Verified</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                <div>
-                  <div className="chip" style={{ marginBottom: 16 }} />
-                  <div className="cred-name">Sample Worker</div>
-                  <div className="cred-role">Groundworker · CSCS Blue</div>
-                  <div className="cred-row">
-                    <span className="cred-tag g">Compliant</span>
-                    <span className="cred-tag">CSCS Valid</span>
-                    <span className="cred-tag">Inducted</span>
-                  </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ fontSize: 8, letterSpacing: '.14em', textTransform: 'uppercase', color: '#ffffff', fontWeight: 600, lineHeight: 1.4 }}>
+                  Construction Skills<br />Certification Scheme
+                </div>
+                <div style={{ fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: '#ffffff', fontWeight: 700, textAlign: 'right' }}>
+                  Skilled Worker
                 </div>
               </div>
-              <div className="cred-bottom">
-                <div className="cred-qr" />
-                <div className="cred-no">Member since 2026<b>NK · 0042</b></div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(255,255,255,.18)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="8" r="4" fill="rgba(255,255,255,.7)" />
+                    <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" fill="none" />
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, color: '#ffffff', fontWeight: 500, marginBottom: 3 }}>J. Smith</div>
+                  <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7ab4f5', marginBottom: 4 }}>NVQ Level 2</div>
+                  <div style={{ fontSize: 12, letterSpacing: '.14em', color: '#ffffff', marginBottom: 2 }}>1234 5678</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)' }}>Expires Apr 2028</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/nekaid-logo.png" alt="NekaID" style={{ height: 16, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)', opacity: 0.75 }} />
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', background: '#22c55e', color: '#ffffff', borderRadius: 4, padding: '3px 9px' }}>Valid</div>
               </div>
             </div>
             <div className="float-note"><span className="ic">✓</span><span className="tx">Signed in · 07:42<span>Plot 4 · on site</span></span></div>
@@ -376,7 +384,8 @@ export default function LandingPage() {
 
       <footer className="lfoot">
         <div className="wrap foot">
-          <span className="wm">Neka<b>ID</b></span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '26px', width: 'auto', display: 'block' }} />
           <div className="foot-links">
             <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookies</a><a href="/login">Contact</a>
           </div>
