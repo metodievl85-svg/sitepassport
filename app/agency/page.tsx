@@ -554,26 +554,7 @@ export default function AgencyPage() {
 
         <section className="hero" style={{ marginBottom: 24, position: 'relative' }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div
-              style={{
-                height: '160px',
-                overflow: 'hidden',
-                maxWidth: '100%',
-                marginLeft: '-14px',
-              }}
-            >
-              <img
-                src="/nekaid-logo.png"
-                alt="NekaID"
-                style={{
-                  display: 'block',
-                  width: '560px',
-                  maxWidth: '100%',
-                  height: 'auto',
-                  marginTop: '-130px',
-                }}
-              />
-            </div>
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '28px', width: 'auto', display: 'block' }} />
             <h1 style={{ fontSize: 'clamp(26px, 3vw, 42px)', margin: 0 }}>
               Agency dashboard
             </h1>
@@ -791,7 +772,7 @@ export default function AgencyPage() {
                       background: '#fbfdff',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                     {(worker.facePhoto || worker.photo) ? (
                       <img
                         src={worker.facePhoto || worker.photo}
@@ -830,7 +811,9 @@ export default function AgencyPage() {
                           fontWeight: 900,
                           fontSize: 16,
                           color: '#09154b',
-                          wordBreak: 'break-word',
+                          wordBreak: 'normal',
+                          overflowWrap: 'break-word',
+                          whiteSpace: 'normal',
                         }}
                       >
                         {worker.fullName || 'Unnamed'}
@@ -858,7 +841,7 @@ export default function AgencyPage() {
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <select
                         value={statusMap[worker.agencyWorkerId] ?? 'Active'}
                         onChange={e => void saveStatus(worker.agencyWorkerId, e.target.value)}
