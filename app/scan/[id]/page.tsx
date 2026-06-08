@@ -37,6 +37,14 @@ type Worker = {
   photo: string
   createdAt: string
   cscsVerificationStatus: string
+  passportPhoto: string
+  rightToWorkPhoto: string
+  niNumber: string
+  nextOfKinName: string
+  nextOfKinPhone: string
+  bankName: string
+  bankAccountNumber: string
+  bankSortCode: string
   qualifications: Qualification[]
 }
 
@@ -179,6 +187,14 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
     photo: worker.photo ?? '',
     createdAt: worker.created_at ?? '',
     cscsVerificationStatus: worker.cscs_verification_status ?? 'self_declared',
+    passportPhoto: worker.passport_photo ?? '',
+    rightToWorkPhoto: worker.right_to_work_photo ?? '',
+    niNumber: worker.ni_number ?? '',
+    nextOfKinName: worker.next_of_kin_name ?? '',
+    nextOfKinPhone: worker.next_of_kin_phone ?? '',
+    bankName: worker.bank_name ?? '',
+    bankAccountNumber: worker.bank_account_number ?? '',
+    bankSortCode: worker.bank_sort_code ?? '',
     qualifications: Array.isArray(qualifications)
       ? qualifications.map((q) => ({
           id: q.id,
@@ -482,17 +498,20 @@ export default function PublicWorkerPage() {
                     padding: 12,
                   }}
                 >
-                  <img
-                    src={worker.photo}
-                    alt={`${worker.fullName} CSCS card`}
-                    className="profile-photo-large"
-                    style={{
-                      aspectRatio: '1.58 / 1',
-                      objectFit: 'contain',
-                      background: '#ffffff',
-                      borderRadius: 16,
-                    }}
-                  />
+                  <a href={worker.photo} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={worker.photo}
+                      alt={`${worker.fullName} CSCS card`}
+                      className="profile-photo-large"
+                      style={{
+                        aspectRatio: '1.58 / 1',
+                        objectFit: 'contain',
+                        background: '#ffffff',
+                        borderRadius: 16,
+                        display: 'block',
+                      }}
+                    />
+                  </a>
                 </div>
               ) : (
                 <div
@@ -512,7 +531,8 @@ export default function PublicWorkerPage() {
               )}
             </div>
 
-            <div className="card">
+            {isCompanyUser ? (
+              <div className="card">
               <h2 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: '#08153d' }}>
                 Verification summary
               </h2>
@@ -579,6 +599,7 @@ export default function PublicWorkerPage() {
                 </div>
               </div>
             </div>
+            ) : null}
           </div>
 
           <div className="profile-info-card">
@@ -599,83 +620,242 @@ export default function PublicWorkerPage() {
                 </p>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
+              {isCompanyUser ? (
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <div className={cscsStatus.className}>CSCS: {cscsStatus.text}</div>
 
-                <div style={cscsVerificationStatus.style}>
-                  {cscsVerificationStatus.text}
-                </div>
+                  <div style={cscsVerificationStatus.style}>
+                    {cscsVerificationStatus.text}
+                  </div>
 
-                <div className={rightToWorkStatus.className}>
-                  Right to work: {rightToWorkStatus.text}
+                  <div className={rightToWorkStatus.className}>
+                    Right to work: {rightToWorkStatus.text}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
 
-            <div
-              style={{
-                border: '1px solid #d7e0ec',
-                borderRadius: 22,
-                padding: 18,
-                background: '#fbfdff',
-                marginBottom: 24,
-              }}
-            >
+            {isCompanyUser ? (
               <div
                 style={{
-                  fontSize: 15,
-                  fontWeight: 900,
-                  letterSpacing: 1.2,
-                  textTransform: 'uppercase',
-                  color: '#62779a',
-                  marginBottom: 12,
+                  border: '1px solid #d7e0ec',
+                  borderRadius: 22,
+                  padding: 18,
+                  background: '#fbfdff',
+                  marginBottom: 24,
                 }}
               >
-                Operative details
+                <div
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 900,
+                    letterSpacing: 1.2,
+                    textTransform: 'uppercase',
+                    color: '#62779a',
+                    marginBottom: 12,
+                  }}
+                >
+                  Operative details
+                </div>
+
+                <div className="profile-meta-grid" style={{ marginTop: 0 }}>
+                  <div>
+                    <div className="meta-label">Company</div>
+                    <div className="meta-value">{worker.company || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Role</div>
+                    <div className="meta-value">{worker.role || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Email</div>
+                    <div className="meta-value">{worker.email || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Phone</div>
+                    <div className="meta-value">{worker.phone || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">CSCS card</div>
+                    <div className="meta-value">{worker.cscsCard || '—'}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">CSCS expiry</div>
+                    <div className="meta-value">{formatDate(worker.cscsExpiry)}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Right to work expiry</div>
+                    <div className="meta-value">{formatDate(worker.rightToWorkExpiry)}</div>
+                  </div>
+
+                  <div>
+                    <div className="meta-label">Created</div>
+                    <div className="meta-value">{formatDate(worker.createdAt)}</div>
+                  </div>
+                </div>
               </div>
-
-              <div className="profile-meta-grid" style={{ marginTop: 0 }}>
-                <div>
-                  <div className="meta-label">Company</div>
-                  <div className="meta-value">{worker.company || '—'}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">Role</div>
-                  <div className="meta-value">{worker.role || '—'}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">Email</div>
-                  <div className="meta-value">{worker.email || '—'}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">Phone</div>
-                  <div className="meta-value">{worker.phone || '—'}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">CSCS card</div>
-                  <div className="meta-value">{worker.cscsCard || '—'}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">CSCS expiry</div>
-                  <div className="meta-value">{formatDate(worker.cscsExpiry)}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">Right to work expiry</div>
-                  <div className="meta-value">{formatDate(worker.rightToWorkExpiry)}</div>
-                </div>
-
-                <div>
-                  <div className="meta-label">Created</div>
-                  <div className="meta-value">{formatDate(worker.createdAt)}</div>
-                </div>
+            ) : (
+              <div
+                style={{
+                  border: '1px solid #d7e0ec',
+                  borderRadius: 22,
+                  padding: 20,
+                  background: '#f0f4ff',
+                  marginBottom: 24,
+                  textAlign: 'center',
+                }}
+              >
+                <p style={{ margin: '0 0 14px', color: '#08153d', fontSize: 16, fontWeight: 700 }}>
+                  Sign in to view the full operative passport.
+                </p>
+                <Link href="/login" className="btn btn-primary">Sign in</Link>
               </div>
-            </div>
+            )}
+
+            {isCompanyUser ? (
+              <>
+                {worker.niNumber ? (
+                  <div
+                    style={{
+                      border: '1px solid #d7e0ec',
+                      borderRadius: 22,
+                      padding: 18,
+                      background: '#fbfdff',
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
+                      National Insurance number
+                    </div>
+                    <div className="meta-value">{worker.niNumber}</div>
+                  </div>
+                ) : null}
+
+                {(worker.nextOfKinName || worker.nextOfKinPhone) ? (
+                  <div
+                    style={{
+                      border: '1px solid #d7e0ec',
+                      borderRadius: 22,
+                      padding: 18,
+                      background: '#fbfdff',
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
+                      Next of kin
+                    </div>
+                    <div className="profile-meta-grid" style={{ marginTop: 0 }}>
+                      {worker.nextOfKinName ? (
+                        <div>
+                          <div className="meta-label">Full name</div>
+                          <div className="meta-value">{worker.nextOfKinName}</div>
+                        </div>
+                      ) : null}
+                      {worker.nextOfKinPhone ? (
+                        <div>
+                          <div className="meta-label">Phone</div>
+                          <div className="meta-value">{worker.nextOfKinPhone}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+
+                {worker.rightToWorkPhoto ? (
+                  <div
+                    style={{
+                      border: '1px solid #d7e0ec',
+                      borderRadius: 22,
+                      padding: 18,
+                      background: '#fbfdff',
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
+                      Right to work document
+                    </div>
+                    <a href={worker.rightToWorkPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
+                      <img
+                        src={worker.rightToWorkPhoto}
+                        alt="Right to work document"
+                        style={{ maxWidth: 320, width: '100%', height: 'auto', borderRadius: 12, border: '1px solid #d7e0ec', display: 'block' }}
+                      />
+                    </a>
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+
+            {userRole === 'agency' ? (
+              <>
+                {worker.passportPhoto ? (
+                  <div
+                    style={{
+                      border: '1px solid #d7e0ec',
+                      borderRadius: 22,
+                      padding: 18,
+                      background: '#fbfdff',
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
+                      Passport photo
+                    </div>
+                    <a href={worker.passportPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
+                      <img
+                        src={worker.passportPhoto}
+                        alt="Passport"
+                        style={{ width: 120, height: 160, objectFit: 'cover', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
+                      />
+                    </a>
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
+                  </div>
+                ) : null}
+
+                {(worker.bankName || worker.bankAccountNumber || worker.bankSortCode) ? (
+                  <div
+                    style={{
+                      border: '1px solid #d7e0ec',
+                      borderRadius: 22,
+                      padding: 18,
+                      background: '#fbfdff',
+                      marginBottom: 24,
+                    }}
+                  >
+                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
+                      Bank details
+                    </div>
+                    <div className="profile-meta-grid" style={{ marginTop: 0 }}>
+                      {worker.bankName ? (
+                        <div>
+                          <div className="meta-label">Bank name</div>
+                          <div className="meta-value">{worker.bankName}</div>
+                        </div>
+                      ) : null}
+                      {worker.bankAccountNumber ? (
+                        <div>
+                          <div className="meta-label">Account number</div>
+                          <div className="meta-value">{worker.bankAccountNumber}</div>
+                        </div>
+                      ) : null}
+                      {worker.bankSortCode ? (
+                        <div>
+                          <div className="meta-label">Sort code</div>
+                          <div className="meta-value">{worker.bankSortCode}</div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
 
             {isCompanyUser && worker.medicalInfo ? (
               <div
@@ -715,6 +895,7 @@ export default function PublicWorkerPage() {
               </div>
             ) : null}
 
+            {isCompanyUser ? (
             <div className="notes-box">
               <div className="notes-title">Qualifications</div>
 
@@ -805,6 +986,7 @@ export default function PublicWorkerPage() {
                 </div>
               )}
             </div>
+            ) : null}
 
             {isCompanyUser ? (
               <div className="notes-box">
