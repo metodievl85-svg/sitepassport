@@ -35,6 +35,17 @@ type AgencyWorker = {
   complianceStatus: ComplianceStatus
   status: string
   notes: string
+  email: string
+  phone: string
+  cscsCard: string
+  workerNotes: string
+  medicalInfo: string
+  niNumber: string
+  nextOfKinName: string
+  nextOfKinPhone: string
+  bankName: string
+  bankAccountNumber: string
+  bankSortCode: string
 }
 
 function getComplianceStatus(expiries: (string | null | undefined)[]): ComplianceStatus {
@@ -114,7 +125,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company)')
+        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -164,6 +175,17 @@ export default function AgencyPage() {
             cscsExpiry: (w.cscs_expiry as string) ?? '',
             rightToWorkExpiry: (w.right_to_work_expiry as string) ?? '',
             complianceStatus: getComplianceStatus([w.cscs_expiry, w.right_to_work_expiry, ...quals]),
+            email: (w.email as string) ?? '',
+            phone: (w.phone as string) ?? '',
+            cscsCard: (w.cscs_card as string) ?? '',
+            workerNotes: (w.notes as string) ?? '',
+            medicalInfo: (w.medical_info as string) ?? '',
+            niNumber: (w.ni_number as string) ?? '',
+            nextOfKinName: (w.next_of_kin_name as string) ?? '',
+            nextOfKinPhone: (w.next_of_kin_phone as string) ?? '',
+            bankName: (w.bank_name as string) ?? '',
+            bankAccountNumber: (w.bank_account_number as string) ?? '',
+            bankSortCode: (w.bank_sort_code as string) ?? '',
           }
         })
         .filter(Boolean) as AgencyWorker[]
@@ -407,7 +429,7 @@ export default function AgencyPage() {
     const placementText = placement ? `${placement.company_name} · ${placement.site_name}` : '—'
     doc.text(placementText, col3, y + 38)
 
-    // Email & Phone (not on AgencyWorker — show dashes)
+    // Email & Phone
     doc.setFontSize(7.5)
     doc.setTextColor(100, 116, 139)
     doc.setFont('helvetica', 'normal')
@@ -416,8 +438,8 @@ export default function AgencyPage() {
     doc.setTextColor(15, 23, 42)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9)
-    doc.text('—', col1, y + 54)
-    doc.text('—', col2, y + 54)
+    doc.text(w.email || '—', col1, y + 54)
+    doc.text(w.phone || '—', col2, y + 54)
 
     // Qualifications
     doc.setFontSize(7.5)
@@ -428,6 +450,45 @@ export default function AgencyPage() {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8.5)
     doc.text('—', col1, y + 70)
+
+    // Additional worker info section
+    const infoFields: Array<[string, string]> = [
+      ['NI Number', w.niNumber],
+      ['Next of Kin', w.nextOfKinName],
+      ['Next of Kin Phone', w.nextOfKinPhone],
+      ['Bank Name', w.bankName],
+      ['Account Number', w.bankAccountNumber],
+      ['Sort Code', w.bankSortCode],
+      ['CSCS Card', w.cscsCard],
+      ['Notes', w.workerNotes],
+      ['Medical Info', w.medicalInfo],
+    ]
+    const filledFields = infoFields.filter(([, v]) => v && v.trim())
+
+    if (filledFields.length > 0) {
+      let iy = y + cardHeight + 10
+
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(15, 23, 42)
+      doc.text('Additional Information', margin, iy)
+      doc.setDrawColor(226, 232, 240)
+      doc.line(margin, iy + 2, margin + contentWidth, iy + 2)
+      iy += 9
+
+      for (const [label, value] of filledFields) {
+        doc.setFontSize(7)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(100, 116, 139)
+        doc.text(label.toUpperCase(), margin + 2, iy)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(15, 23, 42)
+        const lines = doc.splitTextToSize(value, contentWidth - 4)
+        doc.text(lines, margin + 2, iy + 6)
+        iy += 6 + (lines.length * 5) + 4
+      }
+    }
 
     // Footer
     doc.setFontSize(7.5)

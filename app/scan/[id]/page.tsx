@@ -812,7 +812,7 @@ export default function PublicWorkerPage() {
                       <img
                         src={worker.passportPhoto}
                         alt="Passport"
-                        style={{ width: 120, height: 160, objectFit: 'cover', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
+                        style={{ width: '100%', maxWidth: '400px', height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
                       />
                     </a>
                     <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
