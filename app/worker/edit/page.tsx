@@ -47,6 +47,9 @@ export default function EditWorkerPassportPage() {
   const faceCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const faceCameraStreamRef = useRef<MediaStream | null>(null)
   const photoPreviewUrlRef = useRef<string>('')
+  const facePhotoPreviewUrlRef = useRef<string>('')
+  const passportPhotoPreviewUrlRef = useRef<string>('')
+  const rightToWorkPhotoPreviewUrlRef = useRef<string>('')
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
 
   const [loading, setLoading] = useState(true)
@@ -61,7 +64,8 @@ export default function EditWorkerPassportPage() {
   const [facePhotoCaptured, setFacePhotoCaptured] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
-  const facePhotoPreviewUrlRef = useRef<string>('')
+  const [passportPhotoFile, setPassportPhotoFile] = useState<File | null>(null)
+  const [rightToWorkPhotoFile, setRightToWorkPhotoFile] = useState<File | null>(null)
   const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
 
   const [form, setForm] = useState({
@@ -77,6 +81,14 @@ export default function EditWorkerPassportPage() {
     medicalInfo: '',
     photo: '',
     facePhoto: '',
+    passportPhoto: '',
+    rightToWorkPhoto: '',
+    niNumber: '',
+    nextOfKinName: '',
+    nextOfKinPhone: '',
+    bankName: '',
+    bankAccountNumber: '',
+    bankSortCode: '',
     qualifications: [createEmptyQualification()] as Qualification[],
   })
 
@@ -156,6 +168,14 @@ export default function EditWorkerPassportPage() {
         medicalInfo: workerRow.medical_info ?? '',
         photo: workerRow.photo ?? '',
         facePhoto: workerRow.face_photo ?? '',
+        passportPhoto: workerRow.passport_photo ?? '',
+        rightToWorkPhoto: workerRow.right_to_work_photo ?? '',
+        niNumber: workerRow.ni_number ?? '',
+        nextOfKinName: workerRow.next_of_kin_name ?? '',
+        nextOfKinPhone: workerRow.next_of_kin_phone ?? '',
+        bankName: workerRow.bank_name ?? '',
+        bankAccountNumber: workerRow.bank_account_number ?? '',
+        bankSortCode: workerRow.bank_sort_code ?? '',
         qualifications: mappedQualifications,
       })
 
@@ -166,23 +186,27 @@ export default function EditWorkerPassportPage() {
 
     return () => {
       stopCamera()
+      stopFaceCamera()
       if (photoPreviewUrlRef.current) {
         URL.revokeObjectURL(photoPreviewUrlRef.current)
         photoPreviewUrlRef.current = ''
+      }
+      if (facePhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
+        facePhotoPreviewUrlRef.current = ''
+      }
+      if (passportPhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(passportPhotoPreviewUrlRef.current)
+        passportPhotoPreviewUrlRef.current = ''
+      }
+      if (rightToWorkPhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current)
+        rightToWorkPhotoPreviewUrlRef.current = ''
       }
       Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
         URL.revokeObjectURL(url)
       })
       qualPhotoPreviewUrlsRef.current = {}
-      if (facePhotoPreviewUrlRef.current) {
-        URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
-        facePhotoPreviewUrlRef.current = ''
-      }
-      stopFaceCamera()
-      if (faceCameraStreamRef.current) {
-        faceCameraStreamRef.current.getTracks().forEach((track) => track.stop())
-        faceCameraStreamRef.current = null
-      }
     }
   }, [router])
 
@@ -432,6 +456,34 @@ export default function EditWorkerPassportPage() {
     setForm((prev) => ({ ...prev, facePhoto: previewUrl }))
   }
 
+  function makeUploadHandler(
+    setFile: (f: File) => void,
+    previewRef: { current: string },
+    formKey: string
+  ) {
+    return (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+      const url = URL.createObjectURL(file)
+      previewRef.current = url
+      setFile(file)
+      setForm((prev) => ({ ...prev, [formKey]: url }))
+    }
+  }
+
+  const handlePassportPhotoChange = makeUploadHandler(
+    (f) => setPassportPhotoFile(f),
+    passportPhotoPreviewUrlRef,
+    'passportPhoto'
+  )
+
+  const handleRightToWorkPhotoChange = makeUploadHandler(
+    (f) => setRightToWorkPhotoFile(f),
+    rightToWorkPhotoPreviewUrlRef,
+    'rightToWorkPhoto'
+  )
+
   function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -496,6 +548,15 @@ export default function EditWorkerPassportPage() {
     }))
   }
 
+  async function uploadPhoto(file: File, path: string, bucket: string): Promise<string | null> {
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      contentType: file.type || 'image/jpeg', upsert: false,
+    })
+    if (error) { console.error(error); return null }
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+    return data.publicUrl
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
 
@@ -512,10 +573,11 @@ export default function EditWorkerPassportPage() {
     setSaving(true)
 
     try {
-      let photoValue = form.photo
+      const ts = () => `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`
 
+      let photoValue = form.photo
       if (photoFile) {
-        const path = `${userId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+        const path = `${userId}/${ts()}.jpg`
         const { error: uploadError } = await supabase.storage
           .from('worker-photos')
           .upload(path, photoFile, {
@@ -537,7 +599,7 @@ export default function EditWorkerPassportPage() {
 
       let facePhotoValue = form.facePhoto
       if (facePhotoFile) {
-        const facePath = `${userId}/face-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+        const facePath = `${userId}/face-${ts()}.jpg`
         const { error: faceUploadError } = await supabase.storage
           .from('worker-photos')
           .upload(facePath, facePhotoFile, {
@@ -555,6 +617,20 @@ export default function EditWorkerPassportPage() {
         facePhotoValue = faceUrlData.publicUrl
       }
 
+      let passportPhotoValue = form.passportPhoto
+      if (passportPhotoFile) {
+        const url = await uploadPhoto(passportPhotoFile, `${userId}/passport-${ts()}.jpg`, 'worker-photos')
+        if (!url) { alert('Passport photo upload failed.'); setSaving(false); return }
+        passportPhotoValue = url
+      }
+
+      let rightToWorkPhotoValue = form.rightToWorkPhoto
+      if (rightToWorkPhotoFile) {
+        const url = await uploadPhoto(rightToWorkPhotoFile, `${userId}/rtw-${ts()}.jpg`, 'worker-photos')
+        if (!url) { alert('Right to work photo upload failed.'); setSaving(false); return }
+        rightToWorkPhotoValue = url
+      }
+
       const { error: workerError } = await supabase
         .from('workers')
         .update({
@@ -570,6 +646,14 @@ export default function EditWorkerPassportPage() {
           medical_info: form.medicalInfo.trim(),
           photo: photoValue,
           face_photo: facePhotoValue,
+          passport_photo: passportPhotoValue,
+          right_to_work_photo: rightToWorkPhotoValue,
+          ni_number: form.niNumber.trim(),
+          next_of_kin_name: form.nextOfKinName.trim(),
+          next_of_kin_phone: form.nextOfKinPhone.trim(),
+          bank_name: form.bankName.trim(),
+          bank_account_number: form.bankAccountNumber.trim(),
+          bank_sort_code: form.bankSortCode.trim(),
         })
         .eq('id', workerId)
 
@@ -596,12 +680,11 @@ export default function EditWorkerPassportPage() {
       if (cleanedQualifications.length > 0) {
         const qualRows = await Promise.all(
           cleanedQualifications.map(async (qualification) => {
-            // Use existing URL unless the user uploaded a new file
             let qualPhotoUrl: string | null = qualification.photoUrl || null
             const file = qualPhotoFiles[qualification.id]
 
             if (file) {
-              const path = `${workerId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.jpg`
+              const path = `${workerId}/${ts()}.jpg`
               const { error: uploadError } = await supabase.storage
                 .from('qualification-photos')
                 .upload(path, file, {
@@ -645,14 +728,22 @@ export default function EditWorkerPassportPage() {
         URL.revokeObjectURL(photoPreviewUrlRef.current)
         photoPreviewUrlRef.current = ''
       }
-      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
-        URL.revokeObjectURL(url)
-      })
-      qualPhotoPreviewUrlsRef.current = {}
       if (facePhotoPreviewUrlRef.current) {
         URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
         facePhotoPreviewUrlRef.current = ''
       }
+      if (passportPhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(passportPhotoPreviewUrlRef.current)
+        passportPhotoPreviewUrlRef.current = ''
+      }
+      if (rightToWorkPhotoPreviewUrlRef.current) {
+        URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current)
+        rightToWorkPhotoPreviewUrlRef.current = ''
+      }
+      Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => {
+        URL.revokeObjectURL(url)
+      })
+      qualPhotoPreviewUrlsRef.current = {}
 
       router.replace('/worker')
     } catch (error) {
@@ -699,6 +790,8 @@ export default function EditWorkerPassportPage() {
           </p>
 
           <form onSubmit={handleSubmit}>
+
+            {/* Selfie */}
             <div className="form-grid-1" style={{ marginBottom: 20 }}>
               <div className="field">
                 <label>Profile photo (selfie)</label>
@@ -758,6 +851,7 @@ export default function EditWorkerPassportPage() {
               </div>
             </div>
 
+            {/* CSCS card image */}
             <div className="form-grid-1" style={{ marginBottom: 20 }}>
               <div className="field">
                 <label>CSCS card image</label>
@@ -1023,6 +1117,43 @@ export default function EditWorkerPassportPage() {
               </div>
             </div>
 
+            {/* Passport photo */}
+            <div className="form-grid-1" style={{ marginBottom: 20 }}>
+              <div className="field">
+                <label>Passport photo</label>
+                <div className="photo-upload-box">
+                  {form.passportPhoto ? (
+                    <img src={form.passportPhoto} alt="Passport preview" style={{ width: 120, height: 160, objectFit: 'cover', borderRadius: 8, border: '1px solid #d7e0ec' }} />
+                  ) : (
+                    <div className="photo-preview-placeholder" style={{ fontSize: 16, padding: 16, textAlign: 'center', lineHeight: 1.4 }}>No passport photo</div>
+                  )}
+                  <div>
+                    <input type="file" accept="image/*" onChange={handlePassportPhotoChange} />
+                    <p style={{ margin: '12px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.6 }}>Upload a photo of your passport photo page.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right to work photo */}
+            <div className="form-grid-1" style={{ marginBottom: 20 }}>
+              <div className="field">
+                <label>Right to work document photo</label>
+                <div className="photo-upload-box">
+                  {form.rightToWorkPhoto ? (
+                    <img src={form.rightToWorkPhoto} alt="Right to work document preview" style={{ width: '100%', maxWidth: 260, height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', objectFit: 'contain' }} />
+                  ) : (
+                    <div className="photo-preview-placeholder" style={{ fontSize: 16, padding: 16, textAlign: 'center', lineHeight: 1.4 }}>No document uploaded</div>
+                  )}
+                  <div>
+                    <input type="file" accept="image/*" onChange={handleRightToWorkPhotoChange} />
+                    <p style={{ margin: '12px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.6 }}>Upload your right to work document — passport, BRP, visa, or share code letter.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Core fields */}
             <div className="form-grid">
               <div className="field">
                 <label>Full name</label>
@@ -1075,6 +1206,16 @@ export default function EditWorkerPassportPage() {
               </div>
 
               <div className="field">
+                <label>National Insurance number</label>
+                <input
+                  name="niNumber"
+                  value={form.niNumber}
+                  onChange={handleChange}
+                  placeholder="AB 12 34 56 C"
+                />
+              </div>
+
+              <div className="field">
                 <label>CSCS card</label>
                 <input
                   name="cscsCard"
@@ -1105,6 +1246,66 @@ export default function EditWorkerPassportPage() {
               </div>
             </div>
 
+            {/* Next of kin */}
+            <div className="form-grid" style={{ marginTop: 18 }}>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <label style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: '#62779a', textTransform: 'uppercase' }}>Next of kin</label>
+              </div>
+              <div className="field">
+                <label>Full name</label>
+                <input
+                  name="nextOfKinName"
+                  value={form.nextOfKinName}
+                  onChange={handleChange}
+                  placeholder="Next of kin full name"
+                />
+              </div>
+              <div className="field">
+                <label>Phone number</label>
+                <input
+                  name="nextOfKinPhone"
+                  value={form.nextOfKinPhone}
+                  onChange={handleChange}
+                  placeholder="Next of kin phone number"
+                />
+              </div>
+            </div>
+
+            {/* Bank details */}
+            <div className="form-grid" style={{ marginTop: 18 }}>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <label style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: '#62779a', textTransform: 'uppercase' }}>Bank details</label>
+              </div>
+              <div className="field">
+                <label>Bank name</label>
+                <input
+                  name="bankName"
+                  value={form.bankName}
+                  onChange={handleChange}
+                  placeholder="e.g. Barclays"
+                />
+              </div>
+              <div className="field">
+                <label>Account number</label>
+                <input
+                  name="bankAccountNumber"
+                  value={form.bankAccountNumber}
+                  onChange={handleChange}
+                  placeholder="12345678"
+                />
+              </div>
+              <div className="field">
+                <label>Sort code</label>
+                <input
+                  name="bankSortCode"
+                  value={form.bankSortCode}
+                  onChange={handleChange}
+                  placeholder="00-00-00"
+                />
+              </div>
+            </div>
+
+            {/* Qualifications */}
             <div className="form-grid-1" style={{ marginTop: 18 }}>
               <div className="field">
                 <label>Qualifications</label>
@@ -1287,6 +1488,7 @@ export default function EditWorkerPassportPage() {
               </div>
             </div>
 
+            {/* Notes */}
             <div className="form-grid-1" style={{ marginTop: 18 }}>
               <div className="field">
                 <label>Notes</label>
@@ -1299,6 +1501,7 @@ export default function EditWorkerPassportPage() {
               </div>
             </div>
 
+            {/* Medical info */}
             <div className="form-grid-1" style={{ marginTop: 18 }}>
               <div className="field">
                 <label>Medical information (optional)</label>
