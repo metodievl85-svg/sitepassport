@@ -1336,7 +1336,7 @@ export default function WorkerPage() {
                     <img
                       src={passport.passportPhoto}
                       alt="Passport"
-                      style={{ width: 120, height: 160, objectFit: 'cover', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
+                      style={{ width: '100%', maxWidth: 400, height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
                     />
                   </a>
                   <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
@@ -1360,7 +1360,7 @@ export default function WorkerPage() {
                     <img
                       src={passport.rightToWorkPhoto}
                       alt="Right to work document"
-                      style={{ maxWidth: 320, width: '100%', height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
+                      style={{ width: '100%', maxWidth: 400, height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
                     />
                   </a>
                   <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
