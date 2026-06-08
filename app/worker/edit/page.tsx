@@ -984,6 +984,21 @@ export default function EditWorkerPassportPage() {
                       <canvas ref={faceCanvasRef} style={{ display: 'none' }} />
                     </div>
                     <div style={{ minWidth: 0, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                      {form.facePhoto ? (
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => {
+                            if (facePhotoPreviewUrlRef.current) { URL.revokeObjectURL(facePhotoPreviewUrlRef.current); facePhotoPreviewUrlRef.current = '' }
+                            setFacePhotoFile(null)
+                            setForm((prev) => ({ ...prev, facePhoto: '' }))
+                          }}
+                          style={{ width: '100%', marginBottom: 12 }}
+                        >
+                          Remove photo
+                        </button>
+                      ) : null}
+
                       {!faceCameraOpen ? (
                         <>
                           <button type="button" className="btn btn-primary" onClick={startFaceCamera} style={{ width: '100%', marginBottom: 12 }}>
@@ -1166,6 +1181,21 @@ export default function EditWorkerPassportPage() {
                         alignItems: 'stretch',
                       }}
                     >
+                      {form.photo ? (
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => {
+                            if (photoPreviewUrlRef.current) { URL.revokeObjectURL(photoPreviewUrlRef.current); photoPreviewUrlRef.current = '' }
+                            setPhotoFile(null)
+                            setForm((prev) => ({ ...prev, photo: '' }))
+                          }}
+                          style={{ width: '100%', marginBottom: 12 }}
+                        >
+                          Remove photo
+                        </button>
+                      ) : null}
+
                       {!cameraOpen ? (
                         <>
                           <button
@@ -1423,6 +1453,21 @@ export default function EditWorkerPassportPage() {
                         alignItems: 'stretch',
                       }}
                     >
+                      {form.passportPhoto ? (
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => {
+                            if (passportPhotoPreviewUrlRef.current) { URL.revokeObjectURL(passportPhotoPreviewUrlRef.current); passportPhotoPreviewUrlRef.current = '' }
+                            setPassportPhotoFile(null)
+                            setForm((prev) => ({ ...prev, passportPhoto: '' }))
+                          }}
+                          style={{ width: '100%', marginBottom: 12 }}
+                        >
+                          Remove photo
+                        </button>
+                      ) : null}
+
                       {!passportCameraOpen ? (
                         <button
                           type="button"
@@ -1653,6 +1698,21 @@ export default function EditWorkerPassportPage() {
                         alignItems: 'stretch',
                       }}
                     >
+                      {form.rightToWorkPhoto ? (
+                        <button
+                          type="button"
+                          className="btn btn-danger"
+                          onClick={() => {
+                            if (rightToWorkPhotoPreviewUrlRef.current) { URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current); rightToWorkPhotoPreviewUrlRef.current = '' }
+                            setRightToWorkPhotoFile(null)
+                            setForm((prev) => ({ ...prev, rightToWorkPhoto: '' }))
+                          }}
+                          style={{ width: '100%', marginBottom: 12 }}
+                        >
+                          Remove photo
+                        </button>
+                      ) : null}
+
                       {!rtwCameraOpen ? (
                         <button
                           type="button"
