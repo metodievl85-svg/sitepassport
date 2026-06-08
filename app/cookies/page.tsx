@@ -3,7 +3,7 @@ export default function CookiePolicyPage() {
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', lineHeight: 1.7 }}>
       <h1>Cookie Policy</h1>
 
-      <p><strong>Last updated:</strong> 24 May 2026</p>
+      <p><strong>Last updated:</strong> 8 June 2026</p>
 
       <p>
         This Cookie Policy explains how NekaID uses cookies and similar technologies

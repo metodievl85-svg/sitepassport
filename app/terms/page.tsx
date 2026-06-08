@@ -1,229 +1,217 @@
 export default function TermsPage() {
   return (
     <main style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px', lineHeight: 1.7 }}>
-      <h1>Terms & Conditions</h1>
-      <p><strong>Last updated:</strong> 24 May 2026</p>
+      <h1>Terms &amp; Conditions</h1>
+      <p><strong>Last updated:</strong> 8 June 2026</p>
 
       <p>
-        These Terms & Conditions explain the rules for using NekaID, a UK construction
-        workforce verification and site management platform.
+        These Terms &amp; Conditions govern your use of NekaID. By creating an account or using
+        the platform, you agree to these terms in full. Please read them carefully.
       </p>
 
-      <h2>1. Who we are</h2>
+      <h2>1. About NekaID</h2>
       <p>
-        NekaID operates through <strong>https://www.sitepassportapp.co.uk</strong>.
-        During our rebrand to NekaID, some services may also be found at
-        <strong> https://www.nekaid.co.uk</strong>.
+        NekaID is a UK construction workforce compliance platform. It enables workers to maintain a
+        digital passport of their credentials, allows companies to verify and manage their workforce,
+        and allows agencies to manage labour pools and placements.
       </p>
       <p>
-        Contact email:
-        <br />
-        <strong>info@nekaid.co.uk</strong>
-      </p>
-
-      <h2>2. Use of the platform</h2>
-      <p>
-        NekaID is designed to help workers, companies, site managers, and contractors
-        manage workforce information, QR verification, site attendance, inductions,
-        and compliance visibility.
+        NekaID is operated by <strong>Lyuben Metodiev trading as NekaID</strong>, based in the
+        United Kingdom. Website: <strong>nekaid.co.uk</strong>. Contact: <strong>info@nekaid.co.uk</strong>.
       </p>
 
-      <p>
-        You agree to use NekaID only for lawful business, workforce, construction,
-        safety, and site management purposes.
-      </p>
-
-      <h2>3. Eligibility</h2>
-      <p>
-        You must be 18 years of age or older to create an account or use NekaID.
-        By using the platform, you confirm that you are using it for legitimate business
-        purposes, including workforce management, site compliance, or construction
-        site administration.
-      </p>
-
-      <h2>4. User accounts</h2>
-      <p>
-        Users are responsible for keeping their login details secure. You must not
-        share your account access with unauthorised persons.
-      </p>
-
-      <p>
-        Companies are responsible for ensuring that only authorised managers or
-        representatives access company dashboard information.
-      </p>
-
-      <h2>5. Worker information</h2>
-      <p>
-        Workers are responsible for ensuring that information they enter into NekaID
-        is accurate, current, and not misleading.
-      </p>
-
-      <p>
-        This may include role, company, CSCS details, Right to Work expiry dates,
-        qualification details, uploaded card images, medical information, and other
-        site-related information.
-      </p>
-
-      <p>
-        Workers retain ownership of their own personal data and uploaded documents.
-        NekaID processes this information only to deliver the platform features
-        requested by the worker, as described in the Privacy Policy.
-      </p>
-
-      <h2>6. Company responsibilities</h2>
-      <p>
-        Companies and site managers remain responsible for their own workforce
-        compliance checks, including but not limited to:
-      </p>
-
+      <h2>2. Eligibility</h2>
+      <p>To use NekaID you must:</p>
       <ul>
-        <li>Right to Work checks</li>
-        <li>CSCS checks</li>
-        <li>Qualification verification</li>
-        <li>Health and safety requirements</li>
-        <li>Induction completion</li>
-        <li>Site access decisions</li>
+        <li>Be 18 years of age or older.</li>
+        <li>Be based in the United Kingdom.</li>
+        <li>If registering as a worker, have the legal right to work in the UK.</li>
+        <li>Use the platform for legitimate workforce management, compliance, or construction site administration purposes.</li>
       </ul>
 
+      <h2>3. Account types and responsibilities</h2>
+
+      <h3>Workers</h3>
       <p>
-        NekaID helps organise and display workforce information, but it does not
-        replace a company's legal duties or compliance responsibilities.
+        Workers are responsible for the accuracy and completeness of all information entered into
+        their NekaID passport, including but not limited to: name, trade, CSCS card details,
+        National Insurance number, bank details, passport photo, right to work document, and
+        qualification information.
+      </p>
+      <p>
+        Workers must keep their details up to date, particularly expiry dates for CSCS cards,
+        right to work documents, and qualifications.
+      </p>
+      <p>
+        Workers are responsible for choosing who to share their QR code or passport link with.
+        Sharing your passport link with a company or agency grants that party access to the data
+        permitted for their access tier. Do not share your passport link with any party you do not
+        wish to share your data with.
       </p>
 
-      <h2>7. Verification disclaimer</h2>
+      <h3>Companies</h3>
       <p>
-        Unless a record is clearly marked as verified by NekaID, worker qualifications,
-        documents, CSCS details, and uploaded information should be treated as
-        self-declared or company-managed information.
+        Companies and site managers are responsible for verifying that workers are suitable,
+        qualified, and legally permitted to work on their sites. NekaID provides credential
+        information to support this process but does not replace a company's legal verification duties.
+      </p>
+      <p>
+        CSCS card details and qualifications are self-declared by workers unless explicitly marked
+        as verified by NekaID. Companies must carry out their own verification checks as required
+        by law.
+      </p>
+      <p>
+        Site GPS coordinates and attendance data are provided for operational convenience only.
+        NekaID does not guarantee their accuracy or suitability for legal compliance purposes.
       </p>
 
+      <h3>Agencies</h3>
       <p>
-        NekaID does not guarantee that uploaded documents are genuine, complete,
-        valid, or sufficient for legal compliance unless specifically confirmed.
+        Agencies are responsible for handling worker data — including bank details, National
+        Insurance numbers, passport photos, and right to work documents — in full compliance with
+        UK GDPR, the Data Protection Act 2018, and all applicable employment and payroll law.
+      </p>
+      <p>
+        Agencies must not use worker data for any purpose other than workforce management, payroll
+        administration, and placement activity.
       </p>
 
-      <h2>8. QR codes and public scan links</h2>
+      <h2>4. Sensitive data responsibility</h2>
       <p>
-        Worker QR codes and public scan links may allow others to view worker passport
-        information. Workers should only share QR codes and scan links with people or
-        companies they trust.
+        Workers acknowledge that entering sensitive data into their passport — including bank details,
+        National Insurance number, passport photo, and right to work documents — makes this
+        information visible to agency accounts they share their passport with.
+      </p>
+      <p>
+        Workers are solely responsible for deciding who to share their passport with. NekaID
+        provides access controls but cannot prevent misuse of data once a worker has chosen to
+        share their passport link with a third party.
       </p>
 
+      <h2>5. Verification disclaimer</h2>
       <p>
-        Companies must use QR scanning responsibly and only for legitimate workforce
-        or site management purposes.
+        CSCS card details, qualification information, and uploaded documents are self-declared by
+        workers unless a record is explicitly marked as verified by NekaID. NekaID does not
+        independently verify the authenticity, validity, or completeness of any worker-submitted
+        credentials.
+      </p>
+      <p>
+        Companies and agencies must carry out their own credential verification, Right to Work checks,
+        CSCS checks, and any other compliance checks required by law before permitting workers to
+        access sites or commence employment.
       </p>
 
-      <h2>9. Site attendance and GPS</h2>
+      <h2>6. Data sharing</h2>
       <p>
-        NekaID may provide site sign-in, sign-out, visitor records, and GPS/location
-        verification features.
+        Workers control access to their data by choosing whether to share their QR code or passport
+        link. Once a worker shares their passport with a company or agency, that party can view the
+        data permitted for their access tier until the worker requests deletion of their account.
+      </p>
+      <p>
+        NekaID does not sell, rent, or share worker personal data with any third party other than
+        the data processors listed in our Privacy Policy and parties the worker has explicitly chosen
+        to share with.
       </p>
 
+      <h2>7. GPS and site attendance</h2>
       <p>
-        GPS and attendance tools are intended to support site management, but they
-        may depend on device permissions, mobile signal, browser settings, GPS
-        accuracy, and user behaviour.
+        Site sign-in on NekaID is manual. Sign-out may be automated via GPS geofence (650-metre
+        radius from the registered site location). GPS data is used solely for attendance tracking
+        purposes and is not used for any other form of monitoring.
+      </p>
+      <p>
+        NekaID is not liable for GPS inaccuracies, missed sign-outs, incorrect attendance records,
+        or any consequences arising from reliance on attendance data for legal or payroll purposes.
       </p>
 
+      <h2>8. Messaging</h2>
       <p>
-        NekaID does not guarantee perfect GPS accuracy or uninterrupted attendance
-        tracking.
+        In-app messages, photos, and PDFs sent via NekaID messaging are stored on our servers and
+        are accessible to both the sender and recipient. Do not send sensitive personal data via
+        messages beyond information already contained in your passport profile.
+      </p>
+      <p>
+        NekaID may access message content where required for security investigations, legal
+        compliance, or to resolve disputes.
       </p>
 
-      <h2>10. Inductions</h2>
-      <p>
-        NekaID may allow companies to send or track induction requests. Companies
-        remain responsible for ensuring that inductions are legally sufficient,
-        site-specific, up to date, and properly reviewed.
-      </p>
-
-      <h2>11. Prohibited use</h2>
+      <h2>9. Prohibited use</h2>
       <p>You must not use NekaID to:</p>
-
       <ul>
-        <li>Upload false or misleading information</li>
-        <li>Impersonate another person or company</li>
-        <li>Access data you are not authorised to access</li>
-        <li>Interfere with the security or operation of the platform</li>
-        <li>Use the platform for unlawful, harmful, or fraudulent purposes</li>
-        <li>Share personal data without proper permission or lawful basis</li>
+        <li>Engage in any illegal activity or facilitate the illegal activities of others.</li>
+        <li>Impersonate another person or company.</li>
+        <li>Upload false, forged, or misleading documents or credentials.</li>
+        <li>Access, view, or misuse personal data belonging to other workers.</li>
+        <li>Use automated scripts, bots, or scrapers to extract data from the platform.</li>
+        <li>Interfere with the security, integrity, or operation of the platform.</li>
+        <li>Share personal data without a proper legal basis or the consent of the individual concerned.</li>
       </ul>
 
-      <h2>12. Availability of the service</h2>
+      <h2>10. Payments and subscriptions</h2>
       <p>
-        We aim to keep NekaID available and reliable, but we do not guarantee that
-        the service will always be uninterrupted, error-free, or available at all times.
+        Company and agency accounts are subject to subscription fees. A <strong>14-day free trial</strong>{' '}
+        is available with no payment card required.
+      </p>
+      <p>
+        Full billing terms, pricing, and plan details are presented clearly at the time of purchase
+        or subscription. NekaID does not offer refunds on partial billing months.
+      </p>
+      <p>
+        We may update pricing, features, or plan limits as the service develops. Material changes
+        to pricing will be notified in advance.
       </p>
 
+      <h2>11. Intellectual property</h2>
       <p>
-        We may update, suspend, change, or remove parts of the platform as the product
-        develops.
+        The NekaID platform, branding, design, software, and code are owned by Lyuben Metodiev
+        trading as NekaID. You must not copy, reproduce, resell, reverse engineer, or misuse any
+        part of the platform without written permission.
+      </p>
+      <p>
+        Workers retain ownership of their own personal data and uploaded documents. By using NekaID,
+        workers grant us a limited licence to store and display their data solely for the purpose of
+        providing the platform features they have requested.
       </p>
 
-      <h2>13. Limitation of liability</h2>
+      <h2>12. Limitation of liability</h2>
       <p>
-        NekaID is provided as a workforce management and verification support tool.
-        To the maximum extent permitted by law, we are not responsible for losses
-        caused by inaccurate user-submitted data, failed checks, missed expiry dates,
-        site access decisions, device issues, GPS inaccuracies, or misuse of the platform.
+        To the maximum extent permitted by law, NekaID is not liable for:
+      </p>
+      <ul>
+        <li>Credential verification failures or reliance on self-declared worker information.</li>
+        <li>GPS inaccuracies or errors in attendance records.</li>
+        <li>Third-party misuse of worker data after a worker has shared their passport link.</li>
+        <li>Loss or corruption of data due to third-party infrastructure failure (including Supabase, Vercel, or Resend).</li>
+        <li>Business losses, compliance failures, or site access decisions made by companies or agencies based on NekaID data.</li>
+      </ul>
+
+      <h2>13. Termination</h2>
+      <p>
+        NekaID may suspend or terminate any account that breaches these Terms, presents a security
+        risk, or is used for fraudulent or unlawful purposes.
+      </p>
+      <p>
+        Workers may delete their account at any time via the platform. On deletion, personal data
+        is removed in accordance with our Privacy Policy.
       </p>
 
+      <h2>14. Governing law</h2>
       <p>
-        Companies remain responsible for final compliance decisions and site access
-        decisions.
+        These Terms &amp; Conditions are governed by the laws of <strong>England and Wales</strong>.
+        Any disputes arising from your use of NekaID will be subject to the exclusive jurisdiction
+        of the courts of England and Wales.
       </p>
 
-      <h2>14. Data protection</h2>
+      <h2>15. Changes to these Terms</h2>
       <p>
-        Use of personal data within NekaID is also covered by our Privacy Policy.
-        Users and companies must use the platform in line with applicable UK data
-        protection laws.
+        We may update these Terms &amp; Conditions as NekaID develops. Material changes will be
+        notified by email to all registered users. Continued use of the platform after notification
+        constitutes acceptance of the updated Terms.
       </p>
 
-      <h2>15. Account deletion and suspension</h2>
+      <h2>16. Contact</h2>
       <p>
-        We may suspend or restrict access if we believe an account is being misused,
-        presents a security risk, breaches these Terms, or creates legal or compliance
-        concerns.
-      </p>
-
-      <p>
-        Users may request deletion of their account, subject to any legal, security,
-        or compliance retention requirements.
-      </p>
-
-      <h2>16. Payments and subscriptions</h2>
-      <p>
-        NekaID may introduce paid subscriptions, pricing tiers, or company plans.
-        Any payment terms will be shown clearly before purchase or subscription.
-      </p>
-
-      <p>
-        We may update pricing, features, or plan limits as the service develops.
-      </p>
-
-      <h2>17. Intellectual property</h2>
-      <p>
-        NekaID branding, design, software, content, and platform features belong to
-        NekaID or its licensors. You must not copy, reproduce, resell, or misuse the
-        platform without permission.
-      </p>
-
-      <h2>18. Changes to these Terms</h2>
-      <p>
-        We may update these Terms & Conditions as NekaID grows. The latest version
-        will always be available on this page.
-      </p>
-
-      <h2>19. Governing law</h2>
-      <p>
-        These Terms are governed by the laws of England and Wales.
-      </p>
-
-      <h2>20. Contact</h2>
-      <p>
-        For questions about these Terms, email:
+        For questions about these Terms, contact us at:
         <br />
         <strong>info@nekaid.co.uk</strong>
       </p>
