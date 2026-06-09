@@ -552,26 +552,18 @@ export default function AgencyPage() {
     <main className="page-shell">
       <div className="container">
 
-        <section className="hero" style={{ marginBottom: 24, position: 'relative' }}>
-          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '28px', width: 'auto', display: 'block' }} />
-            <h1 style={{ fontSize: 'clamp(26px, 3vw, 42px)', margin: 0 }}>
-              Agency dashboard
-            </h1>
-            <p style={{ margin: 0 }}>{email}</p>
-          </div>
-          <div
-            style={{
-              position: 'absolute',
-              top: '16px',
-              right: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '8px',
-              width: '180px',
-            }}
-          >
-            <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
+        <section className="hero" style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, width: '100%' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '28px', width: 'auto', display: 'block' }} />
+              <h1 style={{ fontSize: 'clamp(26px, 3vw, 42px)', margin: 0 }}>
+                Agency dashboard
+              </h1>
+              <p style={{ margin: 0 }}>{email}</p>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
+            </div>
           </div>
         </section>
 
