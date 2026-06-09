@@ -47,7 +47,7 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx .lbrand .wm b{color:var(--gold);font-weight:500}
 .nkx .nav-links{display:flex;align-items:center;gap:38px;font-size:14.5px;color:var(--cream-dim)}
 .nkx .nav-links a:not(.lbtn):hover{color:var(--gold)}
-.nkx .lhero{position:relative;padding:96px 0 90px}
+.nkx .lhero{position:relative;padding:48px 0 90px}
 .nkx .hero-glow{position:absolute;top:-160px;right:-120px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(22,48,127,.12),transparent 62%);pointer-events:none}
 .nkx .hero-in{position:relative;display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
 .nkx .tagline{display:inline-flex;align-items:center;gap:10px;margin-bottom:30px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-dim)}
@@ -210,8 +210,8 @@ export default function LandingPage() {
       <header className="lhero">
         <div className="hero-glow" />
         <div className="wrap">
-          <div style={{ marginBottom: '48px' }}>
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '240px', width: 'auto', display: 'block' }} />
+          <div style={{ marginBottom: '24px' }}>
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '120px', width: 'auto', display: 'block' }} />
           </div>
         </div>
         <div className="wrap hero-in">
