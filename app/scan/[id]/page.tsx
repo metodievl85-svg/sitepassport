@@ -235,8 +235,11 @@ export default function PublicWorkerPage() {
 
   useEffect(() => {
     if (!workerId) return
-    fetchWorker()
-    checkCompanyUser()
+    const run = async () => {
+      const resolvedRole = await checkCompanyUser()
+      fetchWorker(resolvedRole)
+    }
+    run()
   }, [workerId])
 
   useEffect(() => {
@@ -248,14 +251,14 @@ export default function PublicWorkerPage() {
     fetchAttendanceLogs(companyId)
   }, [workerId, companyId, isCompanyUser])
 
-  async function checkCompanyUser() {
+  async function checkCompanyUser(): Promise<string> {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.user || !workerId) {
         setIsCompanyUser(false)
         setCompanyId(null)
         setIsSaved(false)
-        return
+        return ''
       }
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -266,7 +269,7 @@ export default function PublicWorkerPage() {
         setIsCompanyUser(false)
         setCompanyId(null)
         setIsSaved(false)
-        return
+        return ''
       }
       setIsCompanyUser(true)
       setCompanyId(profile.id)
@@ -290,21 +293,29 @@ export default function PublicWorkerPage() {
         if (agencyError) console.error(agencyError)
         setIsSaved(!!agencyWorker)
       }
+      return profile.role
     } catch (error) {
       console.error(error)
       setIsCompanyUser(false)
       setCompanyId(null)
       setIsSaved(false)
+      return ''
     }
   }
 
-  async function fetchWorker() {
+  async function fetchWorker(role: string) {
     try {
       setIsLoading(true)
 
+      const selectCols = role === 'agency'
+        ? '*'
+        : role === 'company'
+          ? 'id, user_id, full_name, role, company, email, phone, cscs_card, cscs_expiry, right_to_work_expiry, notes, medical_info, photo, face_photo, cscs_verification_status, created_at, right_to_work_photo, next_of_kin_name, next_of_kin_phone'
+          : 'id, full_name, photo'
+
       const { data: workerRow, error: workerError } = await supabase
         .from('workers')
-        .select('*')
+        .select(selectCols)
         .eq('id', workerId)
         .single()
 
