@@ -199,7 +199,7 @@ export default function LandingPage() {
         <div className="wrap nav-in">
           <div className="lbrand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '40px', width: 'auto', display: 'block' }} />
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '40px', width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }} />
           </div>
           <div className="nav-links">
             <a href="#why">Why NekaID</a>
