@@ -212,6 +212,11 @@ export default function LandingPage() {
 
       <header className="lhero">
         <div className="hero-glow" />
+        <div className="wrap">
+          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '80px', width: 'auto', display: 'inline-block' }} />
+          </div>
+        </div>
         <div className="wrap hero-in">
           <div className="rv in">
             <span className="tagline"><span className="ln" />Live on UK construction sites</span>
