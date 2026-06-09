@@ -568,7 +568,7 @@ export default function AgencyPage() {
               <h1 style={{ fontSize: 'clamp(22px, 5vw, 42px)', margin: 0 }}>
                 Agency dashboard
               </h1>
-              <p style={{ margin: 0, wordBreak: 'break-all' }}>{email}</p>
+              <p style={{ margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{email}</p>
             </div>
             <div style={{ flexShrink: 0, width: '190px' }}>
               <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
