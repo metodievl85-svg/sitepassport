@@ -42,7 +42,7 @@ body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-e
 .nkx nav{position:sticky;top:0;z-index:100;background:rgba(12,11,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
 .nkx .nav-in{display:flex;align-items:center;justify-content:space-between;height:78px}
 .nkx .lbrand{display:flex;align-items:center;gap:11px;margin:0;letter-spacing:normal;font-weight:400}
-.nkx .lbrand img{height:30px;width:auto;display:block}
+.nkx .lbrand img{height:40px;width:auto;display:block}
 .nkx .lbrand .wm{font-family:'Fraunces',serif;font-weight:500;font-size:23px;letter-spacing:.01em}
 .nkx .lbrand .wm b{color:var(--gold);font-weight:500}
 .nkx .nav-links{display:flex;align-items:center;gap:38px;font-size:14.5px;color:var(--cream-dim)}
@@ -199,7 +199,7 @@ export default function LandingPage() {
         <div className="wrap nav-in">
           <div className="lbrand">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '32px', width: 'auto', display: 'block' }} />
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '40px', width: 'auto', display: 'block' }} />
           </div>
           <div className="nav-links">
             <a href="#why">Why NekaID</a>
