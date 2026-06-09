@@ -553,26 +553,17 @@ export default function AgencyPage() {
       <div className="container">
 
         <section className="hero" style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, width: '100%' }}>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div
-                className="worker-brand-logo"
-                style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 6, maxWidth: '100%' }}
-              >
-                <img
-                  src="/nekaid-logo.png"
-                  alt="NekaID"
-                  style={{ display: 'block', width: 'min(340px, 100%)', height: 'auto', objectFit: 'contain' }}
-                />
+          <div style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+              <div className="worker-brand-logo" style={{ display: 'inline-flex', alignItems: 'center', maxWidth: '100%' }}>
+                <img src="/nekaid-logo.png" alt="NekaID" style={{ display: 'block', width: 'min(340px, 100%)', height: 'auto', objectFit: 'contain' }} />
               </div>
-              <h1 style={{ fontSize: 'clamp(22px, 5vw, 42px)', margin: 0 }}>
-                Agency dashboard
-              </h1>
-              <p style={{ margin: 0, fontSize: 'clamp(11px, 3vw, 16px)', wordBreak: 'break-all' }}>{email}</p>
+              <div style={{ flexShrink: 0, width: '190px' }}>
+                <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
+              </div>
             </div>
-            <div style={{ flexShrink: 0, width: '190px' }}>
-              <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
-            </div>
+            <h1 style={{ fontSize: 'clamp(22px, 5vw, 42px)', margin: '0 0 8px 0' }}>Agency dashboard</h1>
+            <p style={{ margin: 0, wordBreak: 'break-all' }}>{email}</p>
           </div>
         </section>
 
