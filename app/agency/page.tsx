@@ -555,7 +555,7 @@ export default function AgencyPage() {
         <section className="hero" style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, width: '100%' }}>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '36px', width: 'auto', display: 'block' }} />
+              <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '52px', width: 'auto', display: 'block' }} />
               <h1 style={{ fontSize: 'clamp(26px, 3vw, 42px)', margin: 0 }}>
                 Agency dashboard
               </h1>
