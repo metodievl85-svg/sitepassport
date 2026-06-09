@@ -197,10 +197,7 @@ export default function LandingPage() {
 
       <nav>
         <div className="wrap nav-in">
-          <div className="lbrand">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '40px', width: 'auto', display: 'block' }} />
-          </div>
+          <div className="lbrand" />
           <div className="nav-links">
             <a href="#why">Why NekaID</a>
             <a href="#how">How it works</a>
@@ -213,8 +210,8 @@ export default function LandingPage() {
       <header className="lhero">
         <div className="hero-glow" />
         <div className="wrap">
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '80px', width: 'auto', display: 'inline-block' }} />
+          <div style={{ marginBottom: '48px' }}>
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '240px', width: 'auto', display: 'block' }} />
           </div>
         </div>
         <div className="wrap hero-in">
