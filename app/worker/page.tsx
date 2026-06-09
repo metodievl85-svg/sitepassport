@@ -310,6 +310,16 @@ export default function WorkerPage() {
       }
 
       const mappedPassport = mapWorkerRow(workerRow, qualificationsRows ?? [])
+
+      if (mappedPassport.passportPhoto && !mappedPassport.passportPhoto.startsWith('http')) {
+        const { data: ppSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mappedPassport.passportPhoto, 3600)
+        if (ppSigned?.signedUrl) mappedPassport.passportPhoto = ppSigned.signedUrl
+      }
+      if (mappedPassport.rightToWorkPhoto && !mappedPassport.rightToWorkPhoto.startsWith('http')) {
+        const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mappedPassport.rightToWorkPhoto, 3600)
+        if (rtwSigned?.signedUrl) mappedPassport.rightToWorkPhoto = rtwSigned.signedUrl
+      }
+
       setPassport(mappedPassport)
 
       const { data: inductionRows, error: inductionError } = await supabase

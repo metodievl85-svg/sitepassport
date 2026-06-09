@@ -50,6 +50,8 @@ export default function EditWorkerPassportPage() {
   const facePhotoPreviewUrlRef = useRef<string>('')
   const passportPhotoPreviewUrlRef = useRef<string>('')
   const rightToWorkPhotoPreviewUrlRef = useRef<string>('')
+  const passportPhotoPathRef = useRef<string>('')
+  const rightToWorkPhotoPathRef = useRef<string>('')
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
   const passportVideoRef = useRef<HTMLVideoElement | null>(null)
   const passportCanvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -165,6 +167,23 @@ export default function EditWorkerPassportPage() {
 
       setUserId(session.user.id)
       setWorkerId(workerRow.id)
+
+      const rawPassportPhoto = workerRow.passport_photo ?? ''
+      const rawRightToWorkPhoto = workerRow.right_to_work_photo ?? ''
+      passportPhotoPathRef.current = rawPassportPhoto
+      rightToWorkPhotoPathRef.current = rawRightToWorkPhoto
+
+      let passportPhotoDisplay = rawPassportPhoto
+      if (rawPassportPhoto && !rawPassportPhoto.startsWith('http')) {
+        const { data: ppSigned } = await supabase.storage.from('worker-photos').createSignedUrl(rawPassportPhoto, 3600)
+        passportPhotoDisplay = ppSigned?.signedUrl ?? rawPassportPhoto
+      }
+      let rightToWorkPhotoDisplay = rawRightToWorkPhoto
+      if (rawRightToWorkPhoto && !rawRightToWorkPhoto.startsWith('http')) {
+        const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(rawRightToWorkPhoto, 3600)
+        rightToWorkPhotoDisplay = rtwSigned?.signedUrl ?? rawRightToWorkPhoto
+      }
+
       setForm({
         fullName: workerRow.full_name ?? '',
         role: workerRow.role ?? '',
@@ -178,8 +197,8 @@ export default function EditWorkerPassportPage() {
         medicalInfo: workerRow.medical_info ?? '',
         photo: workerRow.photo ?? '',
         facePhoto: workerRow.face_photo ?? '',
-        passportPhoto: workerRow.passport_photo ?? '',
-        rightToWorkPhoto: workerRow.right_to_work_photo ?? '',
+        passportPhoto: passportPhotoDisplay,
+        rightToWorkPhoto: rightToWorkPhotoDisplay,
         niNumber: workerRow.ni_number ?? '',
         nextOfKinName: workerRow.next_of_kin_name ?? '',
         nextOfKinPhone: workerRow.next_of_kin_phone ?? '',
@@ -789,18 +808,20 @@ export default function EditWorkerPassportPage() {
         facePhotoValue = faceUrlData.publicUrl
       }
 
-      let passportPhotoValue = form.passportPhoto
+      let passportPhotoValue = passportPhotoPathRef.current
       if (passportPhotoFile) {
-        const url = await uploadPhoto(passportPhotoFile, `${userId}/passport-${ts()}.jpg`, 'worker-photos')
-        if (!url) { alert('Passport photo upload failed.'); setSaving(false); return }
-        passportPhotoValue = url
+        const ppPath = `${userId}/passport-${ts()}.jpg`
+        const { error: ppUploadError } = await supabase.storage.from('worker-photos').upload(ppPath, passportPhotoFile, { contentType: passportPhotoFile.type || 'image/jpeg', upsert: false })
+        if (ppUploadError) { alert('Passport photo upload failed.'); setSaving(false); return }
+        passportPhotoValue = ppPath
       }
 
-      let rightToWorkPhotoValue = form.rightToWorkPhoto
+      let rightToWorkPhotoValue = rightToWorkPhotoPathRef.current
       if (rightToWorkPhotoFile) {
-        const url = await uploadPhoto(rightToWorkPhotoFile, `${userId}/rtw-${ts()}.jpg`, 'worker-photos')
-        if (!url) { alert('Right to work photo upload failed.'); setSaving(false); return }
-        rightToWorkPhotoValue = url
+        const rtwPath = `${userId}/rtw-${ts()}.jpg`
+        const { error: rtwUploadError } = await supabase.storage.from('worker-photos').upload(rtwPath, rightToWorkPhotoFile, { contentType: rightToWorkPhotoFile.type || 'image/jpeg', upsert: false })
+        if (rtwUploadError) { alert('Right to work photo upload failed.'); setSaving(false); return }
+        rightToWorkPhotoValue = rtwPath
       }
 
       const { error: workerError } = await supabase
@@ -1460,6 +1481,7 @@ export default function EditWorkerPassportPage() {
                           onClick={() => {
                             if (passportPhotoPreviewUrlRef.current) { URL.revokeObjectURL(passportPhotoPreviewUrlRef.current); passportPhotoPreviewUrlRef.current = '' }
                             setPassportPhotoFile(null)
+                            passportPhotoPathRef.current = ''
                             setForm((prev) => ({ ...prev, passportPhoto: '' }))
                           }}
                           style={{ width: '100%', marginBottom: 12 }}
@@ -1705,6 +1727,7 @@ export default function EditWorkerPassportPage() {
                           onClick={() => {
                             if (rightToWorkPhotoPreviewUrlRef.current) { URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current); rightToWorkPhotoPreviewUrlRef.current = '' }
                             setRightToWorkPhotoFile(null)
+                            rightToWorkPhotoPathRef.current = ''
                             setForm((prev) => ({ ...prev, rightToWorkPhoto: '' }))
                           }}
                           style={{ width: '100%', marginBottom: 12 }}

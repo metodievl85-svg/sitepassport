@@ -334,7 +334,18 @@ export default function PublicWorkerPage() {
         console.error(qualificationsError)
       }
 
-      setWorker(mapWorkerRow(workerRow, qualificationRows ?? []))
+      const mapped = mapWorkerRow(workerRow, qualificationRows ?? [])
+
+      if (mapped.passportPhoto && !mapped.passportPhoto.startsWith('http')) {
+        const { data: ppSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mapped.passportPhoto, 3600)
+        if (ppSigned?.signedUrl) mapped.passportPhoto = ppSigned.signedUrl
+      }
+      if (mapped.rightToWorkPhoto && !mapped.rightToWorkPhoto.startsWith('http')) {
+        const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mapped.rightToWorkPhoto, 3600)
+        if (rtwSigned?.signedUrl) mapped.rightToWorkPhoto = rtwSigned.signedUrl
+      }
+
+      setWorker(mapped)
     } catch (error) {
       console.error(error)
       setWorker(null)

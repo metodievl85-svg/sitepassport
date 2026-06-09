@@ -171,6 +171,14 @@ export default function CreateWorkerPassportPage() {
     return data.publicUrl
   }
 
+  async function uploadPhotoGetPath(file: File, path: string, bucket: string): Promise<string | null> {
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      contentType: file.type || 'image/jpeg', upsert: false,
+    })
+    if (error) { console.error(error); return null }
+    return path
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!form.fullName.trim()) { alert('Please enter full name.'); return }
@@ -182,12 +190,12 @@ export default function CreateWorkerPassportPage() {
 
       const photoUrl = photoFile ? await uploadPhoto(photoFile, `${userId}/${ts()}.jpg`, 'worker-photos') ?? '' : ''
       const facePhotoUrl = facePhotoFile ? await uploadPhoto(facePhotoFile, `${userId}/face-${ts()}.jpg`, 'worker-photos') ?? '' : ''
-      const passportPhotoUrl = passportPhotoFile ? await uploadPhoto(passportPhotoFile, `${userId}/passport-${ts()}.jpg`, 'worker-photos') ?? '' : ''
-      const rightToWorkPhotoUrl = rightToWorkPhotoFile ? await uploadPhoto(rightToWorkPhotoFile, `${userId}/rtw-${ts()}.jpg`, 'worker-photos') ?? '' : ''
+      const passportPhotoPath = passportPhotoFile ? await uploadPhotoGetPath(passportPhotoFile, `${userId}/passport-${ts()}.jpg`, 'worker-photos') ?? '' : ''
+      const rightToWorkPhotoPath = rightToWorkPhotoFile ? await uploadPhotoGetPath(rightToWorkPhotoFile, `${userId}/rtw-${ts()}.jpg`, 'worker-photos') ?? '' : ''
 
       if (photoFile && !photoUrl) { alert('CSCS card photo upload failed.'); setSaving(false); return }
-      if (passportPhotoFile && !passportPhotoUrl) { alert('Passport photo upload failed.'); setSaving(false); return }
-      if (rightToWorkPhotoFile && !rightToWorkPhotoUrl) { alert('Right to work photo upload failed.'); setSaving(false); return }
+      if (passportPhotoFile && !passportPhotoPath) { alert('Passport photo upload failed.'); setSaving(false); return }
+      if (rightToWorkPhotoFile && !rightToWorkPhotoPath) { alert('Right to work photo upload failed.'); setSaving(false); return }
 
       const { data: insertedWorker, error: workerError } = await supabase
         .from('workers')
@@ -204,8 +212,8 @@ export default function CreateWorkerPassportPage() {
           notes: form.notes.trim(),
           photo: photoUrl,
           face_photo: facePhotoUrl,
-          passport_photo: passportPhotoUrl,
-          right_to_work_photo: rightToWorkPhotoUrl,
+          passport_photo: passportPhotoPath,
+          right_to_work_photo: rightToWorkPhotoPath,
           ni_number: form.niNumber.trim(),
           next_of_kin_name: form.nextOfKinName.trim(),
           next_of_kin_phone: form.nextOfKinPhone.trim(),
