@@ -562,13 +562,13 @@ export default function AgencyPage() {
                 <img
                   src="/nekaid-logo.png"
                   alt="NekaID"
-                  style={{ display: 'block', width: 'min(200px, 100%)', height: 'auto', objectFit: 'contain' }}
+                  style={{ display: 'block', width: 'min(340px, 100%)', height: 'auto', objectFit: 'contain' }}
                 />
               </div>
               <h1 style={{ fontSize: 'clamp(22px, 5vw, 42px)', margin: 0 }}>
                 Agency dashboard
               </h1>
-              <p style={{ margin: 0 }}>{email}</p>
+              <p style={{ margin: 0, wordBreak: 'break-all' }}>{email}</p>
             </div>
             <div style={{ flexShrink: 0, width: '190px' }}>
               <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
