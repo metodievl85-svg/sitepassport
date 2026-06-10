@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
 
 function getAdminClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -91,28 +90,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not create invite.' }, { status: 500 })
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY)
     const inviteUrl = `https://nekaid.co.uk/join?token=${invite.token}`
 
-    await resend.emails.send({
-      from: 'NekaID <info@nekaid.co.uk>',
-      to: email,
-      subject: `You've been invited to join ${orgName} on NekaID`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-          <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 40px; margin-bottom: 24px;" />
-          <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited</h2>
-          <p style="color: #5a6f96; font-size: 15px; line-height: 1.6;">
-            You've been invited to join <strong>${orgName}</strong> on NekaID as a team member.
-          </p>
-          <a href="${inviteUrl}" style="display: inline-block; margin-top: 24px; padding: 14px 28px; background: #16307f; color: #ffffff; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">
-            Accept invitation
-          </a>
-          <p style="margin-top: 24px; color: #5a6f96; font-size: 13px;">
-            This invite expires in 7 days. If you did not expect this email, you can ignore it.
-          </p>
-        </div>
-      `,
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'NekaID <info@nekaid.co.uk>',
+        to: email,
+        subject: `You've been invited to join ${orgName} on NekaID`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+            <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 40px; margin-bottom: 24px;" />
+            <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited</h2>
+            <p style="color: #5a6f96; font-size: 15px; line-height: 1.6;">
+              You've been invited to join <strong>${orgName}</strong> on NekaID as a team member.
+            </p>
+            <a href="${inviteUrl}" style="display: inline-block; margin-top: 24px; padding: 14px 28px; background: #16307f; color: #ffffff; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">
+              Accept invitation
+            </a>
+            <p style="margin-top: 24px; color: #5a6f96; font-size: 13px;">
+              This invite expires in 7 days. If you did not expect this email, you can ignore it.
+            </p>
+          </div>
+        `,
+      }),
     })
 
     return NextResponse.json({ success: true })
