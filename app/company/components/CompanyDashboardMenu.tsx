@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-type Props = { onAddOperative: () => void }
+type Props = { onAddOperative: () => void; onExportReport: () => void }
 
-export default function CompanyDashboardMenu({ onAddOperative }: Props) {
+export default function CompanyDashboardMenu({ onAddOperative, onExportReport }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -62,6 +62,15 @@ export default function CompanyDashboardMenu({ onAddOperative }: Props) {
           >
             Print site QR
           </Link>
+
+          <button
+            type="button"
+            className="company-dashboard-menu-link"
+            onClick={() => { onExportReport(); setOpen(false) }}
+            style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900 }}
+          >
+            Export Compliance Report
+          </button>
         </div>
       ) : null}
 
