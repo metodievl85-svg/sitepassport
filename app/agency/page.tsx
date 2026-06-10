@@ -88,6 +88,7 @@ export default function AgencyPage() {
   const messagesRef = useRef<HTMLDivElement>(null)
   const [statusMap, setStatusMap] = useState<Record<string, string>>({})
   const [notesMap, setNotesMap] = useState<Record<string, string>>({})
+  const [removingWorkerId, setRemovingWorkerId] = useState<string | null>(null)
 
   const handleScrollToMessages = () => {
     messagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -535,6 +536,23 @@ export default function AgencyPage() {
       photo: w.facePhoto || w.photo || undefined,
     }))
 
+  const removeOperative = async (workerId: string) => {
+    if (!confirm('Remove this operative from your workforce?')) return
+    setRemovingWorkerId(workerId)
+    const { error } = await supabase
+      .from('agency_workers')
+      .delete()
+      .eq('agency_id', agencyId)
+      .eq('worker_id', workerId)
+    if (error) {
+      alert('Failed to remove operative. Please try again.')
+      setRemovingWorkerId(null)
+      return
+    }
+    setWorkers((prev: any[]) => prev.filter((w: any) => w.workerId !== workerId))
+    setRemovingWorkerId(null)
+  }
+
   if (loading) {
     return (
       <main className="page-shell">
@@ -866,6 +884,23 @@ export default function AgencyPage() {
                       >
                         View passport
                       </Link>
+                      <button
+                        onClick={() => removeOperative(worker.workerId)}
+                        disabled={removingWorkerId === worker.workerId}
+                        style={{
+                          marginTop: '8px',
+                          padding: '6px 14px',
+                          background: 'transparent',
+                          color: '#dc2626',
+                          border: '1px solid #dc2626',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          opacity: removingWorkerId === worker.workerId ? 0.5 : 1,
+                        }}
+                      >
+                        {removingWorkerId === worker.workerId ? 'Removing...' : 'Remove'}
+                      </button>
                       <button
                         onClick={() => downloadOperativePDF(worker)}
                         style={{
