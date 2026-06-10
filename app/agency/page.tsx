@@ -885,24 +885,6 @@ export default function AgencyPage() {
                         View passport
                       </Link>
                       <button
-                        onClick={() => removeOperative(worker.workerId)}
-                        disabled={removingWorkerId === worker.workerId}
-                        style={{
-                          display: 'block',
-                          marginLeft: 'auto',
-                          marginTop: '8px',
-                          padding: '0',
-                          background: 'none',
-                          border: 'none',
-                          color: removingWorkerId === worker.workerId ? '#999' : '#dc2626',
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          textDecoration: 'underline',
-                        }}
-                      >
-                        {removingWorkerId === worker.workerId ? 'Removing...' : 'Remove operative'}
-                      </button>
-                      <button
                         onClick={() => downloadOperativePDF(worker)}
                         style={{
                           fontSize: 13,
@@ -983,6 +965,23 @@ export default function AgencyPage() {
                         background: '#f8fafc',
                       }}
                     />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                      <button
+                        onClick={() => removeOperative(worker.workerId)}
+                        disabled={removingWorkerId === worker.workerId}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: removingWorkerId === worker.workerId ? '#999' : '#dc2626',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          padding: '0',
+                        }}
+                      >
+                        {removingWorkerId === worker.workerId ? 'Removing...' : 'Remove operative'}
+                      </button>
+                    </div>
                   </div>
                 )
               })}
