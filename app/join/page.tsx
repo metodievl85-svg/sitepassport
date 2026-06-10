@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 
@@ -12,7 +13,7 @@ type Invite = {
   organisations: { id: string; name: string }
 }
 
-export default function JoinPage() {
+function JoinPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -170,5 +171,21 @@ export default function JoinPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense fallback={
+      <main className="page-shell">
+        <div className="container">
+          <div className="card" style={{ maxWidth: 480, margin: '60px auto', textAlign: 'center', padding: 40 }}>
+            <p style={{ color: '#5a6f96', fontWeight: 700 }}>Loading...</p>
+          </div>
+        </div>
+      </main>
+    }>
+      <JoinPageInner />
+    </Suspense>
   )
 }
