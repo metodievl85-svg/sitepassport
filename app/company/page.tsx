@@ -1527,103 +1527,199 @@ export default function CompanyPage() {
   const exportComplianceReport = async () => {
     const today = new Date()
     const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })
-
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
     const pageW = 210
-    const margin = 16
+    const margin = 14
     const colW = pageW - margin * 2
 
-    // Header
-    doc.setFillColor(22, 48, 127)
-    doc.rect(0, 0, pageW, 28, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Site Compliance Report', margin, 12)
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`Generated: ${dateStr}`, margin, 20)
-    if (companyName) {
-      doc.text(companyName, pageW - margin, 20, { align: 'right' })
+    // Fetch qualifications for all workers up front
+    const workerIds = savedWorkers.map((w) => w.workerId)
+    const { data: allQuals } = await supabase
+      .from('qualifications')
+      .select('worker_id, name, expiry')
+      .in('worker_id', workerIds)
+
+    const qualsByWorker: Record<string, {name: string, expiry: string | null}[]> = {}
+    for (const q of allQuals || []) {
+      if (!qualsByWorker[q.worker_id]) qualsByWorker[q.worker_id] = []
+      qualsByWorker[q.worker_id].push(q)
     }
 
-    let y = 38
+    // Pre-calculate compliance for all workers
+    const now = new Date()
+    const in30 = new Date(); in30.setDate(now.getDate() + 30)
 
-    for (const w of savedWorkers) {
-      const now = new Date()
-      const in30 = new Date(); in30.setDate(now.getDate() + 30)
+    const workerStatuses = savedWorkers.map((w) => {
       const cscsExp = w.cscsExpiry ? new Date(w.cscsExpiry) : null
       const rtwExp = w.rightToWorkExpiry ? new Date(w.rightToWorkExpiry) : null
-
-      const { data: quals } = await supabase
-        .from('qualifications')
-        .select('name, expiry')
-        .eq('worker_id', w.workerId)
-
+      const quals = qualsByWorker[w.workerId] || []
       const allExpiries = [
         ...(cscsExp ? [cscsExp] : []),
         ...(rtwExp ? [rtwExp] : []),
-        ...(quals || []).filter(q => q.expiry).map(q => new Date(q.expiry))
+        ...quals.filter((q) => q.expiry).map((q) => new Date(q.expiry!))
       ]
-
       let status = 'Compliant'
-      let statusColor: [number, number, number] = [34, 197, 94]
-      if (allExpiries.some(d => d < now)) {
-        status = 'Expired'
-        statusColor = [239, 68, 68]
-      } else if (allExpiries.some(d => d <= in30)) {
-        status = 'Expiring Soon'
-        statusColor = [245, 158, 11]
-      }
+      let color: [number,number,number] = [22, 163, 74]
+      if (allExpiries.some(d => d < now)) { status = 'Expired'; color = [220, 38, 38] }
+      else if (allExpiries.some(d => d <= in30)) { status = 'Expiring Soon'; color = [217, 119, 6] }
+      return { w, status, color, cscsExp, rtwExp, quals }
+    })
 
-      const blockHeight = 14 + (quals && quals.length > 0 ? quals.length * 6 : 0) + 8
-      if (y + blockHeight > 275) {
-        doc.addPage()
-        y = 20
-      }
+    const totalCompliant = workerStatuses.filter(x => x.status === 'Compliant').length
+    const totalExpiring = workerStatuses.filter(x => x.status === 'Expiring Soon').length
+    const totalExpired = workerStatuses.filter(x => x.status === 'Expired').length
 
-      doc.setFillColor(245, 247, 250)
-      doc.roundedRect(margin, y, colW, blockHeight, 3, 3, 'F')
+    // ── HEADER ──────────────────────────────────────────────
+    doc.setFillColor(22, 48, 127)
+    doc.rect(0, 0, pageW, 32, 'F')
 
-      doc.setFillColor(statusColor[0], statusColor[1], statusColor[2])
-      doc.roundedRect(pageW - margin - 32, y + 4, 32, 7, 2, 2, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(7)
-      doc.setFont('helvetica', 'bold')
-      doc.text(status, pageW - margin - 16, y + 9, { align: 'center' })
+    // NekaID wordmark
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('NekaID', margin, 14)
 
-      doc.setTextColor(20, 20, 20)
+    // Report title
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(180, 200, 255)
+    doc.text('Site Compliance Report', margin, 21)
+    doc.text(`Generated: ${dateStr}`, margin, 27)
+
+    // Company name top right
+    if (companyName) {
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
-      doc.text(w.fullName || 'Unknown', margin + 4, y + 10)
+      doc.setTextColor(255, 255, 255)
+      doc.text(companyName, pageW - margin, 14, { align: 'right' })
+    }
+
+    // ── SUMMARY BAR ─────────────────────────────────────────
+    const barY = 38
+    const boxW = colW / 3 - 2
+    const summaryItems = [
+      { label: 'Compliant', value: totalCompliant, bg: [22,163,74] as [number,number,number] },
+      { label: 'Expiring Soon', value: totalExpiring, bg: [217,119,6] as [number,number,number] },
+      { label: 'Expired', value: totalExpired, bg: [220,38,38] as [number,number,number] },
+    ]
+    summaryItems.forEach((item, i) => {
+      const bx = margin + i * (boxW + 3)
+      doc.setFillColor(...item.bg)
+      doc.roundedRect(bx, barY, boxW, 16, 2, 2, 'F')
+      doc.setTextColor(255,255,255)
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text(String(item.value), bx + boxW / 2, barY + 9, { align: 'center' })
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'normal')
+      doc.text(item.label, bx + boxW / 2, barY + 14, { align: 'center' })
+    })
+
+    // Total operatives box
+    doc.setFillColor(22, 48, 127)
+    doc.roundedRect(margin + colW - 28, barY, 28, 16, 2, 2, 'F')
+    doc.setTextColor(255,255,255)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text(String(savedWorkers.length), margin + colW - 14, barY + 9, { align: 'center' })
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Total', margin + colW - 14, barY + 14, { align: 'center' })
+
+    // ── WORKER LIST ──────────────────────────────────────────
+    let y = barY + 24
+
+    for (const { w, status, color, cscsExp, rtwExp, quals } of workerStatuses) {
+      const baseHeight = 34
+      const qualHeight = quals.length > 0 ? 6 + quals.length * 5 : 0
+      const blockHeight = baseHeight + qualHeight
+
+      if (y + blockHeight > 278) {
+        doc.addPage()
+        y = 14
+      }
+
+      // Left accent bar
+      doc.setFillColor(...color)
+      doc.rect(margin, y, 3, blockHeight, 'F')
+
+      // Light background
+      doc.setFillColor(248, 249, 252)
+      doc.rect(margin + 3, y, colW - 3, blockHeight, 'F')
+
+      // Status pill — top right, fully inside block
+      const pillW = status === 'Expiring Soon' ? 28 : 22
+      const pillX = margin + colW - pillW - 2
+      doc.setFillColor(...color)
+      doc.roundedRect(pillX, y + 4, pillW, 8, 2, 2, 'F')
+      doc.setTextColor(255,255,255)
+      doc.setFontSize(6.5)
+      doc.setFont('helvetica', 'bold')
+      doc.text(status, pillX + pillW / 2, y + 9.5, { align: 'center' })
+
+      // Name
+      doc.setTextColor(15, 15, 15)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text(w.fullName || 'Unknown', margin + 7, y + 10)
+
+      // Trade
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 100, 100)
-      doc.text(w.role || '', margin + 4, y + 16)
+      doc.text(w.role || '', margin + 7, y + 16)
 
-      doc.setTextColor(20, 20, 20)
+      // CSCS
       doc.setFontSize(8)
-      doc.text(`CSCS expiry: ${cscsExp ? cscsExp.toLocaleDateString('en-GB') : 'Not provided'}`, margin + 4, y + 22)
-      doc.text(`Right to Work exp: ${rtwExp ? rtwExp.toLocaleDateString('en-GB') : 'Not provided'}`, margin + 4, y + 28)
+      doc.setTextColor(50, 50, 50)
+      doc.text(
+        `CSCS expiry: ${cscsExp ? cscsExp.toLocaleDateString('en-GB') : 'Not provided'}`,
+        margin + 7, y + 23
+      )
 
-      let qy = y + 34
-      if (quals && quals.length > 0) {
+      // RTW
+      doc.text(
+        `Right to Work: ${rtwExp ? rtwExp.toLocaleDateString('en-GB') : 'Not provided'}`,
+        margin + 7, y + 29
+      )
+
+      // Qualifications
+      if (quals.length > 0) {
+        let qy = y + 35
         doc.setTextColor(80, 80, 80)
-        doc.text('Qualifications:', margin + 4, qy)
+        doc.setFont('helvetica', 'bold')
+        doc.setFontSize(7.5)
+        doc.text('Qualifications:', margin + 7, qy)
+        doc.setFont('helvetica', 'normal')
         qy += 5
         for (const q of quals) {
-          const qExp = q.expiry ? new Date(q.expiry) : null
-          doc.text(`• ${q.name}${qExp ? '  —  exp: ' + qExp.toLocaleDateString('en-GB') : ''}`, margin + 8, qy)
+          const qExp = q.expiry ? new Date(q.expiry).toLocaleDateString('en-GB') : null
+          doc.text(`• ${q.name}${qExp ? '  —  exp: ' + qExp : ''}`, margin + 10, qy)
           qy += 5
         }
       }
 
+      // Bottom divider
+      doc.setDrawColor(220, 220, 220)
+      doc.setLineWidth(0.3)
+      doc.line(margin, y + blockHeight, margin + colW, y + blockHeight)
+
       y += blockHeight + 4
     }
 
-    doc.setFontSize(7)
-    doc.setTextColor(160, 160, 160)
-    doc.text('Generated by NekaID — nekaid.co.uk', pageW / 2, 290, { align: 'center' })
+    // ── FOOTER ───────────────────────────────────────────────
+    const totalPages = (doc as any).internal.getNumberOfPages()
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i)
+      doc.setFillColor(22, 48, 127)
+      doc.rect(0, 287, pageW, 10, 'F')
+      doc.setTextColor(180, 200, 255)
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'normal')
+      doc.text('nekaid.co.uk', margin, 293)
+      doc.text(`Page ${i} of ${totalPages}`, pageW / 2, 293, { align: 'center' })
+      doc.text('Confidential — for authorised use only', pageW - margin, 293, { align: 'right' })
+    }
 
     const safeName = (companyName || 'site').replace(/\s+/g, '-').toLowerCase()
     doc.save(`${safeName}-compliance-report-${today.toISOString().slice(0, 10)}.pdf`)
