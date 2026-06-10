@@ -888,18 +888,19 @@ export default function AgencyPage() {
                         onClick={() => removeOperative(worker.workerId)}
                         disabled={removingWorkerId === worker.workerId}
                         style={{
+                          display: 'block',
+                          marginLeft: 'auto',
                           marginTop: '8px',
-                          padding: '6px 14px',
-                          background: 'transparent',
-                          color: '#dc2626',
-                          border: '1px solid #dc2626',
-                          borderRadius: '6px',
-                          fontSize: '13px',
+                          padding: '0',
+                          background: 'none',
+                          border: 'none',
+                          color: removingWorkerId === worker.workerId ? '#999' : '#dc2626',
+                          fontSize: '12px',
                           cursor: 'pointer',
-                          opacity: removingWorkerId === worker.workerId ? 0.5 : 1,
+                          textDecoration: 'underline',
                         }}
                       >
-                        {removingWorkerId === worker.workerId ? 'Removing...' : 'Remove'}
+                        {removingWorkerId === worker.workerId ? 'Removing...' : 'Remove operative'}
                       </button>
                       <button
                         onClick={() => downloadOperativePDF(worker)}
