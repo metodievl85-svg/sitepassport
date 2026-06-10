@@ -1534,6 +1534,14 @@ export default function CompanyPage() {
 
     // Fetch qualifications for all workers up front
     const workerIds = savedWorkers.map((w) => w.workerId)
+
+    // Fetch site name
+    const { data: siteData } = await supabase
+      .from('company_sites')
+      .select('site_name')
+      .eq('company_id', companyId)
+      .single()
+    const siteName = siteData?.site_name || null
     const { data: allQuals } = await supabase
       .from('qualifications')
       .select('worker_id, name, expiry')
@@ -1586,45 +1594,41 @@ export default function CompanyPage() {
     doc.text('Site Compliance Report', margin, 21)
     doc.text(`Generated: ${dateStr}`, margin, 27)
 
-    // Company name top right
+    // Company name and site top right
     if (companyName) {
       doc.setFontSize(11)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(255, 255, 255)
       doc.text(companyName, pageW - margin, 14, { align: 'right' })
     }
+    if (siteName) {
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(180, 200, 255)
+      doc.text(siteName, pageW - margin, 21, { align: 'right' })
+    }
 
     // ── SUMMARY BAR ─────────────────────────────────────────
     const barY = 38
-    const boxW = colW / 3 - 2
-    const summaryItems = [
+    const allSummary = [
+      { label: 'Total', value: savedWorkers.length, bg: [22,48,127] as [number,number,number] },
       { label: 'Compliant', value: totalCompliant, bg: [22,163,74] as [number,number,number] },
       { label: 'Expiring Soon', value: totalExpiring, bg: [217,119,6] as [number,number,number] },
       { label: 'Expired', value: totalExpired, bg: [220,38,38] as [number,number,number] },
     ]
-    summaryItems.forEach((item, i) => {
-      const bx = margin + i * (boxW + 3)
+    const boxW = (colW - 6) / 4
+    allSummary.forEach((item, i) => {
+      const bx = margin + i * (boxW + 2)
       doc.setFillColor(...item.bg)
       doc.roundedRect(bx, barY, boxW, 16, 2, 2, 'F')
       doc.setTextColor(255,255,255)
-      doc.setFontSize(16)
+      doc.setFontSize(15)
       doc.setFont('helvetica', 'bold')
       doc.text(String(item.value), bx + boxW / 2, barY + 9, { align: 'center' })
       doc.setFontSize(7)
       doc.setFont('helvetica', 'normal')
       doc.text(item.label, bx + boxW / 2, barY + 14, { align: 'center' })
     })
-
-    // Total operatives box
-    doc.setFillColor(22, 48, 127)
-    doc.roundedRect(margin + colW - 28, barY, 28, 16, 2, 2, 'F')
-    doc.setTextColor(255,255,255)
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text(String(savedWorkers.length), margin + colW - 14, barY + 9, { align: 'center' })
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Total', margin + colW - 14, barY + 14, { align: 'center' })
 
     // ── WORKER LIST ──────────────────────────────────────────
     let y = barY + 24
