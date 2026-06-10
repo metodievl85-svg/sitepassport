@@ -12,6 +12,7 @@ import CompanyStats from './components/CompanyStats'
 import CompanyDashboardMenu from './components/CompanyDashboardMenu'
 import CompanySettings from './components/CompanySettings'
 import CompanyMessages from './components/CompanyMessages'
+import OrganisationPanel from './components/OrganisationPanel'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
 type SavedWorkerRow = {
@@ -2156,6 +2157,10 @@ export default function CompanyPage() {
             </div>
           )}
         </section>
+
+        <div id="organisation-panel" style={{ marginBottom: 0 }}>
+          <OrganisationPanel />
+        </div>
 
         <div id="messages">
           <CompanyMessages

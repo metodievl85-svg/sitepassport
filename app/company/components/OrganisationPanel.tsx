@@ -1,0 +1,295 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
+
+type OrgMember = {
+  id: string
+  user_id: string
+  role: string
+  email?: string
+}
+
+type Organisation = {
+  id: string
+  name: string
+  type: string
+  created_at: string
+}
+
+export default function OrganisationPanel() {
+  const [loading, setLoading] = useState(true)
+  const [organisation, setOrganisation] = useState<Organisation | null>(null)
+  const [myRole, setMyRole] = useState<string | null>(null)
+  const [members, setMembers] = useState<OrgMember[]>([])
+  const [loadingMembers, setLoadingMembers] = useState(false)
+
+  const [orgNameInput, setOrgNameInput] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'admin' | 'member'>('member')
+  const [inviting, setInviting] = useState(false)
+  const [inviteMessage, setInviteMessage] = useState('')
+  const [inviteError, setInviteError] = useState('')
+
+  useEffect(() => {
+    void loadOrganisation()
+  }, [])
+
+  async function getToken() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || null
+  }
+
+  async function loadOrganisation() {
+    try {
+      setLoading(true)
+      const token = await getToken()
+      if (!token) return
+
+      const res = await fetch('/api/organisations', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json()
+
+      if (json.organisation) {
+        setOrganisation(json.organisation)
+        setMyRole(json.role)
+        void loadMembers(json.organisation.id, token)
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function loadMembers(orgId: string, token: string) {
+    try {
+      setLoadingMembers(true)
+      const { data, error } = await supabase
+        .from('organisation_members')
+        .select('id, user_id, role')
+        .eq('organisation_id', orgId)
+
+      if (error || !data) return
+
+      // Fetch emails via existing profiles API
+      const userIds = data.map((m) => m.user_id).join(',')
+      const profileRes = await fetch(`/api/profiles/company?ids=${userIds}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const profileJson = await profileRes.json()
+      const emailMap = new Map<string, string>()
+      for (const p of profileJson.profiles || []) {
+        emailMap.set(p.id, p.email)
+      }
+
+      setMembers(data.map((m) => ({ ...m, email: emailMap.get(m.user_id) || m.user_id })))
+    } catch {
+      // silent
+    } finally {
+      setLoadingMembers(false)
+    }
+  }
+
+  async function handleCreate() {
+    const name = orgNameInput.trim()
+    if (!name) { setCreateError('Please enter an organisation name.'); return }
+
+    try {
+      setCreating(true)
+      setCreateError('')
+      const token = await getToken()
+      if (!token) return
+
+      const res = await fetch('/api/organisations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name, type: 'company' }),
+      })
+      const json = await res.json()
+
+      if (!res.ok || json.error) {
+        setCreateError(json.error || 'Could not create organisation.')
+        return
+      }
+
+      setOrganisation(json.organisation)
+      setMyRole(json.role)
+      void loadMembers(json.organisation.id, token)
+    } catch {
+      setCreateError('Unexpected error. Please try again.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function handleInvite() {
+    const email = inviteEmail.trim()
+    if (!email) { setInviteError('Please enter an email address.'); return }
+
+    try {
+      setInviting(true)
+      setInviteError('')
+      setInviteMessage('')
+      const token = await getToken()
+      if (!token) return
+
+      const res = await fetch('/api/organisations/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email, role: inviteRole }),
+      })
+      const json = await res.json()
+
+      if (!res.ok || json.error) {
+        setInviteError(json.error || 'Could not send invite.')
+        return
+      }
+
+      setInviteMessage(`Invite sent to ${email}.`)
+      setInviteEmail('')
+    } catch {
+      setInviteError('Unexpected error. Please try again.')
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  const roleLabel = (role: string) => {
+    if (role === 'owner') return 'Owner'
+    if (role === 'admin') return 'Admin'
+    return 'Member'
+  }
+
+  const roleBadgeStyle = (role: string) => ({
+    display: 'inline-block',
+    padding: '3px 10px',
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: 900,
+    background: role === 'owner' ? '#eef3ff' : role === 'admin' ? '#fff7e6' : '#f3f7ff',
+    color: role === 'owner' ? '#243caa' : role === 'admin' ? '#9a5b00' : '#5a6f96',
+    border: role === 'owner' ? '1px solid #cdd9ff' : role === 'admin' ? '1px solid #ffd591' : '1px solid #d7e1ef',
+  })
+
+  if (loading) {
+    return (
+      <section className="card">
+        <p style={{ color: '#5a6f96', fontWeight: 700 }}>Loading organisation...</p>
+      </section>
+    )
+  }
+
+  if (!organisation) {
+    return (
+      <section className="card">
+        <h2 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 900, color: '#09154b' }}>
+          Set up your organisation
+        </h2>
+        <p style={{ margin: '0 0 20px', color: '#5a6f96', fontSize: 15, lineHeight: 1.5 }}>
+          Create your organisation to invite team members and manage multi-site access.
+        </p>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', maxWidth: 480 }}>
+          <input
+            value={orgNameInput}
+            onChange={(e) => { setOrgNameInput(e.target.value); setCreateError('') }}
+            placeholder="Organisation name (e.g. Rigby & Rigby)"
+            style={{ flex: 1, minWidth: 0, minHeight: 48, borderRadius: 14, border: '1px solid #d7e1ef', padding: '0 14px', fontSize: 15, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => void handleCreate()}
+            disabled={creating || !orgNameInput.trim()}
+            style={{ whiteSpace: 'nowrap', opacity: creating || !orgNameInput.trim() ? 0.6 : 1 }}
+          >
+            {creating ? 'Creating...' : 'Create organisation'}
+          </button>
+        </div>
+        {createError && (
+          <p style={{ marginTop: 10, color: '#b42318', fontWeight: 700, fontSize: 14 }}>{createError}</p>
+        )}
+      </section>
+    )
+  }
+
+  return (
+    <section className="card">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+        <h2 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: '#09154b' }}>
+          {organisation.name}
+        </h2>
+        {myRole && <span style={roleBadgeStyle(myRole)}>{roleLabel(myRole)}</span>}
+      </div>
+
+      <h3 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 900, color: '#09154b' }}>
+        Team members
+      </h3>
+
+      {loadingMembers ? (
+        <p style={{ color: '#5a6f96', fontWeight: 700, fontSize: 14 }}>Loading members...</p>
+      ) : (
+        <div style={{ display: 'grid', gap: 8, marginBottom: 24 }}>
+          {members.map((member) => (
+            <div
+              key={member.id}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px', border: '1px solid #d7e1ef', borderRadius: 12, background: '#fbfdff' }}
+            >
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#09154b', wordBreak: 'break-word' }}>
+                {member.email}
+              </span>
+              <span style={roleBadgeStyle(member.role)}>{roleLabel(member.role)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {myRole === 'owner' && (
+        <div style={{ borderTop: '1px solid #d7e1ef', paddingTop: 20 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 900, color: '#09154b' }}>
+            Invite team member
+          </h3>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', maxWidth: 560 }}>
+            <input
+              value={inviteEmail}
+              onChange={(e) => { setInviteEmail(e.target.value); setInviteError(''); setInviteMessage('') }}
+              placeholder="Email address"
+              type="email"
+              style={{ flex: 1, minWidth: 0, minHeight: 48, borderRadius: 14, border: '1px solid #d7e1ef', padding: '0 14px', fontSize: 15, fontFamily: 'inherit', outline: 'none' }}
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+              style={{ minHeight: 48, borderRadius: 14, border: '1px solid #d7e1ef', padding: '0 12px', fontSize: 15, fontFamily: 'inherit' }}
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void handleInvite()}
+              disabled={inviting || !inviteEmail.trim()}
+              style={{ whiteSpace: 'nowrap', opacity: inviting || !inviteEmail.trim() ? 0.6 : 1 }}
+            >
+              {inviting ? 'Sending...' : 'Send invite'}
+            </button>
+          </div>
+          {inviteError && (
+            <p style={{ marginTop: 10, color: '#b42318', fontWeight: 700, fontSize: 14 }}>{inviteError}</p>
+          )}
+          {inviteMessage && (
+            <p style={{ marginTop: 10, color: '#167342', fontWeight: 700, fontSize: 14 }}>{inviteMessage}</p>
+          )}
+          <p style={{ marginTop: 12, color: '#5a6f96', fontSize: 13, lineHeight: 1.5 }}>
+            Admin — can view all sites. Member — can view their own site only. Roles: Owner (you), Admin, Member.
+          </p>
+        </div>
+      )}
+    </section>
+  )
+}

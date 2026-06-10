@@ -47,6 +47,15 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
             Attendance settings
           </Link>
 
+          <a
+            href="#organisation-panel"
+            className="company-dashboard-menu-link"
+            onClick={() => setOpen(false)}
+            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
+          >
+            Team & Organisation
+          </a>
+
           <Link
             href="/company/site-location"
             className="company-dashboard-menu-link"
