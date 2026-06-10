@@ -126,7 +126,7 @@ function JoinPageInner() {
       <div className="container">
         <div className="card" style={{ maxWidth: 480, margin: '60px auto', padding: 40 }}>
           <div style={{ marginBottom: 24 }}>
-            <span className="brand">NekaID</span>
+            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: 36, width: 'auto', display: 'block' }} />
           </div>
 
           <h2 style={{ color: '#09154b', fontWeight: 900, marginTop: 0, fontSize: 28 }}>
