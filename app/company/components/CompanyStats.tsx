@@ -9,6 +9,7 @@ type CompanyStatsProps = {
   onVisitorsClick: () => void
   onExpiringSoonClick: () => void
   onExpiredClick: () => void
+  onOnSiteClick: () => void
 }
 
 export default function CompanyStats({
@@ -22,6 +23,7 @@ export default function CompanyStats({
   onVisitorsClick,
   onExpiringSoonClick,
   onExpiredClick,
+  onOnSiteClick,
 }: CompanyStatsProps) {
   return (
     <>
@@ -40,12 +42,27 @@ export default function CompanyStats({
           </div>
         </div>
 
-        <div style={{ background:'#ecfdf3',border:'1px solid #b7e4c7',borderRadius:22,padding:18 }}>
+        <button
+          type="button"
+          className="company-stats-button"
+          onClick={onOnSiteClick}
+          style={{
+            textAlign:'left',
+            background:'#ecfdf3',
+            border:'1px solid #b7e4c7',
+            borderRadius:22,
+            padding:18,
+            cursor:'pointer'
+          }}
+        >
           <div className="meta-label">On site now</div>
           <div style={{fontSize:34,fontWeight:900,color:'#167342',lineHeight:1,marginTop:8}}>
             {onSiteCount}
           </div>
-        </div>
+          <div style={{marginTop:8,fontSize:12,fontWeight:900,color:'#167342'}}>
+            Click to view
+          </div>
+        </button>
 
         <button
           type="button"

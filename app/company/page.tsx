@@ -403,6 +403,7 @@ export default function CompanyPage() {
   const [realActiveWorkersToday, setRealActiveWorkersToday] = useState(0)
   const [siteLink, setSiteLink] = useState('')
   const [loadingWorkers, setLoadingWorkers] = useState(true)
+  const [onSiteFilter, setOnSiteFilter] = useState(false)
 
   usePushNotifications(companyId)
 
@@ -1189,6 +1190,10 @@ export default function CompanyPage() {
     return result
   }, [savedWorkers, searchTerm, filter, sortBy])
 
+  const displayedWorkers = onSiteFilter
+    ? filteredWorkers.filter((w) => w.siteStatus === 'IN')
+    : filteredWorkers
+
   function VisitorsModal() {
     if (!visitorModalOpen) return null
 
@@ -1780,6 +1785,7 @@ export default function CompanyPage() {
           onVisitorsClick={() => setVisitorModalOpen(true)}
           onExpiringSoonClick={() => setFilter('expiring')}
           onExpiredClick={() => setFilter('expired')}
+          onOnSiteClick={() => setOnSiteFilter(true)}
         />
         <CompanySettings
           companyName={companyName}
@@ -1885,6 +1891,38 @@ export default function CompanyPage() {
             </button>
           </div>
 
+          {onSiteFilter && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: '8px',
+              padding: '10px 16px',
+              marginBottom: '12px',
+            }}>
+              <span style={{ color: '#16a34a', fontWeight: 600, fontSize: '14px' }}>
+                Showing on-site workers only
+              </span>
+              <button
+                onClick={() => setOnSiteFilter(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#16307f',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: 0,
+                }}
+              >
+                View all
+              </button>
+            </div>
+          )}
+
           {loadingWorkers ? (
             <div style={{ textAlign: 'center', padding: 40, color: '#5a6f96', fontWeight: 700 }}>
               Loading operatives...
@@ -1896,11 +1934,11 @@ export default function CompanyPage() {
                 Scan first
               </Link>
             </div>
-          ) : filteredWorkers.length === 0 ? (
+          ) : displayedWorkers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 30 }}>No results</div>
           ) : (
             <div style={{ display: 'grid', gap: 14 }}>
-              {filteredWorkers.map((worker) => {
+              {displayedWorkers.map((worker) => {
                 const rtwStatus = getStatus(worker.rightToWorkExpiry)
                 const cscsBadge = getCscsBadgeStyle(worker.cscsVerificationStatus)
                 const isOnSite = worker.siteStatus === 'IN'
