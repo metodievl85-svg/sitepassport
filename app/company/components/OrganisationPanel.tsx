@@ -173,11 +173,15 @@ export default function OrganisationPanel() {
     try {
       setSavingName(true)
       setEditNameError('')
-      const { error } = await supabase
-        .from('organisations')
-        .update({ name })
-        .eq('id', organisation!.id)
-      if (error) { setEditNameError('Could not update name.'); return }
+      const token = await getToken()
+      if (!token) return
+      const res = await fetch('/api/organisations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name }),
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) { setEditNameError(json.error || 'Could not update name.'); return }
       setOrganisation({ ...organisation!, name })
       setEditingName(false)
     } catch {

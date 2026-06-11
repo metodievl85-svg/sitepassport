@@ -98,3 +98,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 })
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await getUser(request)
+    if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 })
+
+    const body = await request.json()
+    const { name } = body
+    if (!name?.trim()) return NextResponse.json({ error: 'Name required.' }, { status: 400 })
+
+    const supabaseAdmin = getAdminClient()
+
+    const { data: member } = await supabaseAdmin
+      .from('organisation_members')
+      .select('organisation_id, role')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!member || member.role !== 'owner') {
+      return NextResponse.json({ error: 'Not authorised.' }, { status: 403 })
+    }
+
+    const { error } = await supabaseAdmin
+      .from('organisations')
+      .update({ name: name.trim() })
+      .eq('id', member.organisation_id)
+
+    if (error) return NextResponse.json({ error: 'Could not update name.' }, { status: 500 })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('org PATCH error:', error)
+    return NextResponse.json({ error: 'Unexpected error.' }, { status: 500 })
+  }
+}
