@@ -1,12 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '../../lib/supabase';
 
 const PLANS = [
   { key: 'small', label: 'Small', cap: 'Up to 50 workers', monthly: 79, annual: 66 },
@@ -55,9 +50,10 @@ export default function AgencyBillingPage() {
 
   async function handleSubscribe() {
     setCheckoutLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/billing/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
       body: JSON.stringify({ plan: selectedPlan, interval, account_type: 'agency', organisation_id: organisationId }),
     });
     const { url, error } = await res.json();
@@ -66,9 +62,10 @@ export default function AgencyBillingPage() {
   }
 
   async function handleManage() {
+    const { data: { session } } = await supabase.auth.getSession();
     const res = await fetch('/api/billing/portal', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
       body: JSON.stringify({ account_type: 'agency', organisation_id: organisationId }),
     });
     const { url, error } = await res.json();
