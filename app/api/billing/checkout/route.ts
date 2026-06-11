@@ -4,9 +4,9 @@ import Stripe from 'stripe';
 
 const PRICE_IDS: Record<string, Record<string, string>> = {
   company: {
-    small_month: 'price_1ThCOkAl0WsHlwKl5gGP8ydC',
+    small_month: 'price_1ThCOkAl0WsHIwKI5gGP8ydC',
     small_year: 'price_1ThCXhAl0WsHIwKIZJGe9wLs',
-    medium_month: 'price_1ThChUAl0WsHlwKlLWUHsv93',
+    medium_month: 'price_1ThChUAl0WsHIwKILWUHsv93',
     medium_year: 'price_1ThCi4Al0WsHIwKIKaMA5rC9',
     large_month: 'price_1ThCjIAl0WsHIwKIgwDdypWE',
     large_year: 'price_1ThCjkAl0WsHIwKIMjTvdu4Z',
