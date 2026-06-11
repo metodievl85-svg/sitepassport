@@ -40,6 +40,13 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
           </a>
 
           <Link
+            href="/company/billing"
+            className="company-dashboard-menu-link"
+            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
+          >
+            Billing
+          </Link>
+          <Link
             href="/company/attendance-settings"
             className="company-dashboard-menu-link"
             style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}

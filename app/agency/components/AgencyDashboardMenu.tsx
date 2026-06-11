@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 type Props = { onMessages: () => void; onSignOut: () => void; onScanQR: () => void }
 
 export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR }: Props) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
 
@@ -76,6 +78,13 @@ export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR }:
             style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900 }}
           >
             Scan QR
+          </button>
+          <button
+            type="button"
+            onClick={() => { router.push('/agency/billing'); setOpen(false) }}
+            style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900 }}
+          >
+            Billing
           </button>
           <button
             type="button"
