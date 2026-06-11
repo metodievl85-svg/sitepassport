@@ -274,9 +274,9 @@ export default function OrganisationPanel() {
               <button
                 className="btn-outline"
                 onClick={() => { setEditingName(true); setEditNameInput(organisation.name) }}
-                style={{ fontSize: 13, padding: '4px 12px' }}
+                style={{ fontSize: 13, padding: '4px 12px', display: 'inline-block' }}
               >
-                Edit name
+                ✏️ Edit name
               </button>
             )}
           </>
