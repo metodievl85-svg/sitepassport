@@ -33,6 +33,10 @@ export default function OrganisationPanel() {
   const [inviting, setInviting] = useState(false)
   const [inviteMessage, setInviteMessage] = useState('')
   const [inviteError, setInviteError] = useState('')
+  const [editingName, setEditingName] = useState(false)
+  const [editNameInput, setEditNameInput] = useState('')
+  const [savingName, setSavingName] = useState(false)
+  const [editNameError, setEditNameError] = useState('')
 
   useEffect(() => {
     void loadOrganisation()
@@ -159,6 +163,26 @@ export default function OrganisationPanel() {
     }
   }
 
+  async function handleSaveName() {
+    const name = editNameInput.trim()
+    if (!name) return
+    try {
+      setSavingName(true)
+      setEditNameError('')
+      const { error } = await supabase
+        .from('organisations')
+        .update({ name })
+        .eq('id', organisation!.id)
+      if (error) { setEditNameError('Could not update name.'); return }
+      setOrganisation({ ...organisation!, name })
+      setEditingName(false)
+    } catch {
+      setEditNameError('Unexpected error.')
+    } finally {
+      setSavingName(false)
+    }
+  }
+
   const roleLabel = (role: string) => {
     if (role === 'owner') return 'Owner'
     if (role === 'admin') return 'Admin'
@@ -220,10 +244,39 @@ export default function OrganisationPanel() {
   return (
     <section className="card">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        <h2 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: '#09154b' }}>
-          {organisation.name}
-        </h2>
-        {myRole && <span style={roleBadgeStyle(myRole)}>{roleLabel(myRole)}</span>}
+        {editingName ? (
+          <>
+            <input
+              value={editNameInput}
+              onChange={(e) => setEditNameInput(e.target.value)}
+              style={{ fontSize: 22, fontWeight: 900, borderRadius: 10, border: '1px solid #d7e1ef', padding: '6px 12px', fontFamily: 'inherit', outline: 'none', minWidth: 220 }}
+              autoFocus
+            />
+            <button className="btn" onClick={() => void handleSaveName()} disabled={savingName || !editNameInput.trim()} style={{ opacity: savingName || !editNameInput.trim() ? 0.6 : 1 }}>
+              {savingName ? 'Saving...' : 'Save'}
+            </button>
+            <button className="btn-outline" onClick={() => { setEditingName(false); setEditNameError('') }}>
+              Cancel
+            </button>
+            {editNameError && <p style={{ color: '#b42318', fontWeight: 700, fontSize: 14, margin: 0 }}>{editNameError}</p>}
+          </>
+        ) : (
+          <>
+            <h2 style={{ margin: 0, fontSize: 28, fontWeight: 900, color: '#09154b' }}>
+              {organisation.name}
+            </h2>
+            {myRole && <span style={roleBadgeStyle(myRole)}>{roleLabel(myRole)}</span>}
+            {myRole === 'owner' && (
+              <button
+                className="btn-outline"
+                onClick={() => { setEditingName(true); setEditNameInput(organisation.name) }}
+                style={{ fontSize: 13, padding: '4px 12px' }}
+              >
+                Edit name
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       <h3 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 900, color: '#09154b' }}>
