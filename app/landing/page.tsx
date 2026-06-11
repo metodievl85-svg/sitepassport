@@ -220,7 +220,7 @@ export default function LandingPage() {
             <h1 className="head">The credential that <em>moves</em> with the worker.</h1>
             <p className="lede">One digital passport for CSCS, qualifications, Right to Work and inductions. Scanned in seconds, verified on site, compliant by design.</p>
             <div className="hero-cta">
-              <a href="/login" className="lbtn lbtn-gold">Start free for 14 days</a>
+              <a href="/login?redirect=/company/billing&tier=medium&type=company" className="lbtn lbtn-gold">Start free for 14 days</a>
               <a href="#how" className="lbtn lbtn-line">See how it works</a>
             </div>
             <div className="hero-foot">
@@ -355,7 +355,7 @@ export default function LandingPage() {
                   <div className="tp">£{p}<small> /mo</small></div>
                   <div className="ta">{a}</div>
                   <ul>{t.f.map((x) => <li key={x}><span className="ck">—</span>{x}</li>)}</ul>
-                  <a href="/login" className={`lbtn ${t.pop ? 'lbtn-gold' : 'lbtn-line'}`}>Start free trial</a>
+                  <a href={`/login?redirect=/${aud === 'site' ? 'company' : 'agency'}/billing&tier=${t.n.toLowerCase()}&type=${aud === 'site' ? 'company' : 'agency'}`} className={`lbtn ${t.pop ? 'lbtn-gold' : 'lbtn-line'}`}>Start free trial</a>
                 </div>
               )
             })}
@@ -366,7 +366,7 @@ export default function LandingPage() {
             <p><b>Director &amp; admin view.</b> Every site, every worker and full company compliance — at no cost. The decision-maker sees the whole picture, then rolls NekaID out across the business.</p>
           </div>
 
-          <p className="pnote">All prices exclude VAT, shown at checkout · Annual billed yearly (~2 months free) · 14-day free trial on every tier, no card required.</p>
+          <p className="pnote">All prices exclude VAT, shown at checkout · Annual billed yearly (~2 months free) · 14-day free trial on every tier · card required.</p>
         </div>
       </section>
 
@@ -375,10 +375,10 @@ export default function LandingPage() {
         <div className="wrap">
           <div className="rv in">
             <h2>Get your first site live <em>this week.</em></h2>
-            <p>Build a passport, scan it in, watch the dashboard update. No card, no commitment.</p>
+            <p>Build a passport, scan it in, watch the dashboard update. 14 days free, card required.</p>
             <div className="hero-cta">
-              <a href="/login" className="lbtn lbtn-gold">Start free trial</a>
-              <a href="/login" className="lbtn lbtn-line">Speak with us</a>
+              <a href="/login?redirect=/company/billing&tier=medium&type=company" className="lbtn lbtn-gold">Start free trial</a>
+              <a href="mailto:info@nekaid.co.uk" className="lbtn lbtn-line">Speak with us</a>
             </div>
           </div>
         </div>
