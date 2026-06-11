@@ -61,6 +61,7 @@ export default function OrganisationPanel() {
       }).finally(() => clearTimeout(timeout))
       const json = await res.json()
 
+      console.log('org API response:', json)
       if (json.organisation) {
         setOrganisation(json.organisation)
         setMyRole(json.role)
