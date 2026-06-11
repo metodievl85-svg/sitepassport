@@ -10,7 +10,8 @@
       "Bash(npx vercel *)",
       "Bash(ls \"C:\\\\Users\\\\metod\\\\AppData\\\\Local\\\\Temp\" 2>&1 | head -20)",
       "Read(//c/Users/metod/AppData/Local/Temp/**)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npx next *)"
     ]
   }
 }

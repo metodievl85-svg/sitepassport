@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -25,6 +23,7 @@ const AGENCY_CAPS: Record<string, number | null> = {
 };
 
 export async function POST(req: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' });
   const body = await req.text();
   const sig = req.headers.get('stripe-signature')!;
 
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
     const meta = session.metadata;
     const subscriptionId = session.subscription;
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
     const priceId = subscription.items.data[0].price.id;
     const interval = subscription.items.data[0].price.recurring?.interval === 'year' ? 'year' : 'month';
     const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
@@ -68,7 +67,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object as Stripe.Subscription;
+    const sub = event.data.object as any;
     const priceId = sub.items.data[0].price.id;
     const interval = sub.items.data[0].price.recurring?.interval === 'year' ? 'year' : 'month';
     const currentPeriodEnd = new Date(sub.current_period_end * 1000).toISOString();

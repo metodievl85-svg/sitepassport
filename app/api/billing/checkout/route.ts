@@ -3,8 +3,6 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
-
 const PRICE_IDS: Record<string, Record<string, string>> = {
   company: {
     small_month: 'price_1ThCOkAl0WsHlwKl5gGP8ydC',
@@ -30,7 +28,8 @@ const PRICE_IDS: Record<string, Record<string, string>> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = cookies();
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-05-27.dahlia' });
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
