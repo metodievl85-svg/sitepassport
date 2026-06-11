@@ -366,7 +366,7 @@ export default function LandingPage() {
             <p><b>Director &amp; admin view.</b> Every site, every worker and full company compliance — at no cost. The decision-maker sees the whole picture, then rolls NekaID out across the business.</p>
           </div>
 
-          <p className="pnote">All prices exclude VAT, shown at checkout · Annual billed yearly (~2 months free) · 14-day free trial on every tier · card required.</p>
+          <p className="pnote">Annual billed yearly (~2 months free) · 14-day free trial on every tier · card required.</p>
         </div>
       </section>
 
