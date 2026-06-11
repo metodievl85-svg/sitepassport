@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 
@@ -10,7 +10,7 @@ const PLANS = [
   { key: 'enterprise', label: 'Enterprise', cap: 'No cap + custom branding', monthly: 499, annual: 415 },
 ];
 
-export default function AgencyBillingPage() {
+function AgencyBillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState(searchParams.get('tier') || 'medium');
@@ -162,5 +162,13 @@ export default function AgencyBillingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AgencyBillingPage() {
+  return (
+    <Suspense fallback={<div className="page-shell"><p>Loading...</p></div>}>
+      <AgencyBillingContent />
+    </Suspense>
   );
 }
