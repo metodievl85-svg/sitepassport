@@ -53,9 +53,12 @@ export default function OrganisationPanel() {
       const token = await getToken()
       if (!token) return
 
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 8000)
       const res = await fetch('/api/organisations', {
         headers: { Authorization: `Bearer ${token}` },
-      })
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeout))
       const json = await res.json()
 
       if (json.organisation) {
@@ -63,8 +66,8 @@ export default function OrganisationPanel() {
         setMyRole(json.role)
         void loadMembers(json.organisation.id, token)
       }
-    } catch {
-      // silent
+    } catch (e: any) {
+      if (e?.name !== 'AbortError') console.error('loadOrganisation error:', e)
     } finally {
       setLoading(false)
     }
