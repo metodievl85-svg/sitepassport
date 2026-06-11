@@ -101,8 +101,12 @@ export default function LoginPage() {
           return
         }
 
+        const redirect = typeof window !== 'undefined'
+          ? new URL(window.location.href).searchParams.get('redirect')
+          : null
+
         if (profile.role === 'company') {
-          router.replace('/company')
+          router.replace(redirect?.startsWith('/company') ? redirect : '/company')
           return
         }
 
@@ -112,7 +116,7 @@ export default function LoginPage() {
         }
 
         if (profile.role === 'agency') {
-          router.replace('/agency')
+          router.replace(redirect?.startsWith('/agency') ? redirect : '/agency')
           return
         }
 
@@ -189,8 +193,12 @@ export default function LoginPage() {
       return
     }
 
+    const redirect = typeof window !== 'undefined'
+      ? new URL(window.location.href).searchParams.get('redirect')
+      : null
+
     if (profile.role === 'company') {
-      router.replace('/company')
+      router.replace(redirect?.startsWith('/company') ? redirect : '/company')
       return
     }
 
@@ -200,7 +208,7 @@ export default function LoginPage() {
     }
 
     if (profile.role === 'agency') {
-      router.replace('/agency')
+      router.replace(redirect?.startsWith('/agency') ? redirect : '/agency')
       return
     }
 
