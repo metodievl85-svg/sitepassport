@@ -17,12 +17,12 @@ async function getUser(req: NextRequest) {
   return user ?? null
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getUser(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const admin = getAdminClient()
-  const memberId = params.id
+  const { id: memberId } = await params
 
   // Get the member row being deleted
   const { data: targetMember, error: fetchError } = await admin
