@@ -156,6 +156,12 @@ export default function PrivacyPolicyPage() {
           notifications and account confirmation emails. GDPR-compliant.
         </li>
         <li>
+          <strong>Stripe (stripe.com)</strong> — payment processing and subscription billing for
+          company and agency accounts. Stripe processes payment card data directly and is PCI-DSS
+          compliant. NekaID does not store payment card details. Stripe's privacy policy is
+          available at stripe.com/gb/privacy.
+        </li>
+        <li>
           <strong>Cloudflare (cloudflare.com)</strong> — DNS routing. No personal data is stored
           by Cloudflare in connection with NekaID.
         </li>

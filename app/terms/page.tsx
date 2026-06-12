@@ -150,11 +150,18 @@ export default function TermsPage() {
       <h2>10. Payments and subscriptions</h2>
       <p>
         Company and agency accounts are subject to subscription fees. A <strong>14-day free trial</strong>{' '}
-        is available with no payment card required.
+        is available on all plans. A valid payment card is required at the start of the trial.
+        No charge is made during the trial period. If you do not cancel before the trial ends,
+        your subscription will automatically begin and your card will be charged.
       </p>
       <p>
-        Full billing terms, pricing, and plan details are presented clearly at the time of purchase
-        or subscription. NekaID does not offer refunds on partial billing months.
+        Payments are processed securely by <strong>Stripe</strong>. NekaID does not store payment
+        card details. All prices are in GBP and are exclusive of VAT. NekaID is not VAT registered.
+      </p>
+      <p>
+        You may cancel your subscription at any time via the billing portal. Cancellation takes
+        effect at the end of the current billing period. NekaID does not offer refunds on partial
+        billing periods.
       </p>
       <p>
         We may update pricing, features, or plan limits as the service develops. Material changes
