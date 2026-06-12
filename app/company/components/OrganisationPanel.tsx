@@ -17,7 +17,11 @@ type Organisation = {
   created_at: string
 }
 
-export default function OrganisationPanel() {
+type Props = {
+  onViewSite: (userId: string, fullName: string) => void
+}
+
+export default function OrganisationPanel({ onViewSite }: Props) {
   const [loading, setLoading] = useState(true)
   const [organisation, setOrganisation] = useState<Organisation | null>(null)
   const [myRole, setMyRole] = useState<string | null>(null)
@@ -38,6 +42,7 @@ export default function OrganisationPanel() {
   const [savingName, setSavingName] = useState(false)
   const [editNameError, setEditNameError] = useState('')
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [myUserId, setMyUserId] = useState<string | null>(null)
 
   useEffect(() => {
     void loadOrganisation()
@@ -51,8 +56,10 @@ export default function OrganisationPanel() {
   async function loadOrganisation() {
     try {
       setLoading(true)
-      const token = await getToken()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token || null
       if (!token) return
+      if (session?.user?.id) setMyUserId(session.user.id)
 
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 8000)
@@ -336,6 +343,15 @@ export default function OrganisationPanel() {
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b42318', fontSize: 13, fontWeight: 700, padding: '2px 6px', opacity: removingId === member.id ? 0.5 : 1 }}
                   >
                     {removingId === member.id ? 'Removing...' : 'Remove'}
+                  </button>
+                )}
+                {member.user_id !== myUserId && (
+                  <button
+                    type="button"
+                    onClick={() => onViewSite(member.user_id, member.email || member.user_id)}
+                    style={{ padding: '6px 14px', borderRadius: 10, background: '#16307f', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
+                  >
+                    View site
                   </button>
                 )}
               </div>

@@ -405,6 +405,9 @@ export default function CompanyPage() {
   const [siteLink, setSiteLink] = useState('')
   const [loadingWorkers, setLoadingWorkers] = useState(true)
   const [onSiteFilter, setOnSiteFilter] = useState(false)
+  const [viewingSite, setViewingSite] = useState<{ userId: string; name: string } | null>(null)
+  const [viewingSiteData, setViewingSiteData] = useState<{ saved_workers: any[]; site_attendance: any[]; company_sites: any[] } | null>(null)
+  const [viewingSiteLoading, setViewingSiteLoading] = useState(false)
 
   usePushNotifications(companyId)
 
@@ -800,6 +803,28 @@ export default function CompanyPage() {
     }
   }
 
+  async function loadMemberSite(userId: string, name: string) {
+    setViewingSiteLoading(true)
+    setViewingSite({ userId, name })
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const res = await fetch(`/api/organisations/sites/${userId}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json()
+      setViewingSiteData({
+        saved_workers: data.saved_workers || [],
+        site_attendance: data.site_attendance || [],
+        company_sites: data.company_sites || [],
+      })
+    } catch (err) {
+      console.error('loadMemberSite error:', err)
+    } finally {
+      setViewingSiteLoading(false)
+    }
+  }
+
   async function handleVisitorSignOut(visitorId: string) {
     const confirmed = window.confirm('Sign this visitor out?')
     if (!confirmed) return
@@ -1127,44 +1152,46 @@ export default function CompanyPage() {
     }
   }
 
+  const displayWorkers = viewingSiteData ? viewingSiteData.saved_workers : savedWorkers
+
   const fallbackScansToday = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    return savedWorkers.filter((item) => {
+    return displayWorkers.filter((item) => {
       const created = new Date(item.savedAt)
       created.setHours(0, 0, 0, 0)
       return created.getTime() === today.getTime()
     }).length
-  }, [savedWorkers])
+  }, [displayWorkers])
 
   const fallbackActiveWorkers = useMemo(() => {
-    return savedWorkers.filter((worker) => isWorkerActive(worker)).length
-  }, [savedWorkers])
+    return displayWorkers.filter((worker) => isWorkerActive(worker)).length
+  }, [displayWorkers])
 
   const scansToday = realScansToday || fallbackScansToday
   const activeWorkers = realActiveWorkersToday || fallbackActiveWorkers
 
   const onSiteCount = useMemo(() => {
-    return savedWorkers.filter((worker) => worker.siteStatus === 'IN').length
-  }, [savedWorkers])
+    return displayWorkers.filter((worker) => worker.siteStatus === 'IN').length
+  }, [displayWorkers])
 
   const visitorsOnSiteCount = useMemo(() => {
     return visitorsToday.filter((visitor) => visitor.status === 'IN').length
   }, [visitorsToday])
 
   const expiringSoonCount = useMemo(() => {
-    return savedWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expiring').length
-  }, [savedWorkers])
+    return displayWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expiring').length
+  }, [displayWorkers])
 
   const expiredCount = useMemo(() => {
-    return savedWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expired').length
-  }, [savedWorkers])
+    return displayWorkers.filter((worker) => getWorkerFilterKey(worker) === 'expired').length
+  }, [displayWorkers])
 
   const filteredWorkers = useMemo(() => {
     const search = searchTerm.trim().toLowerCase()
 
-    const result = savedWorkers.filter((worker) => {
+    const result = displayWorkers.filter((worker) => {
       const nameMatch =
         !search ||
         worker.fullName.toLowerCase().includes(search) ||
@@ -1189,7 +1216,7 @@ export default function CompanyPage() {
     })
 
     return result
-  }, [savedWorkers, searchTerm, filter, sortBy])
+  }, [displayWorkers, searchTerm, filter, sortBy])
 
   const displayedWorkers = onSiteFilter
     ? filteredWorkers.filter((w) => w.siteStatus === 'IN')
@@ -1773,10 +1800,23 @@ export default function CompanyPage() {
       <AddOperativeModal />
 
       <div className="container">
+        {viewingSite && (
+          <div style={{ background: '#fff3cd', border: '1px solid #ffc107', borderRadius: 12, padding: '12px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <span style={{ fontWeight: 700, color: '#856404', fontSize: 15 }}>
+              Viewing {viewingSite.name}&apos;s site{viewingSiteLoading ? ' — loading...' : ' — read only'}
+            </span>
+            <button
+              onClick={() => { setViewingSite(null); setViewingSiteData(null); }}
+              style={{ padding: '6px 14px', borderRadius: 10, background: '#856404', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
+            >
+              Back to my site
+            </button>
+          </div>
+        )}
         <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => setAddOperativeOpen(true)} onExportReport={() => void exportComplianceReport()} />
 
         <CompanyStats
-          savedWorkersCount={savedWorkers.length}
+          savedWorkersCount={displayWorkers.length}
           scansToday={scansToday}
           onSiteCount={onSiteCount}
           visitorsOnSiteCount={visitorsOnSiteCount}
@@ -1928,7 +1968,7 @@ export default function CompanyPage() {
             <div style={{ textAlign: 'center', padding: 40, color: '#5a6f96', fontWeight: 700 }}>
               Loading operatives...
             </div>
-          ) : savedWorkers.length === 0 ? (
+          ) : displayWorkers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, border: '2px dashed #d7e1ef', borderRadius: 20 }}>
               <h3>No operatives yet</h3>
               <Link href="/scan" className="btn btn-primary">
@@ -2159,23 +2199,25 @@ export default function CompanyPage() {
         </section>
 
         <div id="organisation-panel" style={{ marginBottom: 0 }}>
-          <OrganisationPanel />
+          <OrganisationPanel onViewSite={(userId, name) => { void loadMemberSite(userId, name); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         </div>
 
-        <div id="messages">
-          <CompanyMessages
-            companyId={companyId}
-            workers={savedWorkers
-              .filter((w) => w.userId)
-              .map((w) => ({
-                workerId: w.workerId,
-                userId: w.userId,
-                fullName: w.fullName,
-                role: w.role,
-                photo: w.facePhoto || w.photo || undefined,
-              }))}
-          />
-        </div>
+        {!viewingSite && (
+          <div id="messages">
+            <CompanyMessages
+              companyId={companyId}
+              workers={savedWorkers
+                .filter((w) => w.userId)
+                .map((w) => ({
+                  workerId: w.workerId,
+                  userId: w.userId,
+                  fullName: w.fullName,
+                  role: w.role,
+                  photo: w.facePhoto || w.photo || undefined,
+                }))}
+            />
+          </div>
+        )}
       </div>
 
       <style jsx>{`
