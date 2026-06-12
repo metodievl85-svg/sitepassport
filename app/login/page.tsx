@@ -105,12 +105,13 @@ export default function LoginPage() {
           ? new URL(window.location.href).searchParams.get('redirect')
           : null
 
+        if (redirect?.startsWith('/join')) {
+          router.replace(redirect)
+          return
+        }
+
         if (profile.role === 'company') {
-          if (redirect?.startsWith('/join') || redirect?.startsWith('/company')) {
-            router.replace(redirect)
-          } else {
-            router.replace('/company')
-          }
+          router.replace(redirect?.startsWith('/company') ? redirect : '/company')
           return
         }
 
@@ -201,12 +202,13 @@ export default function LoginPage() {
       ? new URL(window.location.href).searchParams.get('redirect')
       : null
 
+    if (redirect?.startsWith('/join')) {
+      router.replace(redirect)
+      return
+    }
+
     if (profile.role === 'company') {
-      if (redirect?.startsWith('/join') || redirect?.startsWith('/company')) {
-        router.replace(redirect)
-      } else {
-        router.replace('/company')
-      }
+      router.replace(redirect?.startsWith('/company') ? redirect : '/company')
       return
     }
 
