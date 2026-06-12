@@ -23,7 +23,8 @@ function CompanyBillingContent() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
-      const { data } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
+      const { data, error } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
+      console.log('[billing] subscription query result:', data, 'error:', error);
       setSubscription(data);
       setLoading(false);
     }
