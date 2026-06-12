@@ -76,6 +76,53 @@ export async function POST(req: NextRequest) {
       }
 
       console.log('[webhook] subscription upserted successfully for subscriptionId:', subscriptionId);
+
+      // Send confirmation email
+      const customerEmail = session.customer_details?.email;
+      const trialEnd = new Date(periodEnd * 1000).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'long', year: 'numeric',
+        timeZone: 'Europe/London'
+      });
+      const planLabel: Record<string, string> = {
+        small: 'Small', medium: 'Medium', large: 'Large', unlimited: 'Unlimited', enterprise: 'Enterprise'
+      };
+      const intervalLabel = interval === 'year' ? 'Annual' : 'Monthly';
+
+      if (customerEmail) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'NekaID <info@nekaid.co.uk>',
+            to: customerEmail,
+            subject: 'Your NekaID subscription is active',
+            html: `
+              <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
+                <div style="margin-bottom: 32px;">
+                  <span style="font-size: 20px; font-weight: 700; color: #16307f;">NekaID</span>
+                </div>
+                <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 16px;">Your free trial has started</h1>
+                <p style="font-size: 16px; color: #444; margin: 0 0 24px;">Thanks for subscribing to NekaID. Your 14-day free trial is now active.</p>
+                <div style="background: #f5f7ff; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;">
+                  <div style="margin-bottom: 12px;">
+                    <span style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.05em;">Plan</span>
+                    <div style="font-size: 16px; font-weight: 600; margin-top: 2px;">${planLabel[plan] || plan} — ${intervalLabel}</div>
+                  </div>
+                  <div>
+                    <span style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.05em;">Trial ends</span>
+                    <div style="font-size: 16px; font-weight: 600; margin-top: 2px;">${trialEnd}</div>
+                  </div>
+                </div>
+                <a href="https://nekaid.co.uk/company" style="display: inline-block; background: #16307f; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; font-weight: 600;">Go to dashboard</a>
+                <p style="font-size: 13px; color: #888; margin-top: 32px;">NekaID Ltd · nekaid.co.uk</p>
+              </div>
+            `,
+          }),
+        });
+      }
     } catch (err: any) {
       console.error('[webhook] checkout.session.completed handler error:', err.message);
       return NextResponse.json({ error: 'Webhook handler error' }, { status: 500 });
