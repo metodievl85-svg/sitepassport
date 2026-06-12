@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
       const priceId = subscription.items.data[0].price.id;
       const interval = subscription.items.data[0].price.recurring?.interval === 'year' ? 'year' : 'month';
-      const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      const periodEnd = subscription.current_period_end ?? subscription.trial_end ?? null;
+      const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
       const status = subscription.status;
       const customerId = subscription.customer as string;
       const plan = meta.plan;
