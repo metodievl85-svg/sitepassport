@@ -106,7 +106,11 @@ export default function LoginPage() {
           : null
 
         if (profile.role === 'company') {
-          router.replace(redirect?.startsWith('/company') ? redirect : '/company')
+          if (redirect?.startsWith('/join') || redirect?.startsWith('/company')) {
+            router.replace(redirect)
+          } else {
+            router.replace('/company')
+          }
           return
         }
 
@@ -198,7 +202,11 @@ export default function LoginPage() {
       : null
 
     if (profile.role === 'company') {
-      router.replace(redirect?.startsWith('/company') ? redirect : '/company')
+      if (redirect?.startsWith('/join') || redirect?.startsWith('/company')) {
+        router.replace(redirect)
+      } else {
+        router.replace('/company')
+      }
       return
     }
 

@@ -143,7 +143,7 @@ function JoinPageInner() {
                 Please log in or create an account to accept this invitation.
               </p>
               <a
-                href={`/login?redirect=/join?token=${token}`}
+                href={`/login?redirect=/join%3Ftoken%3D${token}`}
                 className="btn btn-primary"
                 style={{ display: 'block', textAlign: 'center' }}
               >
