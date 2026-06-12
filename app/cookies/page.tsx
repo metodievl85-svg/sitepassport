@@ -62,6 +62,7 @@ export default function CookiePolicyPage() {
       <ul>
         <li>Supabase</li>
         <li>Vercel</li>
+        <li>Stripe — payment processing. Stripe may set cookies when you visit the Stripe-hosted checkout page. See stripe.com/gb/privacy for details.</li>
         <li>Browser security and session systems</li>
       </ul>
 
