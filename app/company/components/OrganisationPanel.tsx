@@ -82,31 +82,20 @@ export default function OrganisationPanel({ onViewSite }: Props) {
     }
   }
 
-  async function loadMembers(orgId: string, token: string) {
+  async function loadMembers(_orgId: string, token: string) {
     try {
       setLoadingMembers(true)
-      const { data, error } = await supabase
-        .from('organisation_members')
-        .select('id, user_id, role')
-        .eq('organisation_id', orgId)
-
-      if (error || !data) return
-
-      // Fetch emails via existing profiles API
-      const userIds = data.map((m) => m.user_id).join(',')
-      const profileRes = await fetch(`/api/profiles/company?ids=${userIds}`, {
+      const res = await fetch('/api/organisations/members/list', {
         headers: { Authorization: `Bearer ${token}` },
       })
-      const profileJson = await profileRes.json()
-      const profileMap = new Map<string, { email: string; full_name?: string }>()
-      for (const p of profileJson.profiles || []) {
-        profileMap.set(p.id, { email: p.email, full_name: p.full_name })
-      }
-
-      setMembers(data.map((m) => ({
-        ...m,
-        email: profileMap.get(m.user_id)?.email || m.user_id,
-        full_name: profileMap.get(m.user_id)?.full_name,
+      const json = await res.json()
+      if (!json.members) return
+      setMembers(json.members.map((m: any) => ({
+        id: m.user_id,
+        user_id: m.user_id,
+        role: m.role,
+        email: m.email,
+        full_name: m.full_name,
       })))
     } catch {
       // silent

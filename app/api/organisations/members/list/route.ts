@@ -53,12 +53,18 @@ export async function GET(request: NextRequest) {
       .select('id, full_name, email')
       .in('id', userIds)
 
+    const { data: sites } = await admin
+      .from('company_sites')
+      .select('company_id, site_name')
+      .in('company_id', userIds)
+
     const result = members.map((m) => {
       const profile = profiles?.find((p) => p.id === m.user_id)
+      const site = sites?.find((s) => s.company_id === m.user_id)
       return {
         user_id: m.user_id,
         role: m.role,
-        full_name: profile?.full_name || profile?.email || m.user_id,
+        full_name: site?.site_name || profile?.email || m.user_id,
         email: profile?.email || '',
         is_self: m.user_id === user.id,
       }
