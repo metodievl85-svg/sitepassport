@@ -8,6 +8,7 @@ type OrgMember = {
   user_id: string
   role: string
   email?: string
+  full_name?: string
 }
 
 type Organisation = {
@@ -97,12 +98,16 @@ export default function OrganisationPanel({ onViewSite }: Props) {
         headers: { Authorization: `Bearer ${token}` },
       })
       const profileJson = await profileRes.json()
-      const emailMap = new Map<string, string>()
+      const profileMap = new Map<string, { email: string; full_name?: string }>()
       for (const p of profileJson.profiles || []) {
-        emailMap.set(p.id, p.email)
+        profileMap.set(p.id, { email: p.email, full_name: p.full_name })
       }
 
-      setMembers(data.map((m) => ({ ...m, email: emailMap.get(m.user_id) || m.user_id })))
+      setMembers(data.map((m) => ({
+        ...m,
+        email: profileMap.get(m.user_id)?.email || m.user_id,
+        full_name: profileMap.get(m.user_id)?.full_name,
+      })))
     } catch {
       // silent
     } finally {
@@ -348,7 +353,7 @@ export default function OrganisationPanel({ onViewSite }: Props) {
                 {member.user_id !== myUserId && (
                   <button
                     type="button"
-                    onClick={() => onViewSite(member.user_id, member.email || member.user_id)}
+                    onClick={() => onViewSite(member.user_id, member.full_name || member.email || member.user_id)}
                     style={{ padding: '6px 14px', borderRadius: 10, background: '#16307f', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
                   >
                     View site

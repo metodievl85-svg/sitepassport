@@ -814,7 +814,21 @@ export default function CompanyPage() {
       })
       const data = await res.json()
       setViewingSiteData({
-        saved_workers: data.saved_workers || [],
+        saved_workers: (data.saved_workers || []).map((item: any) => ({
+          workerId: item.worker_id,
+          workerName: item.workers?.full_name || '',
+          workerRole: item.workers?.role || '',
+          workerCompany: item.workers?.company || '',
+          cscsCard: item.workers?.cscs_card || '',
+          cscsExpiry: item.workers?.cscs_expiry || null,
+          rightToWorkExpiry: item.workers?.right_to_work_expiry || null,
+          photo: item.workers?.photo || null,
+          siteStatus: null,
+          lastSeen: null,
+          cscsVerificationStatus: item.workers?.cscs_verification_status || 'unverified',
+          inductionStatus: null,
+          savedWorkerId: item.id,
+        })),
         site_attendance: data.site_attendance || [],
         company_sites: data.company_sites || [],
       })
