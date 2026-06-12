@@ -41,29 +41,44 @@ export async function POST(req: NextRequest) {
     const meta = session.metadata;
     const subscriptionId = session.subscription;
 
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
-    const priceId = subscription.items.data[0].price.id;
-    const interval = subscription.items.data[0].price.recurring?.interval === 'year' ? 'year' : 'month';
-    const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
-    const status = subscription.status;
-    const customerId = subscription.customer as string;
-    const plan = meta.plan;
-    const accountType = meta.account_type;
-    const workerCap = accountType === 'agency' ? AGENCY_CAPS[plan] : WORKER_CAPS[plan];
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
+      const priceId = subscription.items.data[0].price.id;
+      const interval = subscription.items.data[0].price.recurring?.interval === 'year' ? 'year' : 'month';
+      const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+      const status = subscription.status;
+      const customerId = subscription.customer as string;
+      const plan = meta.plan;
+      const accountType = meta.account_type;
+      const workerCap = accountType === 'agency' ? AGENCY_CAPS[plan] : WORKER_CAPS[plan];
 
-    await supabase.from('subscriptions').upsert({
-      user_id: accountType === 'company' ? meta.user_id : null,
-      organisation_id: accountType === 'agency' && meta.organisation_id ? meta.organisation_id : null,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscriptionId,
-      stripe_price_id: priceId,
-      plan_name: plan,
-      account_type: accountType,
-      billing_interval: interval,
-      status,
-      current_period_end: currentPeriodEnd,
-      worker_cap: workerCap,
-    }, { onConflict: 'stripe_subscription_id' });
+      console.log('[webhook] checkout.session.completed metadata:', meta);
+      console.log('[webhook] resolved plan:', plan, 'accountType:', accountType, 'workerCap:', workerCap);
+
+      const { error: upsertError } = await supabase.from('subscriptions').upsert({
+        user_id: accountType === 'company' ? meta.user_id : null,
+        organisation_id: accountType === 'agency' && meta.organisation_id ? meta.organisation_id : null,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        stripe_price_id: priceId,
+        plan_name: plan,
+        account_type: accountType,
+        billing_interval: interval,
+        status,
+        current_period_end: currentPeriodEnd,
+        worker_cap: workerCap,
+      }, { onConflict: 'stripe_subscription_id' });
+
+      if (upsertError) {
+        console.error('[webhook] Supabase upsert error:', upsertError);
+        return NextResponse.json({ error: 'DB write failed' }, { status: 500 });
+      }
+
+      console.log('[webhook] subscription upserted successfully for subscriptionId:', subscriptionId);
+    } catch (err: any) {
+      console.error('[webhook] checkout.session.completed handler error:', err.message);
+      return NextResponse.json({ error: 'Webhook handler error' }, { status: 500 });
+    }
   }
 
   if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {

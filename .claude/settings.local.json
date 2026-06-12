@@ -11,7 +11,9 @@
       "Bash(ls \"C:\\\\Users\\\\metod\\\\AppData\\\\Local\\\\Temp\" 2>&1 | head -20)",
       "Read(//c/Users/metod/AppData/Local/Temp/**)",
       "Bash(npm install *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(supabase --version)",
+      "Bash(npx supabase *)"
     ]
   }
 }
