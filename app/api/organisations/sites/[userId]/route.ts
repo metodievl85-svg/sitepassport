@@ -20,14 +20,14 @@ async function getUser(request: NextRequest) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const user = await getUser(request)
     if (!user) return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 })
 
     const admin = getAdminClient()
-    const targetUserId = params.userId
+    const { userId: targetUserId } = await params
 
     // Verify requester is owner or admin in the same org as target
     const { data: myMembership } = await admin
