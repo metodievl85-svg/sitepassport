@@ -2143,6 +2143,8 @@ export default function CompanyPage() {
                       <div className="saved-operative-actions">
                         <Link
                           href={`/scan/${worker.workerId}`}
+                          target={viewingSite ? '_blank' : undefined}
+                          rel={viewingSite ? 'noopener noreferrer' : undefined}
                           className="btn btn-secondary"
                           style={{
                             minHeight: 38,

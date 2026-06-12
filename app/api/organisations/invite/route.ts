@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .maybeSingle()
 
-    if (!membership || membership.role !== 'owner') {
-      return NextResponse.json({ error: 'Only owners can invite members.' }, { status: 403 })
+    if (!membership || !['owner', 'admin'].includes(membership.role)) {
+      return NextResponse.json({ error: 'Only owners and admins can invite members.' }, { status: 403 })
     }
 
     const orgName = (membership.organisations as any)?.name || 'your organisation'
@@ -103,17 +103,25 @@ export async function POST(request: NextRequest) {
         to: email,
         subject: `You've been invited to join ${orgName} on NekaID`,
         html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+          <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
             <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 60px; margin-bottom: 24px;" />
-            <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited</h2>
+            <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited to join ${orgName}</h2>
             <p style="color: #5a6f96; font-size: 15px; line-height: 1.6;">
-              You've been invited to join <strong>${orgName}</strong> on NekaID as <strong>${role === 'admin' ? 'Admin' : 'Member'}</strong>.
+              <strong>${orgName}</strong> has invited you to join their team on NekaID as <strong>${role === 'admin' ? 'Admin (can view all sites)' : 'Member (manages own site)'}</strong>.
             </p>
-            <a href="${inviteUrl}" style="display: inline-block; margin-top: 24px; padding: 14px 28px; background: #16307f; color: #ffffff; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">
-              Accept invitation
+            <div style="background: #f3f7ff; border-radius: 12px; padding: 20px 24px; margin: 24px 0;">
+              <p style="margin: 0 0 12px; color: #09154b; font-weight: 900; font-size: 15px;">How to accept your invitation:</p>
+              <ol style="margin: 0; padding-left: 20px; color: #5a6f96; font-size: 14px; line-height: 2;">
+                <li><strong style="color: #09154b;">Already have a NekaID account?</strong> Click the button below and log in — you'll be added automatically.</li>
+                <li><strong style="color: #09154b;">Don't have an account yet?</strong> Click the button below, then click <em>Sign up</em> and create a <strong>Site Manager</strong> account (not Worker or Agency).</li>
+                <li>Once logged in or signed up, click <strong>Accept invitation</strong> to join ${orgName}.</li>
+              </ol>
+            </div>
+            <a href="${inviteUrl}" style="display: inline-block; padding: 14px 28px; background: #16307f; color: #ffffff; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">
+              Accept invitation →
             </a>
-            <p style="margin-top: 24px; color: #5a6f96; font-size: 13px;">
-              This invite expires in 7 days. If you did not expect this email, you can ignore it.
+            <p style="margin-top: 24px; color: #9aa5b4; font-size: 13px;">
+              This invite expires in 7 days. If you did not expect this email, you can safely ignore it.
             </p>
           </div>
         `,
