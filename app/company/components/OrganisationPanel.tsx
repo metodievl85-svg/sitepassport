@@ -37,6 +37,7 @@ export default function OrganisationPanel() {
   const [editNameInput, setEditNameInput] = useState('')
   const [savingName, setSavingName] = useState(false)
   const [editNameError, setEditNameError] = useState('')
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   useEffect(() => {
     void loadOrganisation()
@@ -163,6 +164,29 @@ export default function OrganisationPanel() {
       setInviteError('Unexpected error. Please try again.')
     } finally {
       setInviting(false)
+    }
+  }
+
+  async function handleRemoveMember(memberId: string, memberEmail: string) {
+    if (!confirm(`Remove ${memberEmail} from the organisation?`)) return
+    try {
+      setRemovingId(memberId)
+      const token = await getToken()
+      if (!token) return
+      const res = await fetch(`/api/organisations/members/${memberId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      const json = await res.json()
+      if (!res.ok || json.error) {
+        alert(json.error || 'Could not remove member.')
+        return
+      }
+      setMembers((prev) => prev.filter((m) => m.id !== memberId))
+    } catch {
+      alert('Unexpected error. Please try again.')
+    } finally {
+      setRemovingId(null)
     }
   }
 
@@ -302,13 +326,25 @@ export default function OrganisationPanel() {
               <span style={{ fontSize: 14, fontWeight: 700, color: '#09154b', wordBreak: 'break-word' }}>
                 {member.email}
               </span>
-              <span style={roleBadgeStyle(member.role)}>{roleLabel(member.role)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={roleBadgeStyle(member.role)}>{roleLabel(member.role)}</span>
+                {(myRole === 'owner' || myRole === 'admin') && member.role !== 'owner' && (
+                  <button
+                    type="button"
+                    onClick={() => void handleRemoveMember(member.id, member.email || member.user_id)}
+                    disabled={removingId === member.id}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b42318', fontSize: 13, fontWeight: 700, padding: '2px 6px', opacity: removingId === member.id ? 0.5 : 1 }}
+                  >
+                    {removingId === member.id ? 'Removing...' : 'Remove'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {myRole === 'owner' && (
+      {(myRole === 'owner' || myRole === 'admin') && (
         <div style={{ borderTop: '1px solid #d7e1ef', paddingTop: 20 }}>
           <h3 style={{ margin: '0 0 12px', fontSize: 17, fontWeight: 900, color: '#09154b' }}>
             Invite team member
