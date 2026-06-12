@@ -336,7 +336,7 @@ export default function OrganisationPanel({ onViewSite }: Props) {
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px', border: '1px solid #d7e1ef', borderRadius: 12, background: '#fbfdff' }}
             >
               <span style={{ fontSize: 14, fontWeight: 700, color: '#09154b', wordBreak: 'break-word' }}>
-                {member.email}
+                {member.full_name || member.email}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={roleBadgeStyle(member.role)}>{roleLabel(member.role)}</span>
