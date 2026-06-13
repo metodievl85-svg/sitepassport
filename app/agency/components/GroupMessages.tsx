@@ -19,8 +19,7 @@ type GroupMessage = {
   attachment_url: string | null
   attachment_type: 'image' | 'pdf' | null
   created_at: string
-  profiles?: { company_name: string | null }
-  workers?: { full_name: string | null }
+  sender_name?: string
 }
 
 type Placement = {
@@ -226,10 +225,7 @@ export default function GroupMessages({ agencyId, placements }: Props) {
     else grouped.push({ date: label, messages: [msg] })
   }
 
-  const getSenderName = (msg: GroupMessage) => {
-    if (msg.sender_type === 'agency') return msg.profiles?.company_name ?? 'Agency'
-    return msg.workers?.full_name ?? 'Operative'
-  }
+  const getSenderName = (msg: GroupMessage) => msg.sender_name ?? (msg.sender_type === 'agency' ? 'Agency' : 'Operative')
 
   return (
     <div

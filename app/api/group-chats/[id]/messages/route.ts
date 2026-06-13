@@ -62,14 +62,37 @@ export async function GET(
   if (!chat) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!isAgency && !isWorker) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { data, error } = await supabase
+  const { data: rawMessages, error } = await supabase
     .from('group_messages')
-    .select('id, content, attachment_url, attachment_type, sender_id, sender_type, created_at, profiles(company_name), workers!group_messages_sender_id_fkey(full_name)')
+    .select('id, content, attachment_url, attachment_type, sender_id, sender_type, created_at')
     .eq('group_chat_id', id)
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  const senderIds = [...new Set((rawMessages ?? []).map((m: any) => m.sender_id))]
+
+  const { data: profileRows } = await supabase
+    .from('profiles')
+    .select('id, company_name')
+    .in('id', senderIds)
+
+  const { data: workerRows } = await supabase
+    .from('workers')
+    .select('user_id, full_name')
+    .in('user_id', senderIds)
+
+  const profileMap = Object.fromEntries((profileRows ?? []).map((p: any) => [p.id, p.company_name]))
+  const workerMap = Object.fromEntries((workerRows ?? []).map((w: any) => [w.user_id, w.full_name]))
+
+  const messages = (rawMessages ?? []).map((m: any) => ({
+    ...m,
+    sender_name: m.sender_type === 'agency'
+      ? (profileMap[m.sender_id] ?? 'Agency')
+      : (workerMap[m.sender_id] ?? 'Operative'),
+  }))
+
+  return NextResponse.json(messages)
 }
 
 export async function POST(
