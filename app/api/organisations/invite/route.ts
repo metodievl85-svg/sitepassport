@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         subject: `You've been invited to join ${orgName} on NekaID`,
         html: `
           <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
-            <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 60px; margin-bottom: 24px;" />
+            <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 40px; max-width: 160px; display: block; margin-bottom: 24px;" />
             <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited to join ${orgName}</h2>
             <p style="color: #5a6f96; font-size: 15px; line-height: 1.6;">
               <strong>${orgName}</strong> has invited you to join their team on NekaID as <strong>${role === 'admin' ? 'Admin (can view all sites)' : 'Member (manages own site)'}</strong>.
