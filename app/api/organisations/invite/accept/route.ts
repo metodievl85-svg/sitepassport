@@ -73,10 +73,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'You are already a member of a different organisation.' }, { status: 400 })
     }
 
+    console.error('[accept] reached insert — org:', invite.organisation_id, 'user:', user.id, 'role:', invite.role)
     const { error: memberError } = await supabaseAdmin
       .from('organisation_members')
       .insert({ organisation_id: invite.organisation_id, user_id: user.id, role: invite.role })
 
+    console.error('[accept] insert done — memberError:', JSON.stringify(memberError))
     if (memberError) {
       console.error('accept member insert error:', memberError)
       return NextResponse.json({ error: 'Could not accept invite.' }, { status: 500 })
