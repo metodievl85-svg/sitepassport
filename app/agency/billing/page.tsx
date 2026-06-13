@@ -104,8 +104,19 @@ function AgencyBillingContent() {
                 onClick={() => setInterval('month')}
               >Monthly</button>
               <button
-                className={interval === 'year' ? 'btn' : 'btn-outline'}
                 onClick={() => setInterval('year')}
+                style={{
+                  minHeight: 44,
+                  borderRadius: 18,
+                  padding: '10px 20px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  fontSize: 15,
+                  background: interval === 'year' ? '#16307f' : '#fff',
+                  color: interval === 'year' ? '#fff' : '#16307f',
+                  border: '2px solid #16307f',
+                  boxShadow: 'none',
+                }}
               >Annual — save 17%</button>
             </div>
 
@@ -152,9 +163,21 @@ function AgencyBillingContent() {
             </button>
 
             <button
-              className="btn-outline"
-              style={{ width: '100%', padding: '14px', fontSize: 16, marginTop: 12 }}
               onClick={() => router.push('/agency')}
+              style={{
+                width: '100%',
+                minHeight: 52,
+                borderRadius: 18,
+                padding: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontSize: 16,
+                background: '#fff',
+                color: '#16307f',
+                border: '2px solid #16307f',
+                boxShadow: 'none',
+                marginTop: 12,
+              }}
             >
               Back to dashboard
             </button>
