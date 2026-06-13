@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import CompanyMessages from '../company/components/CompanyMessages'
+import GroupMessages from './components/GroupMessages'
 import AgencyDashboardMenu from './components/AgencyDashboardMenu'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
@@ -89,6 +90,7 @@ export default function AgencyPage() {
   const [statusMap, setStatusMap] = useState<Record<string, string>>({})
   const [notesMap, setNotesMap] = useState<Record<string, string>>({})
   const [removingWorkerId, setRemovingWorkerId] = useState<string | null>(null)
+  const [messageTab, setMessageTab] = useState<'direct' | 'groups'>('direct')
 
   const handleScrollToMessages = () => {
     messagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1001,7 +1003,40 @@ export default function AgencyPage() {
         </section>
 
         <div id="messages" ref={messagesRef}>
-          <CompanyMessages companyId={agencyId} workers={messageWorkers} />
+          <section className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            {/* Tab header */}
+            <div style={{ display: 'flex', borderBottom: '1px solid #e8eef8' }}>
+              {(['direct', 'groups'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setMessageTab(tab)}
+                  style={{
+                    flex: 1,
+                    padding: '14px 0',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: messageTab === tab ? '2.5px solid #16307f' : '2.5px solid transparent',
+                    color: messageTab === tab ? '#16307f' : '#94a3b8',
+                    fontWeight: messageTab === tab ? 800 : 600,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {tab === 'direct' ? '💬 Direct' : '👥 Groups'}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            <div style={{ padding: 0 }}>
+              {messageTab === 'direct' ? (
+                <CompanyMessages companyId={agencyId} workers={messageWorkers} />
+              ) : (
+                <GroupMessages agencyId={agencyId} placements={placements} />
+              )}
+            </div>
+          </section>
         </div>
 
       </div>
