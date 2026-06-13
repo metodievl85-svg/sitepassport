@@ -48,8 +48,9 @@ async function verifyAccess(supabase: any, user: any, chatId: string) {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
@@ -57,14 +58,14 @@ export async function GET(
   const { data: { user }, error: authError } = await supabase.auth.getUser(token)
   if (!user || authError) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, params.id)
+  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, id)
   if (!chat) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!isAgency && !isWorker) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data, error } = await supabase
     .from('group_messages')
     .select('id, content, attachment_url, attachment_type, sender_id, sender_type, created_at, profiles(company_name), workers!group_messages_sender_id_fkey(full_name)')
-    .eq('group_chat_id', params.id)
+    .eq('group_chat_id', id)
     .order('created_at', { ascending: true })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -73,8 +74,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
@@ -82,7 +84,7 @@ export async function POST(
   const { data: { user }, error: authError } = await supabase.auth.getUser(token)
   if (!user || authError) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, params.id)
+  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, id)
   if (!chat) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!isAgency && !isWorker) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -92,7 +94,7 @@ export async function POST(
   const { data: message, error } = await supabase
     .from('group_messages')
     .insert({
-      group_chat_id: params.id,
+      group_chat_id: id,
       sender_id: user.id,
       sender_type: isAgency ? 'agency' : 'worker',
       content: content || null,
