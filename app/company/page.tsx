@@ -827,7 +827,7 @@ export default function CompanyPage() {
       setViewingSiteData({
         saved_workers: (data.saved_workers || []).map((item: any) => ({
           workerId: item.worker_id,
-          workerName: item.workers?.full_name || '',
+          fullName: item.workers?.full_name || '',
           workerRole: item.workers?.role || '',
           workerCompany: item.workers?.company || '',
           cscsCard: item.workers?.cscs_card || '',
