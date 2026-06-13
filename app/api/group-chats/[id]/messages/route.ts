@@ -74,7 +74,7 @@ export async function GET(
 
   const { data: profileRows } = await supabase
     .from('profiles')
-    .select('id, company_name')
+    .select('id, company_name, email')
     .in('id', senderIds)
 
   const { data: workerRows } = await supabase
@@ -82,7 +82,7 @@ export async function GET(
     .select('user_id, full_name')
     .in('user_id', senderIds)
 
-  const profileMap = Object.fromEntries((profileRows ?? []).map((p: any) => [p.id, p.company_name]))
+  const profileMap = Object.fromEntries((profileRows ?? []).map((p: any) => [p.id, p.company_name || p.email || 'Agency']))
   const workerMap = Object.fromEntries((workerRows ?? []).map((w: any) => [w.user_id, w.full_name]))
 
   const messages = (rawMessages ?? []).map((m: any) => ({
