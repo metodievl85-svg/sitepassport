@@ -1,151 +1,101 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
-type Props = { onAddOperative: () => void; onExportReport: () => void }
+type Props = {
+  onAddOperative: () => void
+  onExportReport: () => void
+}
 
 export default function CompanyDashboardMenu({ onAddOperative, onExportReport }: Props) {
   const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const close = () => setOpen(false)
 
   return (
-    <div className="company-dashboard-menu">
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button
-        type="button"
-        className="company-dashboard-menu-button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => setOpen(o => !o)}
+        className="btn btn-secondary"
+        style={{ width: '190px', justifyContent: 'space-between', display: 'flex', alignItems: 'center', gap: 8 }}
       >
         <span>Dashboard menu</span>
-        <span>{open ? '▲' : '▼'}</span>
+        <span style={{ fontSize: 10 }}>{open ? '▲' : '▼'}</span>
       </button>
 
-      {open ? (
-        <div className="company-dashboard-menu-panel">
-          <button
-            type="button"
-            className="company-dashboard-menu-link"
-            onClick={() => { onAddOperative(); setOpen(false) }}
-            style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900 }}
-          >
-            Add Operative
-          </button>
-
-          <a
-            href="#messages"
-            className="company-dashboard-menu-link"
-            onClick={() => setOpen(false)}
-            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
-          >
-            Messages
-          </a>
-
-          <Link
-            href="/company/billing"
-            className="company-dashboard-menu-link"
-            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
-          >
-            Billing
-          </Link>
-          <Link
-            href="/company/attendance-settings"
-            className="company-dashboard-menu-link"
-            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
-          >
-            Attendance settings
-          </Link>
-
-          <a
-            href="#organisation-panel"
-            className="company-dashboard-menu-link"
-            onClick={() => setOpen(false)}
-            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
-          >
-            Team & Organisation
-          </a>
-
-          <Link
-            href="/company/site-location"
-            className="company-dashboard-menu-link"
-            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
-          >
-            Site location
-          </Link>
-
-          <Link
-            href="/company/print-qr"
-            className="company-dashboard-menu-link"
-            style={{ display: 'block', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900, textDecoration: 'none' }}
-          >
-            Print site QR
-          </Link>
-
-          <button
-            type="button"
-            className="company-dashboard-menu-link"
-            onClick={() => { onExportReport(); setOpen(false) }}
-            style={{ textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: 14, borderRadius: 12, color: '#09154b', fontSize: 15, fontWeight: 900 }}
-          >
-            Export Compliance Report
-          </button>
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 6px)',
+          right: 0,
+          background: '#fff',
+          border: '1px solid #d7e1ef',
+          borderRadius: 14,
+          boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
+          minWidth: 230,
+          zIndex: 50,
+          overflow: 'hidden',
+        }}>
+          {[
+            { label: '➕ Add Operative', action: () => { onAddOperative(); close() } },
+            { label: '💬 Messages', action: () => { document.querySelector('#messages')?.scrollIntoView({ behavior: 'smooth' }); close() } },
+            { label: '📊 Export Compliance Report', action: () => { onExportReport(); close() } },
+          ].map(item => (
+            <button
+              key={item.label}
+              onClick={item.action}
+              style={{
+                width: '100%',
+                padding: '13px 18px',
+                background: 'none',
+                border: 'none',
+                borderBottom: '1px solid #f1f5f9',
+                textAlign: 'left',
+                fontSize: 14,
+                fontWeight: 600,
+                color: '#09154b',
+                cursor: 'pointer',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+          {[
+            { label: '💳 Billing', href: '/company/billing' },
+            { label: '⚙️ Attendance settings', href: '/company/attendance-settings' },
+            { label: '👥 Team & Organisation', href: '#organisation-panel' },
+            { label: '📍 Site location', href: '/company/site-location' },
+            { label: '🖨️ Print site QR', href: '/company/print-qr' },
+          ].map(item => (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={close}
+              style={{
+                display: 'block',
+                padding: '13px 18px',
+                borderBottom: '1px solid #f1f5f9',
+                fontSize: 14,
+                fontWeight: 600,
+                color: '#09154b',
+                textDecoration: 'none',
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
-      ) : null}
-
-      <style jsx>{`
-        .company-dashboard-menu {
-          position: relative;
-          width: 100%;
-          z-index: 50;
-        }
-
-        .company-dashboard-menu-button {
-          width: 100%;
-          min-height: 54px;
-          padding: 0 18px;
-          border-radius: 16px;
-          border: 1px solid #d7e1ef;
-          background: #ffffff;
-          color: #09154b;
-          font-size: 16px;
-          font-weight: 900;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          box-shadow: 0 10px 28px rgba(9, 21, 75, 0.08);
-        }
-
-        .company-dashboard-menu-panel {
-          position: absolute;
-          top: calc(100% + 10px);
-          left: 0;
-          right: 0;
-          background: #ffffff;
-          border: 1px solid #d7e1ef;
-          border-radius: 18px;
-          box-shadow: 0 18px 50px rgba(9, 21, 75, 0.16);
-          padding: 8px;
-          display: grid;
-          gap: 6px;
-        }
-
-        .company-dashboard-menu-link {
-          display: block;
-          padding: 14px;
-          border-radius: 12px;
-          color: #09154b;
-          font-size: 15px;
-          font-weight: 900;
-          line-height: 1.2;
-          text-decoration: none;
-          white-space: normal;
-        }
-
-        .company-dashboard-menu-link:hover {
-          background: #f3f7ff;
-          color: #243caa;
-        }
-      `}</style>
+      )}
     </div>
   )
 }
