@@ -87,6 +87,7 @@ function CompanyBillingContent() {
               >Monthly</button>
               <button
                 className={interval === 'year' ? 'btn' : 'btn-outline'}
+                style={interval !== 'year' ? { color: '#16307f', borderColor: '#16307f', opacity: 1 } : {}}
                 onClick={() => setInterval('year')}
               >Annual — save 17%</button>
             </div>
@@ -135,7 +136,7 @@ function CompanyBillingContent() {
 
             <button
               className="btn-outline"
-              style={{ width: '100%', padding: '14px', fontSize: 16, marginTop: 12 }}
+              style={{ width: '100%', padding: '14px', fontSize: 16, marginTop: 12, color: '#16307f', borderColor: '#16307f', opacity: 1 }}
               onClick={() => router.push('/company')}
             >
               Back to dashboard
