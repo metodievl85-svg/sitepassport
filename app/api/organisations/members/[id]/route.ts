@@ -28,7 +28,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { data: targetMember, error: fetchError } = await admin
     .from('organisation_members')
     .select('id, organisation_id, role, user_id')
-    .eq('id', memberId)
+    .eq('user_id', memberId)
     .single()
 
   if (fetchError || !targetMember) {
@@ -60,7 +60,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { error: deleteError } = await admin
     .from('organisation_members')
     .delete()
-    .eq('id', memberId)
+    .eq('user_id', memberId)
 
   if (deleteError) {
     console.error('Delete member error:', deleteError)
