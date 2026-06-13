@@ -48,30 +48,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invite has expired.' }, { status: 400 })
     }
 
-    // Check user not already in an organisation
-    const { data: existing } = await supabaseAdmin
+    const { data: existingInThisOrg } = await supabaseAdmin
+      .from('organisation_members')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('organisation_id', invite.organisation_id)
+      .maybeSingle()
+
+    if (existingInThisOrg) {
+      await supabaseAdmin
+        .from('organisation_invites')
+        .update({ accepted_at: new Date().toISOString() })
+        .eq('id', invite.id)
+      return NextResponse.json({ success: true })
+    }
+
+    const { data: existingInOtherOrg } = await supabaseAdmin
       .from('organisation_members')
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle()
 
-    if (existing) {
-      // If already a member of this same org, treat as success
-      const { data: sameOrg } = await supabaseAdmin
-        .from('organisation_members')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('organisation_id', invite.organisation_id)
-        .maybeSingle()
-
-      if (sameOrg) {
-        await supabaseAdmin
-          .from('organisation_invites')
-          .update({ accepted_at: new Date().toISOString() })
-          .eq('id', invite.id)
-        return NextResponse.json({ success: true })
-      }
-
+    if (existingInOtherOrg) {
       return NextResponse.json({ error: 'You are already a member of a different organisation.' }, { status: 400 })
     }
 
