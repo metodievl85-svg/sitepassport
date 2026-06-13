@@ -104,7 +104,9 @@ export async function POST(request: NextRequest) {
         subject: `You've been invited to join ${orgName} on NekaID`,
         html: `
           <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
-            <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 40px; max-width: 160px; display: block; margin-bottom: 24px;" />
+            <div style="background: #16307f; padding: 24px 32px; margin: -32px -24px 32px -24px; border-radius: 0;">
+              <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 36px; max-width: 140px; display: block;" />
+            </div>
             <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited to join ${orgName}</h2>
             <p style="color: #5a6f96; font-size: 15px; line-height: 1.6;">
               <strong>${orgName}</strong> has invited you to join their team on NekaID as <strong>${role === 'admin' ? 'Admin (can view all sites)' : 'Member (manages own site)'}</strong>.
@@ -113,7 +115,7 @@ export async function POST(request: NextRequest) {
               <p style="margin: 0 0 12px; color: #09154b; font-weight: 900; font-size: 15px;">How to accept your invitation:</p>
               <ol style="margin: 0; padding-left: 20px; color: #5a6f96; font-size: 14px; line-height: 2;">
                 <li><strong style="color: #09154b;">Already have a NekaID account?</strong> Click the button below and log in — you'll be added automatically.</li>
-                <li><strong style="color: #09154b;">Don't have an account yet?</strong> Click the button below, then click <em>Sign up</em> and create a <strong>Site Manager</strong> account (not Worker or Agency).</li>
+                <li><strong style="color: #09154b;">Don't have an account yet?</strong> Click the button below, then click <em>Sign up</em> and create a <strong>Company</strong> account (not Worker or Agency).</li>
                 <li>Once logged in or signed up, click <strong>Accept invitation</strong> to join ${orgName}.</li>
               </ol>
             </div>
