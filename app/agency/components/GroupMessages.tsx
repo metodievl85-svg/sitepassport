@@ -72,8 +72,25 @@ export default function GroupMessages({ agencyId, placements }: Props) {
         schema: 'public',
         table: 'group_messages',
         filter: `group_chat_id=eq.${selectedChatId}`,
-      }, (payload) => {
-        setMessages(prev => [...prev, payload.new as GroupMessage])
+      }, async (payload) => {
+        const msg = payload.new as GroupMessage
+        // Resolve sender name for the incoming real-time message
+        if (msg.sender_type === 'agency') {
+          const { data } = await supabase
+            .from('profiles')
+            .select('company_name, email')
+            .eq('id', msg.sender_id)
+            .single()
+          msg.sender_name = data?.company_name || data?.email || 'Agency'
+        } else {
+          const { data } = await supabase
+            .from('workers')
+            .select('full_name')
+            .eq('user_id', msg.sender_id)
+            .single()
+          msg.sender_name = data?.full_name || 'Operative'
+        }
+        setMessages(prev => [...prev, msg])
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       })
       .subscribe()
