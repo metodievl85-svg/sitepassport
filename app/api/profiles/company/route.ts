@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     const { data: profiles, error: fetchError } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, full_name')
+      .select('id, email, company_name')
       .in('id', ids)
 
     if (fetchError) {

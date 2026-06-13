@@ -97,7 +97,7 @@ export default function WorkerMessages({ workerId, userId }: Props) {
 
       const profilesData = await profilesRes.json()
       const profileMap = new Map(
-        (profilesData.profiles as { id: string; email: string }[]).map((p) => [p.id, p.email])
+        (profilesData.profiles as { id: string; email: string; company_name: string | null }[]).map((p) => [p.id, p.company_name || p.email])
       )
 
       setCompanies(
