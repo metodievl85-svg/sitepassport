@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
             html: `
               <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #1a1a1a;">
                 <div style="margin-bottom: 32px;">
-                  <span style="font-size: 20px; font-weight: 700; color: #16307f;">NekaID</span>
+                  <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 36px; max-width: 140px; display: block;" />
                 </div>
                 <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 16px;">Your free trial has started</h1>
                 <p style="font-size: 16px; color: #444; margin: 0 0 24px;">Thanks for subscribing to NekaID. Your 14-day free trial is now active.</p>
@@ -117,7 +117,9 @@ export async function POST(req: NextRequest) {
                   </div>
                 </div>
                 <a href="https://nekaid.co.uk/company" style="display: inline-block; background: #16307f; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; font-weight: 600;">Go to dashboard</a>
-                <p style="font-size: 13px; color: #888; margin-top: 32px;">NekaID Ltd · nekaid.co.uk</p>
+                <p style="font-size: 13px; color: #888; margin-top: 32px;">
+                  NekaID Ltd · <a href="https://nekaid.co.uk" style="color: #888; text-decoration: none;">nekaid.co.uk</a> · <a href="https://nekaid.co.uk/privacy" style="color: #888; text-decoration: none;">Privacy Policy</a> · <a href="https://nekaid.co.uk/terms" style="color: #888; text-decoration: none;">Terms</a>
+                </p>
               </div>
             `,
           }),
