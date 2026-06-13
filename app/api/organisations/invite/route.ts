@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         html: `
           <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 32px 24px;">
             <div style="background: #16307f; padding: 16px 24px; margin: -32px -24px 32px -24px; border-radius: 0;">
-              <img src="https://nekaid.co.uk/NekaID_logo_wihte.svg" alt="NekaID" style="height: 48px; max-width: 220px; display: block;" />
+              <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 48px; max-width: 220px; display: block;" />
             </div>
             <h2 style="color: #09154b; margin: 0 0 12px;">You've been invited to join ${orgName}</h2>
             <p style="color: #5a6f96; font-size: 15px; line-height: 1.6;">
