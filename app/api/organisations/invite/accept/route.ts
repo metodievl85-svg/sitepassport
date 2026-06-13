@@ -12,8 +12,8 @@ function getAdminClient() {
 async function getUser(request: NextRequest) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return null
-  const supabaseAdmin = getAdminClient()
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
+  const admin = getAdminClient()
+  const { data: { user }, error } = await admin.auth.getUser(token)
   if (error || !user) return null
   return user
 }
@@ -48,37 +48,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invite has expired.' }, { status: 400 })
     }
 
-    const { data: existingInThisOrg } = await supabaseAdmin
-      .from('organisation_members')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('organisation_id', invite.organisation_id)
-      .maybeSingle()
-
-    if (existingInThisOrg) {
-      await supabaseAdmin
-        .from('organisation_invites')
-        .update({ accepted_at: new Date().toISOString() })
-        .eq('id', invite.id)
-      return NextResponse.json({ success: true })
-    }
-
-    const { data: existingInOtherOrg } = await supabaseAdmin
+    const { data: existing } = await supabaseAdmin
       .from('organisation_members')
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle()
 
-    if (existingInOtherOrg) {
-      return NextResponse.json({ error: 'You are already a member of a different organisation.' }, { status: 400 })
+    if (existing) {
+      return NextResponse.json({ error: 'Already in an organisation.' }, { status: 400 })
     }
 
-    console.error('[accept] reached insert — org:', invite.organisation_id, 'user:', user.id, 'role:', invite.role)
     const { error: memberError } = await supabaseAdmin
       .from('organisation_members')
       .insert({ organisation_id: invite.organisation_id, user_id: user.id, role: invite.role })
 
-    console.error('[accept] insert done — memberError:', JSON.stringify(memberError))
     if (memberError) {
       console.error('accept member insert error:', memberError)
       return NextResponse.json({ error: 'Could not accept invite.' }, { status: 500 })
