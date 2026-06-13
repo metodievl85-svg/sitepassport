@@ -56,7 +56,23 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (existing) {
-      return NextResponse.json({ error: 'Already in an organisation.' }, { status: 400 })
+      // If already a member of this same org, treat as success
+      const { data: sameOrg } = await supabaseAdmin
+        .from('organisation_members')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('organisation_id', invite.organisation_id)
+        .maybeSingle()
+
+      if (sameOrg) {
+        await supabaseAdmin
+          .from('organisation_invites')
+          .update({ accepted_at: new Date().toISOString() })
+          .eq('id', invite.id)
+        return NextResponse.json({ success: true })
+      }
+
+      return NextResponse.json({ error: 'You are already a member of a different organisation.' }, { status: 400 })
     }
 
     const { error: memberError } = await supabaseAdmin
