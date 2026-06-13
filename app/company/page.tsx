@@ -691,6 +691,17 @@ export default function CompanyPage() {
               })
               .filter(Boolean) as SavedWorkerCard[]
 
+            for (const w of merged) {
+              if (w.photo && !w.photo.startsWith('http')) {
+                const { data: photoSigned } = await supabase.storage.from('worker-photos').createSignedUrl(w.photo, 3600)
+                if (photoSigned?.signedUrl) w.photo = photoSigned.signedUrl
+              }
+              if (w.facePhoto && !w.facePhoto.startsWith('http')) {
+                const { data: faceSigned } = await supabase.storage.from('worker-photos').createSignedUrl(w.facePhoto, 3600)
+                if (faceSigned?.signedUrl) w.facePhoto = faceSigned.signedUrl
+              }
+            }
+
             setSavedWorkers(merged)
           }
         }

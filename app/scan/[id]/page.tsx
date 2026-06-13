@@ -344,6 +344,10 @@ export default function PublicWorkerPage() {
         const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mapped.rightToWorkPhoto, 3600)
         if (rtwSigned?.signedUrl) mapped.rightToWorkPhoto = rtwSigned.signedUrl
       }
+      if (mapped.photo && !mapped.photo.startsWith('http')) {
+        const { data: photoSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mapped.photo, 3600)
+        if (photoSigned?.signedUrl) mapped.photo = photoSigned.signedUrl
+      }
 
       setWorker(mapped)
     } catch (error) {

@@ -319,6 +319,10 @@ export default function WorkerPage() {
         const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mappedPassport.rightToWorkPhoto, 3600)
         if (rtwSigned?.signedUrl) mappedPassport.rightToWorkPhoto = rtwSigned.signedUrl
       }
+      if (mappedPassport.photo && !mappedPassport.photo.startsWith('http')) {
+        const { data: photoSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mappedPassport.photo, 3600)
+        if (photoSigned?.signedUrl) mappedPassport.photo = photoSigned.signedUrl
+      }
 
       setPassport(mappedPassport)
 
