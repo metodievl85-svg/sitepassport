@@ -27,7 +27,7 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
       <button
         onClick={() => setOpen(o => !o)}
         className="btn btn-secondary"
-        style={{ width: '220px', justifyContent: 'space-between', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap' }}
+        style={{ width: '220px', justifyContent: 'space-between', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', background: 'white', color: '#09154b', border: '1px solid #d1d5db' }}
       >
         <span>Dashboard menu</span>
         <span style={{ fontSize: 10 }}>{open ? '▲' : '▼'}</span>
