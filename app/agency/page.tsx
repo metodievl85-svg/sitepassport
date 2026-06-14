@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import CompanyMessages from '../company/components/CompanyMessages'
 import GroupMessages from './components/GroupMessages'
 import AgencyDashboardMenu from './components/AgencyDashboardMenu'
+import { usePushNotifications } from '../lib/usePushNotifications'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
 
@@ -91,6 +92,8 @@ export default function AgencyPage() {
   const [notesMap, setNotesMap] = useState<Record<string, string>>({})
   const [removingWorkerId, setRemovingWorkerId] = useState<string | null>(null)
   const [messageTab, setMessageTab] = useState<'direct' | 'groups'>('direct')
+
+  usePushNotifications(agencyId)
 
   const handleScrollToMessages = () => {
     messagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })

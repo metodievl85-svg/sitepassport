@@ -170,5 +170,49 @@ export async function POST(
     }
   }
 
+  // If sender is a worker, also notify the agency
+  if (!isAgency) {
+    const { data: agencySubscriptions } = await supabase
+      .from('push_subscriptions')
+      .select('endpoint, p256dh, auth')
+      .eq('user_id', chat.agency_id)
+
+    if (agencySubscriptions?.length) {
+      // Resolve worker name
+      let workerName = 'Operative'
+      const { data: workerRow } = await supabase
+        .from('workers')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single()
+      if (workerRow?.full_name) workerName = workerRow.full_name
+
+      // Resolve placement/chat name
+      const chatName = chat.name || 'Group chat'
+
+      const webpush2 = await import('web-push')
+      webpush2.default.setVapidDetails(
+        'mailto:hello@nekaid.co.uk',
+        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+        process.env.VAPID_PRIVATE_KEY!
+      )
+
+      const agencyPayload = JSON.stringify({
+        title: `NekaID — ${chatName}`,
+        body: content ? `${workerName}: ${content.slice(0, 60)}` : `${workerName} sent a file`,
+        url: '/agency'
+      })
+
+      await Promise.allSettled(
+        agencySubscriptions.map((sub: any) =>
+          webpush2.default.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            agencyPayload
+          )
+        )
+      )
+    }
+  }
+
   return NextResponse.json(message, { status: 201 })
 }

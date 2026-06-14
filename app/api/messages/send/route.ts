@@ -88,18 +88,45 @@ export async function POST(request: NextRequest) {
         .select('endpoint, p256dh, auth')
         .eq('user_id', receiver_id)
 
+      // Resolve sender name for notification body
+      let senderName = 'New message'
+      const { data: senderWorker } = await supabaseAdmin
+        .from('workers')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single()
+      if (senderWorker?.full_name) {
+        senderName = senderWorker.full_name
+      } else {
+        const { data: senderProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('company_name, email')
+          .eq('id', user.id)
+          .single()
+        if (senderProfile?.company_name) senderName = senderProfile.company_name
+        else if (senderProfile?.email) senderName = senderProfile.email
+      }
+
+      // Determine correct URL for receiver
+      const { data: receiverProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', receiver_id)
+        .single()
+      const receiverUrl = receiverProfile?.role === 'agency' ? '/agency' : receiverProfile?.role === 'company' ? '/company' : '/worker'
+
       console.log('push debug: receiver_id=%s subscriptions_found=%d', receiver_id, subscriptions?.length ?? 0)
 
       if (subscriptions?.length) {
         const notificationBody = message_text
-          ? message_text.slice(0, 60)
-          : 'Sent you a file'
+          ? `${senderName}: ${message_text.slice(0, 60)}`
+          : `${senderName} sent a file`
 
         for (const sub of subscriptions) {
           try {
             await webpush.sendNotification(
               { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-              JSON.stringify({ title: 'NekaID — New message', body: notificationBody, url: '/worker' })
+              JSON.stringify({ title: 'NekaID — New message', body: notificationBody, url: receiverUrl })
             )
           } catch (pushErr) {
             console.error('Push notification failed:', pushErr)
