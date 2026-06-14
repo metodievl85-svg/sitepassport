@@ -1135,6 +1135,43 @@ export default function CompanyPage() {
     }
   }
 
+  async function handleManualSignIn(workerId: string, siteId: string) {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const res = await fetch('/api/attendance/manual', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          worker_id: workerId,
+          site_id: siteId,
+          date: new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }),
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json() as { error?: string }
+        if (err.error === 'Already marked present for this date') {
+          // Already signed in via GPS — just refresh
+        } else {
+          alert(err.error || 'Could not sign in worker')
+          return
+        }
+      }
+      setSavedWorkers(prev =>
+        prev.map(w =>
+          w.workerId === workerId
+            ? { ...w, siteStatus: 'IN', lastAttendanceAt: new Date().toISOString() }
+            : w
+        )
+      )
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   async function handleRemoveSavedWorker(savedId: string) {
     const confirmed = window.confirm('Remove this operative from your company dashboard?')
     if (!confirmed) return
@@ -2423,6 +2460,25 @@ export default function CompanyPage() {
                               : worker.inductionStatus === 'opened'
                                 ? 'Opened'
                                 : 'Sent'}
+                          </button>
+                        )}
+
+                        {!isOnSite && companySite?.id && (
+                          <button
+                            onClick={() => void handleManualSignIn(worker.workerId, companySite.id!)}
+                            style={{
+                              padding: '5px 12px',
+                              background: '#16307f',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            Sign in
                           </button>
                         )}
 
