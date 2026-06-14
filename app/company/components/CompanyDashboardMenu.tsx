@@ -6,9 +6,10 @@ import Link from 'next/link'
 type Props = {
   onAddOperative: () => void
   onExportReport: () => void
+  handleLogout: () => void
 }
 
-export default function CompanyDashboardMenu({ onAddOperative, onExportReport }: Props) {
+export default function CompanyDashboardMenu({ onAddOperative, onExportReport, handleLogout }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -23,14 +24,29 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
   const close = () => setOpen(false)
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="btn btn-secondary"
-        style={{ width: '220px', justifyContent: 'space-between', display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', background: 'white', color: '#09154b', border: '1px solid #d1d5db' }}
+        style={{
+          width: '100%',
+          padding: '12px 18px',
+          background: 'rgba(255,255,255,0.15)',
+          border: '1px solid rgba(255,255,255,0.3)',
+          borderRadius: '12px',
+          color: '#ffffff',
+          fontSize: '15px',
+          fontWeight: 700,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+          whiteSpace: 'nowrap',
+          letterSpacing: '0.01em',
+        }}
       >
-        <span>Dashboard menu</span>
-        <span style={{ fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+        <span>☰ Dashboard menu</span>
+        <span style={{ fontSize: 10, opacity: 0.8 }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
@@ -42,7 +58,7 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
           border: '1px solid #d7e1ef',
           borderRadius: 14,
           boxShadow: '0 8px 32px rgba(15,23,42,0.12)',
-          minWidth: 230,
+          minWidth: 240,
           zIndex: 50,
           overflow: 'hidden',
         }}>
@@ -71,6 +87,7 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
             </button>
           ))}
           {[
+            { label: '📷 Scan QR', href: '/scan' },
             { label: '💳 Billing', href: '/company/billing' },
             { label: '⚙️ Attendance settings', href: '/company/attendance-settings' },
             { label: '👥 Team & Organisation', href: '#organisation-panel' },
@@ -94,6 +111,22 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport }:
               {item.label}
             </Link>
           ))}
+          <button
+            onClick={() => { handleLogout(); close() }}
+            style={{
+              width: '100%',
+              padding: '13px 18px',
+              background: 'none',
+              border: 'none',
+              textAlign: 'left',
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#dc2626',
+              cursor: 'pointer',
+            }}
+          >
+            🚪 Sign out
+          </button>
         </div>
       )}
     </div>

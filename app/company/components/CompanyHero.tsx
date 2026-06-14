@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import CompanyDashboardMenu from './CompanyDashboardMenu'
 
 type Props = {
@@ -167,15 +166,7 @@ export default function CompanyHero({ email, handleLogout, onAddOperative, onExp
           </div>
         </div>
 
-        <Link href="/scan" className="btn btn-primary">
-          Scan QR
-        </Link>
-
-        <button onClick={handleLogout} className="btn btn-outline" type="button">
-          Logout
-        </button>
-
-        <CompanyDashboardMenu onAddOperative={onAddOperative} onExportReport={onExportReport} />
+        <CompanyDashboardMenu onAddOperative={onAddOperative} onExportReport={onExportReport} handleLogout={handleLogout} />
       </div>
 
       {isRigby && (
