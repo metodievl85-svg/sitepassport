@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import WorkerGroupMessages from './WorkerGroupMessages'
 
 type CompanyEntry = {
   companyId: string
@@ -29,6 +30,7 @@ type Props = {
 
 export default function WorkerMessages({ workerId, userId }: Props) {
   const [companies, setCompanies] = useState<CompanyEntry[]>([])
+  const [activeTab, setActiveTab] = useState<'direct' | 'groups'>('direct')
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [loadingMessages, setLoadingMessages] = useState(true)
@@ -230,475 +232,504 @@ export default function WorkerMessages({ workerId, userId }: Props) {
     })
   }
 
-  if (!loadingMessages && companies.length === 0) {
-    return null
-  }
-
   return (
-    <section
-      className="card"
-      style={{ marginBottom: 24, padding: 0, overflow: 'hidden' }}
-    >
-      <div className="wm-shell">
+    <div>
+      <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb' }}>
+        <button
+          onClick={() => setActiveTab('direct')}
+          style={{
+            flex: 1, padding: '12px', background: 'none', border: 'none',
+            borderBottom: activeTab === 'direct' ? '2px solid #16307f' : '2px solid transparent',
+            color: activeTab === 'direct' ? '#16307f' : '#6b7280',
+            fontWeight: activeTab === 'direct' ? 600 : 400,
+            cursor: 'pointer', fontSize: '14px'
+          }}
+        >💬 Direct</button>
+        <button
+          onClick={() => setActiveTab('groups')}
+          style={{
+            flex: 1, padding: '12px', background: 'none', border: 'none',
+            borderBottom: activeTab === 'groups' ? '2px solid #16307f' : '2px solid transparent',
+            color: activeTab === 'groups' ? '#16307f' : '#6b7280',
+            fontWeight: activeTab === 'groups' ? 600 : 400,
+            cursor: 'pointer', fontSize: '14px'
+          }}
+        >👥 Groups</button>
+      </div>
+      {activeTab === 'direct' && (
+        <div>
+          {!loadingMessages && companies.length === 0 ? null : (
+            <section
+              className="card"
+              style={{ marginBottom: 24, padding: 0, overflow: 'hidden' }}
+            >
+              <div className="wm-shell">
 
-        {/* Company list */}
-        <div className={`wm-sidebar ${mobileShowThread ? 'wm-sidebar-hidden' : ''}`}>
-          <div
-            style={{
-              padding: '14px 16px 12px',
-              borderBottom: '1px solid #d7e1ef',
-              fontSize: 11,
-              fontWeight: 800,
-              color: '#5a6f96',
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
-            }}
-          >
-            Messages
-          </div>
-
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {loadingMessages ? (
-              <div style={{ padding: 16, color: '#5a6f96', fontSize: 14, fontWeight: 700 }}>
-                Loading...
-              </div>
-            ) : (
-              sortedCompanies.map((company) => {
-                const unread = unreadCount(company.companyId)
-                const isSelected = selectedCompanyId === company.companyId
-
-                return (
-                  <button
-                    key={company.companyId}
-                    type="button"
-                    onClick={() => void handleSelectCompany(company.companyId)}
+                {/* Company list */}
+                <div className={`wm-sidebar ${mobileShowThread ? 'wm-sidebar-hidden' : ''}`}>
+                  <div
                     style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      textAlign: 'left',
-                      background: isSelected ? '#eef3ff' : 'transparent',
-                      border: 'none',
-                      borderBottom: '1px solid #f0f4fb',
-                      cursor: 'pointer',
+                      padding: '14px 16px 12px',
+                      borderBottom: '1px solid #d7e1ef',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: '#5a6f96',
+                      letterSpacing: '1.5px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Messages
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto' }}>
+                    {loadingMessages ? (
+                      <div style={{ padding: 16, color: '#5a6f96', fontSize: 14, fontWeight: 700 }}>
+                        Loading...
+                      </div>
+                    ) : (
+                      sortedCompanies.map((company) => {
+                        const unread = unreadCount(company.companyId)
+                        const isSelected = selectedCompanyId === company.companyId
+
+                        return (
+                          <button
+                            key={company.companyId}
+                            type="button"
+                            onClick={() => void handleSelectCompany(company.companyId)}
+                            style={{
+                              width: '100%',
+                              padding: '12px 16px',
+                              textAlign: 'left',
+                              background: isSelected ? '#eef3ff' : 'transparent',
+                              border: 'none',
+                              borderBottom: '1px solid #f0f4fb',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                            }}
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 900,
+                                  color: isSelected ? '#243caa' : '#09154b',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {company.email}
+                              </div>
+                            </div>
+
+                            {unread > 0 && (
+                              <div
+                                style={{
+                                  minWidth: 20,
+                                  height: 20,
+                                  borderRadius: 999,
+                                  background: '#b42318',
+                                  color: '#ffffff',
+                                  fontSize: 11,
+                                  fontWeight: 900,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  padding: '0 5px',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {unread}
+                              </div>
+                            )}
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Thread panel */}
+                <div className={`wm-thread ${!mobileShowThread ? 'wm-thread-hidden' : ''}`}>
+                  {/* Thread header */}
+                  <div
+                    style={{
+                      padding: '14px 18px 12px',
+                      borderBottom: '1px solid #d7e1ef',
                       display: 'flex',
                       alignItems: 'center',
                       gap: 10,
+                      minHeight: 50,
                     }}
                   >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          fontWeight: 900,
-                          color: isSelected ? '#243caa' : '#09154b',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {company.email}
-                      </div>
-                    </div>
-
-                    {unread > 0 && (
-                      <div
-                        style={{
-                          minWidth: 20,
-                          height: 20,
-                          borderRadius: 999,
-                          background: '#b42318',
-                          color: '#ffffff',
-                          fontSize: 11,
-                          fontWeight: 900,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '0 5px',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {unread}
-                      </div>
-                    )}
-                  </button>
-                )
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Thread panel */}
-        <div className={`wm-thread ${!mobileShowThread ? 'wm-thread-hidden' : ''}`}>
-          {/* Thread header */}
-          <div
-            style={{
-              padding: '14px 18px 12px',
-              borderBottom: '1px solid #d7e1ef',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              minHeight: 50,
-            }}
-          >
-            <button
-              type="button"
-              className="wm-back-btn"
-              onClick={() => setMobileShowThread(false)}
-              style={{
-                display: 'none',
-                minWidth: 32,
-                minHeight: 32,
-                borderRadius: 10,
-                border: '1px solid #d7e1ef',
-                background: '#f8fbff',
-                color: '#09154b',
-                fontSize: 16,
-                fontWeight: 900,
-                cursor: 'pointer',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              ←
-            </button>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#09154b', minWidth: 0 }}>
-              {selectedCompany
-                ? selectedCompany.email
-                : 'Select a conversation'}
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '14px 18px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 10,
-            }}
-          >
-            {!selectedCompanyId ? (
-              <div
-                style={{
-                  color: '#5a6f96',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  margin: 'auto',
-                  textAlign: 'center',
-                  padding: 20,
-                }}
-              >
-                Choose a conversation from the list.
-              </div>
-            ) : threadMessages.length === 0 ? (
-              <div
-                style={{
-                  color: '#5a6f96',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  margin: 'auto',
-                  textAlign: 'center',
-                }}
-              >
-                No messages yet. Send the first message below.
-              </div>
-            ) : (
-              threadMessages.map((msg) => {
-                const isFromMe = msg.sender_id === userId
-
-                return (
-                  <div
-                    key={msg.id}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: isFromMe ? 'flex-end' : 'flex-start',
-                    }}
-                  >
-                    <div
+                    <button
+                      type="button"
+                      className="wm-back-btn"
+                      onClick={() => setMobileShowThread(false)}
                       style={{
-                        maxWidth: '72%',
-                        borderRadius: isFromMe
-                          ? '18px 18px 4px 18px'
-                          : '18px 18px 18px 4px',
-                        padding: '10px 14px',
-                        background: isFromMe ? '#243caa' : '#f0f4fb',
-                        color: isFromMe ? '#ffffff' : '#09154b',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        lineHeight: 1.5,
-                        wordBreak: 'break-word',
+                        display: 'none',
+                        minWidth: 32,
+                        minHeight: 32,
+                        borderRadius: 10,
+                        border: '1px solid #d7e1ef',
+                        background: '#f8fbff',
+                        color: '#09154b',
+                        fontSize: 16,
+                        fontWeight: 900,
+                        cursor: 'pointer',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
                       }}
                     >
-                      {msg.file_url && msg.file_type === 'image' && (
-                        <a href={msg.file_url} target="_blank" rel="noopener noreferrer">
-                          <img
-                            src={msg.file_url}
-                            alt={msg.file_name || 'Attachment'}
-                            style={{
-                              display: 'block',
-                              maxWidth: '100%',
-                              maxHeight: 180,
-                              borderRadius: 10,
-                              objectFit: 'cover',
-                              marginBottom: msg.message_text ? 8 : 0,
-                            }}
-                          />
-                        </a>
-                      )}
+                      ←
+                    </button>
+                    <div style={{ fontSize: 15, fontWeight: 900, color: '#09154b', minWidth: 0 }}>
+                      {selectedCompany
+                        ? selectedCompany.email
+                        : 'Select a conversation'}
+                    </div>
+                  </div>
 
-                      {msg.file_url && msg.file_type === 'pdf' && (
-                        <a
-                          href={msg.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                  {/* Messages */}
+                  <div
+                    style={{
+                      flex: 1,
+                      overflowY: 'auto',
+                      padding: '14px 18px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 10,
+                    }}
+                  >
+                    {!selectedCompanyId ? (
+                      <div
+                        style={{
+                          color: '#5a6f96',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          margin: 'auto',
+                          textAlign: 'center',
+                          padding: 20,
+                        }}
+                      >
+                        Choose a conversation from the list.
+                      </div>
+                    ) : threadMessages.length === 0 ? (
+                      <div
+                        style={{
+                          color: '#5a6f96',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          margin: 'auto',
+                          textAlign: 'center',
+                        }}
+                      >
+                        No messages yet. Send the first message below.
+                      </div>
+                    ) : (
+                      threadMessages.map((msg) => {
+                        const isFromMe = msg.sender_id === userId
+
+                        return (
+                          <div
+                            key={msg.id}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: isFromMe ? 'flex-end' : 'flex-start',
+                            }}
+                          >
+                            <div
+                              style={{
+                                maxWidth: '72%',
+                                borderRadius: isFromMe
+                                  ? '18px 18px 4px 18px'
+                                  : '18px 18px 18px 4px',
+                                padding: '10px 14px',
+                                background: isFromMe ? '#243caa' : '#f0f4fb',
+                                color: isFromMe ? '#ffffff' : '#09154b',
+                                fontSize: 14,
+                                fontWeight: 600,
+                                lineHeight: 1.5,
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {msg.file_url && msg.file_type === 'image' && (
+                                <a href={msg.file_url} target="_blank" rel="noopener noreferrer">
+                                  <img
+                                    src={msg.file_url}
+                                    alt={msg.file_name || 'Attachment'}
+                                    style={{
+                                      display: 'block',
+                                      maxWidth: '100%',
+                                      maxHeight: 180,
+                                      borderRadius: 10,
+                                      objectFit: 'cover',
+                                      marginBottom: msg.message_text ? 8 : 0,
+                                    }}
+                                  />
+                                </a>
+                              )}
+
+                              {msg.file_url && msg.file_type === 'pdf' && (
+                                <a
+                                  href={msg.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    color: isFromMe ? '#ffffff' : '#243caa',
+                                    textDecoration: 'none',
+                                    fontWeight: 800,
+                                    fontSize: 13,
+                                    marginBottom: msg.message_text ? 8 : 0,
+                                  }}
+                                >
+                                  <span style={{ fontSize: 20 }}>📄</span>
+                                  <span
+                                    style={{
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    {msg.file_name || 'Document'}
+                                  </span>
+                                </a>
+                              )}
+
+                              {msg.message_text && <div>{msg.message_text}</div>}
+                            </div>
+
+                            <div
+                              style={{
+                                fontSize: 11,
+                                color: '#9aabba',
+                                marginTop: 4,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {formatTime(msg.sent_at)}
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                    <div ref={threadEndRef} />
+                  </div>
+
+                  {/* Input area */}
+                  {selectedCompanyId && (
+                    <div
+                      style={{
+                        borderTop: '1px solid #d7e1ef',
+                        padding: '10px 14px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8,
+                      }}
+                    >
+                      {selectedFile && (
+                        <div
                           style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: 8,
-                            color: isFromMe ? '#ffffff' : '#243caa',
-                            textDecoration: 'none',
-                            fontWeight: 800,
+                            padding: '6px 10px',
+                            background: '#eef3ff',
+                            borderRadius: 10,
+                            border: '1px solid #cdd9ff',
                             fontSize: 13,
-                            marginBottom: msg.message_text ? 8 : 0,
+                            fontWeight: 700,
+                            color: '#243caa',
                           }}
                         >
-                          <span style={{ fontSize: 20 }}>📄</span>
+                          <span>{selectedFile.type.startsWith('image/') ? '🖼️' : '📄'}</span>
                           <span
                             style={{
+                              flex: 1,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {msg.file_name || 'Document'}
+                            {selectedFile.name}
                           </span>
-                        </a>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFile(null)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: '#5a6f96',
+                              fontWeight: 900,
+                              fontSize: 18,
+                              lineHeight: 1,
+                              padding: 0,
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
                       )}
 
-                      {msg.message_text && <div>{msg.message_text}</div>}
-                    </div>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              void handleSend()
+                            }
+                          }}
+                          placeholder="Type a message..."
+                          disabled={sending}
+                          style={{
+                            flex: 1,
+                            minHeight: 44,
+                            borderRadius: 12,
+                            border: '1px solid #d7e1ef',
+                            padding: '0 14px',
+                            fontSize: 14,
+                            fontWeight: 600,
+                            outline: 'none',
+                            background: '#ffffff',
+                          }}
+                        />
 
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: '#9aabba',
-                        marginTop: 4,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {formatTime(msg.sent_at)}
-                    </div>
-                  </div>
-                )
-              })
-            )}
-            <div ref={threadEndRef} />
-          </div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,.pdf"
+                          style={{ display: 'none' }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) setSelectedFile(file)
+                            e.target.value = ''
+                          }}
+                        />
 
-          {/* Input area */}
-          {selectedCompanyId && (
-            <div
-              style={{
-                borderTop: '1px solid #d7e1ef',
-                padding: '10px 14px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-              }}
-            >
-              {selectedFile && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 10px',
-                    background: '#eef3ff',
-                    borderRadius: 10,
-                    border: '1px solid #cdd9ff',
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: '#243caa',
-                  }}
-                >
-                  <span>{selectedFile.type.startsWith('image/') ? '🖼️' : '📄'}</span>
-                  <span
-                    style={{
-                      flex: 1,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {selectedFile.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedFile(null)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#5a6f96',
-                      fontWeight: 900,
-                      fontSize: 18,
-                      lineHeight: 1,
-                      padding: 0,
-                    }}
-                  >
-                    ×
-                  </button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={sending}
+                          title="Attach file"
+                          style={{
+                            minWidth: 44,
+                            minHeight: 44,
+                            borderRadius: 12,
+                            border: '1px solid #d7e1ef',
+                            background: '#f8fbff',
+                            color: '#5a6f96',
+                            fontSize: 18,
+                            cursor: sending ? 'not-allowed' : 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          📎
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => void handleSend()}
+                          disabled={sending || uploading || (!messageText.trim() && !selectedFile)}
+                          style={{
+                            minWidth: 64,
+                            minHeight: 44,
+                            borderRadius: 12,
+                            border: '1px solid #243caa',
+                            background: '#243caa',
+                            color: '#ffffff',
+                            fontSize: 14,
+                            fontWeight: 900,
+                            cursor:
+                              sending || uploading || (!messageText.trim() && !selectedFile)
+                                ? 'not-allowed'
+                                : 'pointer',
+                            opacity:
+                              sending || uploading || (!messageText.trim() && !selectedFile) ? 0.6 : 1,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {uploading ? '⬆' : sending ? '...' : 'Send'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      void handleSend()
-                    }
-                  }}
-                  placeholder="Type a message..."
-                  disabled={sending}
-                  style={{
-                    flex: 1,
-                    minHeight: 44,
-                    borderRadius: 12,
-                    border: '1px solid #d7e1ef',
-                    padding: '0 14px',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    outline: 'none',
-                    background: '#ffffff',
-                  }}
-                />
-
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  style={{ display: 'none' }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) setSelectedFile(file)
-                    e.target.value = ''
-                  }}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={sending}
-                  title="Attach file"
-                  style={{
-                    minWidth: 44,
-                    minHeight: 44,
-                    borderRadius: 12,
-                    border: '1px solid #d7e1ef',
-                    background: '#f8fbff',
-                    color: '#5a6f96',
-                    fontSize: 18,
-                    cursor: sending ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  📎
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => void handleSend()}
-                  disabled={sending || uploading || (!messageText.trim() && !selectedFile)}
-                  style={{
-                    minWidth: 64,
-                    minHeight: 44,
-                    borderRadius: 12,
-                    border: '1px solid #243caa',
-                    background: '#243caa',
-                    color: '#ffffff',
-                    fontSize: 14,
-                    fontWeight: 900,
-                    cursor:
-                      sending || uploading || (!messageText.trim() && !selectedFile)
-                        ? 'not-allowed'
-                        : 'pointer',
-                    opacity:
-                      sending || uploading || (!messageText.trim() && !selectedFile) ? 0.6 : 1,
-                    flexShrink: 0,
-                  }}
-                >
-                  {uploading ? '⬆' : sending ? '...' : 'Send'}
-                </button>
               </div>
-            </div>
+
+              <style>{`
+                .wm-shell {
+                  display: flex;
+                  height: 540px;
+                }
+
+                .wm-sidebar {
+                  width: 230px;
+                  flex-shrink: 0;
+                  border-right: 1px solid #d7e1ef;
+                  display: flex;
+                  flex-direction: column;
+                  overflow: hidden;
+                }
+
+                .wm-thread {
+                  flex: 1;
+                  min-width: 0;
+                  display: flex;
+                  flex-direction: column;
+                }
+
+                @media (max-width: 640px) {
+                  .wm-shell {
+                    height: 520px;
+                  }
+
+                  .wm-sidebar {
+                    width: 100%;
+                    position: absolute;
+                    inset: 0;
+                    background: #ffffff;
+                    border-right: none;
+                    z-index: 2;
+                  }
+
+                  .wm-sidebar.wm-sidebar-hidden {
+                    display: none;
+                  }
+
+                  .wm-thread {
+                    width: 100%;
+                  }
+
+                  .wm-thread.wm-thread-hidden {
+                    display: none;
+                  }
+
+                  .wm-back-btn {
+                    display: flex !important;
+                  }
+                }
+              `}</style>
+            </section>
           )}
         </div>
-      </div>
-
-      <style>{`
-        .wm-shell {
-          display: flex;
-          height: 540px;
-        }
-
-        .wm-sidebar {
-          width: 230px;
-          flex-shrink: 0;
-          border-right: 1px solid #d7e1ef;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .wm-thread {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-        }
-
-        @media (max-width: 640px) {
-          .wm-shell {
-            height: 520px;
-          }
-
-          .wm-sidebar {
-            width: 100%;
-            position: absolute;
-            inset: 0;
-            background: #ffffff;
-            border-right: none;
-            z-index: 2;
-          }
-
-          .wm-sidebar.wm-sidebar-hidden {
-            display: none;
-          }
-
-          .wm-thread {
-            width: 100%;
-          }
-
-          .wm-thread.wm-thread-hidden {
-            display: none;
-          }
-
-          .wm-back-btn {
-            display: flex !important;
-          }
-        }
-      `}</style>
-    </section>
+      )}
+      {activeTab === 'groups' && (
+        <WorkerGroupMessages workerId={workerId} userId={userId} />
+      )}
+    </div>
   )
 }
