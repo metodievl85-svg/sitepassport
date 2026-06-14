@@ -2467,12 +2467,12 @@ export default function CompanyPage() {
                           <button
                             onClick={() => void handleManualSignIn(worker.workerId, companySite.id!)}
                             style={{
-                              padding: '5px 12px',
-                              background: '#16307f',
+                              padding: '7px 16px',
+                              background: '#1a7a3f',
                               color: '#fff',
                               border: 'none',
                               borderRadius: 8,
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: 700,
                               cursor: 'pointer',
                               whiteSpace: 'nowrap',
