@@ -408,11 +408,19 @@ export default function CompanyPage() {
   const [viewingSite, setViewingSite] = useState<{ userId: string; name: string } | null>(null)
   const [viewingSiteData, setViewingSiteData] = useState<{ saved_workers: any[]; site_attendance: any[]; company_sites: any[] } | null>(null)
   const [viewingSiteLoading, setViewingSiteLoading] = useState(false)
+  const [billingSuccess, setBillingSuccess] = useState(false)
 
   usePushNotifications(companyId)
 
   useEffect(() => {
     void loadCompanyDashboard()
+  }, [])
+
+  useEffect(() => {
+    if (window.location.search.includes('billing=success')) {
+      setBillingSuccess(true)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
 
   useEffect(() => {
@@ -1835,6 +1843,29 @@ export default function CompanyPage() {
               style={{ padding: '6px 14px', borderRadius: 10, background: '#856404', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}
             >
               Back to my site
+            </button>
+          </div>
+        )}
+        {billingSuccess && (
+          <div style={{
+            background: '#ecfdf5',
+            border: '1px solid #6ee7b7',
+            borderRadius: 12,
+            padding: '14px 18px',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}>
+            <span style={{ fontWeight: 700, color: '#065f46', fontSize: 15 }}>
+              🎉 Subscription activated! Your 14-day free trial has started.
+            </span>
+            <button
+              onClick={() => setBillingSuccess(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#065f46', lineHeight: 1, padding: 0 }}
+            >
+              ✕
             </button>
           </div>
         )}

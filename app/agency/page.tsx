@@ -92,6 +92,7 @@ export default function AgencyPage() {
   const [notesMap, setNotesMap] = useState<Record<string, string>>({})
   const [removingWorkerId, setRemovingWorkerId] = useState<string | null>(null)
   const [messageTab, setMessageTab] = useState<'direct' | 'groups'>('direct')
+  const [billingSuccess, setBillingSuccess] = useState(false)
 
   usePushNotifications(agencyId)
 
@@ -101,6 +102,13 @@ export default function AgencyPage() {
 
   useEffect(() => {
     void load()
+  }, [])
+
+  useEffect(() => {
+    if (window.location.search.includes('billing=success')) {
+      setBillingSuccess(true)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
 
   async function load() {
@@ -586,6 +594,29 @@ export default function AgencyPage() {
     <main className="page-shell">
       <div className="container">
 
+        {billingSuccess && (
+          <div style={{
+            background: '#ecfdf5',
+            border: '1px solid #6ee7b7',
+            borderRadius: 12,
+            padding: '14px 18px',
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}>
+            <span style={{ fontWeight: 700, color: '#065f46', fontSize: 15 }}>
+              🎉 Subscription activated! Your 14-day free trial has started.
+            </span>
+            <button
+              onClick={() => setBillingSuccess(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#065f46', lineHeight: 1, padding: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <section
           className="ag-hero-section"
           style={{
