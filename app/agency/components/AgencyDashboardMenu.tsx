@@ -58,14 +58,29 @@ export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR }:
 
   return (
     <>
-      <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <div ref={ref} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
         <button
           onClick={() => setOpen(o => !o)}
-          className="btn btn-secondary"
-          style={{ width: '190px', justifyContent: 'space-between', display: 'flex', alignItems: 'center', gap: 8 }}
+          style={{
+            width: '100%',
+            padding: '12px 18px',
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            borderRadius: '12px',
+            color: '#ffffff',
+            fontSize: '15px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+            whiteSpace: 'nowrap',
+            letterSpacing: '0.01em',
+          }}
         >
-          <span>Dashboard menu</span>
-          <span style={{ fontSize: 10 }}>{open ? '▲' : '▼'}</span>
+          <span>☰ Dashboard menu</span>
+          <span style={{ fontSize: 10, opacity: 0.8 }}>{open ? '▲' : '▼'}</span>
         </button>
 
         {open && (
