@@ -50,6 +50,24 @@ export default function CompanyMessages({ companyId, workers }: Props) {
   }, [companyId])
 
   useEffect(() => {
+    if (!companyId || !accessToken) return
+
+    const channel = supabase
+      .channel(`messages-company-${companyId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `company_id=eq.${companyId}`,
+      }, () => {
+        void loadMessages(accessToken)
+      })
+      .subscribe()
+
+    return () => { void supabase.removeChannel(channel) }
+  }, [companyId, accessToken])
+
+  useEffect(() => {
     if (!selectedWorkerId) return
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, selectedWorkerId])
