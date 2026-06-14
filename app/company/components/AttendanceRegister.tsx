@@ -298,7 +298,7 @@ export default function AttendanceRegister({ siteId }: Props) {
           const x = margin + nameColW + tradeColW + i * dayColW + dayColW / 2
           doc.setFont('helvetica', 'bold')
           doc.setTextColor(22, 115, 66)
-          doc.text(cell.manually_added ? 'M' : '✓', x, y + 5.5, { align: 'center' })
+          doc.text(cell.manually_added ? 'M' : '/', x, y + 5.5, { align: 'center' })
           doc.setFont('helvetica', 'normal')
           doc.setTextColor(15, 15, 15)
         })
