@@ -11,11 +11,11 @@ export function usePushNotifications(userId: string, workerId = '') {
     if (attempted.current) return
     attempted.current = true
 
-    void registerPush(userId, workerId)
+    void registerPush(workerId)
   }, [userId, workerId])
 }
 
-async function registerPush(userId: string, workerId: string) {
+async function registerPush(workerId: string) {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
 
@@ -45,23 +45,22 @@ async function registerPush(userId: string, workerId: string) {
 
     const endpoint = subscription.endpoint
 
-    // Remove any stale rows for this user on a different endpoint (e.g. old domain)
-    await supabase
-      .from('push_subscriptions')
-      .delete()
-      .eq('user_id', userId)
-      .neq('endpoint', endpoint)
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) return
 
-    await supabase.from('push_subscriptions').upsert(
-      {
-        user_id: userId,
-        ...(workerId ? { worker_id: workerId } : {}),
+    await fetch('/api/push-subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
         endpoint,
         p256dh: subscriptionJson.keys.p256dh,
         auth: subscriptionJson.keys.auth,
-      },
-      { onConflict: 'endpoint' }
-    )
+        ...(workerId ? { worker_id: workerId } : {})
+      })
+    })
   } catch (err) {
     console.error('Push registration error:', err)
   }
