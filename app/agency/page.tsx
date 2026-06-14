@@ -50,6 +50,176 @@ type AgencyWorker = {
   bankSortCode: string
 }
 
+type PlacementGroup = {
+  label: string
+  companyName: string
+  siteName: string
+  workers: AgencyWorker[]
+}
+
+function PlacementOverview({
+  groups,
+  onExport,
+}: {
+  groups: [string, PlacementGroup][]
+  onExport: (key: string, workers: AgencyWorker[]) => void
+}) {
+  const [search, setSearch] = useState('')
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set())
+
+  const toggle = (key: string) => {
+    setExpandedKeys(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const filtered = search.trim()
+    ? groups.filter(([, g]) => g.label.toLowerCase().includes(search.trim().toLowerCase()))
+    : groups
+
+  return (
+    <section className="card" style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h2 className="section-title" style={{ marginBottom: 2 }}>Placement overview</h2>
+          <p className="section-subtitle" style={{ margin: 0 }}>{groups.length} placement{groups.length !== 1 ? 's' : ''} · click to expand</p>
+        </div>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search placements..."
+          style={{
+            height: 38,
+            borderRadius: 10,
+            border: '1px solid #d7e1ef',
+            padding: '0 12px',
+            fontSize: 14,
+            fontFamily: 'inherit',
+            outline: 'none',
+            minWidth: 200,
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {filtered.length === 0 && (
+          <p style={{ color: '#94a3b8', fontSize: 14, padding: '12px 0' }}>No placements match.</p>
+        )}
+        {filtered.map(([key, group]) => {
+          const expiredCount = group.workers.filter(w => w.complianceStatus === 'expired').length
+          const expiringCount = group.workers.filter(w => w.complianceStatus === 'expiring').length
+          const dotColor = expiredCount > 0 ? '#dc2626' : expiringCount > 0 ? '#d97706' : '#16a34a'
+          const statusText = expiredCount > 0
+            ? `${expiredCount} expired`
+            : expiringCount > 0
+            ? `${expiringCount} expiring soon`
+            : 'All compliant'
+          const isOpen = expandedKeys.has(key)
+
+          return (
+            <div
+              key={key}
+              style={{
+                border: '1px solid #e2e8f0',
+                borderRadius: 12,
+                overflow: 'hidden',
+                background: '#fafcff',
+              }}
+            >
+              {/* Row — always visible */}
+              <div
+                onClick={() => toggle(key)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '11px 16px',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                }}
+              >
+                <span style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>{isOpen ? '▼' : '▶'}</span>
+                <div
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    background: dotColor,
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontWeight: 700, fontSize: 14, color: '#09154b', flex: 1, minWidth: 0 }}>
+                  {group.label}
+                </span>
+                <span style={{ fontSize: 13, color: '#62779a', fontWeight: 600, flexShrink: 0 }}>
+                  {group.workers.length} {group.workers.length === 1 ? 'worker' : 'workers'}
+                </span>
+                <span style={{ fontSize: 12, color: dotColor, fontWeight: 700, flexShrink: 0, minWidth: 100, textAlign: 'right' }}>
+                  {statusText}
+                </span>
+                {key !== '__unassigned__' && (
+                  <button
+                    onClick={e => { e.stopPropagation(); onExport(key, group.workers) }}
+                    style={{
+                      fontSize: 12,
+                      padding: '5px 12px',
+                      borderRadius: 8,
+                      border: '1px solid #16307f',
+                      background: '#16307f',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    📄 Export PDF
+                  </button>
+                )}
+              </div>
+
+              {/* Expanded worker chips */}
+              {isOpen && (
+                <div style={{ padding: '0 16px 14px 40px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {group.workers.map(w => {
+                    const badge =
+                      w.complianceStatus === 'expired'
+                        ? { bg: '#fff1f1', color: '#b42318', border: '1px solid #efc1c1' }
+                        : w.complianceStatus === 'expiring'
+                        ? { bg: '#fff8ea', color: '#9b5d00', border: '1px solid #efd6ac' }
+                        : { bg: '#ecfdf3', color: '#167342', border: '1px solid #b7e4c7' }
+                    return (
+                      <span
+                        key={w.workerId}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '5px 12px',
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 700,
+                          background: badge.bg,
+                          color: badge.color,
+                          border: badge.border,
+                        }}
+                      >
+                        {w.fullName || 'Unnamed'}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 function getComplianceStatus(expiries: (string | null | undefined)[]): ComplianceStatus {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -987,7 +1157,6 @@ export default function AgencyPage() {
         </section>
 
         {workers.length > 0 && (() => {
-          // Group workers by placement
           const placementGroups: Record<string, { label: string; companyName: string; siteName: string; workers: AgencyWorker[] }> = {}
 
           for (const w of workers) {
@@ -1011,98 +1180,10 @@ export default function AgencyPage() {
           })
 
           return (
-            <section className="card" style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div>
-                  <h2 className="section-title" style={{ marginBottom: 2 }}>Placement overview</h2>
-                  <p className="section-subtitle" style={{ margin: 0 }}>Workers grouped by active placement with compliance summary.</p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {groups.map(([key, group]) => {
-                  const expiredCount = group.workers.filter(w => w.complianceStatus === 'expired').length
-                  const expiringCount = group.workers.filter(w => w.complianceStatus === 'expiring').length
-                  const borderColor = expiredCount > 0 ? '#dc2626' : expiringCount > 0 ? '#d97706' : '#16a34a'
-                  const bgColor = expiredCount > 0 ? '#fff1f1' : expiringCount > 0 ? '#fff8ea' : '#f0fdf4'
-                  const statusText = expiredCount > 0
-                    ? `${expiredCount} expired`
-                    : expiringCount > 0
-                    ? `${expiringCount} expiring soon`
-                    : 'All compliant'
-                  const statusColor = expiredCount > 0 ? '#b42318' : expiringCount > 0 ? '#9b5d00' : '#167342'
-
-                  return (
-                    <div
-                      key={key}
-                      style={{
-                        border: `1.5px solid ${borderColor}`,
-                        borderRadius: 16,
-                        background: bgColor,
-                        padding: '14px 18px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                        <div>
-                          <div style={{ fontWeight: 900, fontSize: 16, color: '#09154b' }}>
-                            {group.label}
-                          </div>
-                          <div style={{ fontSize: 13, color: '#62779a', fontWeight: 600, marginTop: 2 }}>
-                            {group.workers.length} {group.workers.length === 1 ? 'worker' : 'workers'} · <span style={{ color: statusColor, fontWeight: 700 }}>{statusText}</span>
-                          </div>
-                        </div>
-                        {key !== '__unassigned__' && (
-                          <button
-                            onClick={() => exportPlacementPDF(key, group.workers)}
-                            style={{
-                              fontSize: 13,
-                              padding: '7px 16px',
-                              borderRadius: 10,
-                              border: '1px solid #16307f',
-                              background: '#16307f',
-                              color: '#fff',
-                              cursor: 'pointer',
-                              fontWeight: 700,
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            📄 Export PDF
-                          </button>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                        {group.workers.map(w => {
-                          const badge =
-                            w.complianceStatus === 'expired'
-                              ? { bg: '#fff1f1', color: '#b42318', border: '1px solid #efc1c1' }
-                              : w.complianceStatus === 'expiring'
-                              ? { bg: '#fff8ea', color: '#9b5d00', border: '1px solid #efd6ac' }
-                              : { bg: '#ecfdf3', color: '#167342', border: '1px solid #b7e4c7' }
-                          return (
-                            <span
-                              key={w.workerId}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '5px 12px',
-                                borderRadius: 999,
-                                fontSize: 13,
-                                fontWeight: 700,
-                                background: badge.bg,
-                                color: badge.color,
-                                border: badge.border,
-                              }}
-                            >
-                              {w.fullName || 'Unnamed'}
-                            </span>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
+            <PlacementOverview
+              groups={groups}
+              onExport={exportPlacementPDF}
+            />
           )
         })()}
 
