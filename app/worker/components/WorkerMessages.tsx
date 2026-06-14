@@ -49,6 +49,24 @@ export default function WorkerMessages({ workerId, userId }: Props) {
   }, [userId])
 
   useEffect(() => {
+    if (!userId) return
+
+    const channel = supabase
+      .channel(`messages-worker-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `receiver_id=eq.${userId}`,
+      }, () => {
+        void init()
+      })
+      .subscribe()
+
+    return () => { void supabase.removeChannel(channel) }
+  }, [userId])
+
+  useEffect(() => {
     if (!selectedCompanyId) return
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, selectedCompanyId])
