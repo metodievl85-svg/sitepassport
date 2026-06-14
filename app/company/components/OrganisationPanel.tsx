@@ -9,6 +9,7 @@ type OrgMember = {
   role: string
   email?: string
   full_name?: string
+  site_name?: string | null
 }
 
 type Organisation = {
@@ -96,6 +97,7 @@ export default function OrganisationPanel({ onViewSite }: Props) {
         role: m.role,
         email: m.email,
         full_name: m.full_name,
+        site_name: m.site_name ?? null,
       })))
     } catch {
       // silent
@@ -324,9 +326,16 @@ export default function OrganisationPanel({ onViewSite }: Props) {
               key={member.id}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px', border: '1px solid #d7e1ef', borderRadius: 12, background: '#fbfdff' }}
             >
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#09154b', wordBreak: 'break-word' }}>
-                {member.full_name || member.email}
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#09154b', wordBreak: 'break-word' }}>
+                  {member.email || member.user_id}
+                </span>
+                {member.site_name && (
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#5a6f96' }}>
+                    📍 {member.site_name}
+                  </span>
+                )}
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={roleBadgeStyle(member.role)}>{roleLabel(member.role)}</span>
                 {(myRole === 'owner' || myRole === 'admin') && member.role !== 'owner' && (

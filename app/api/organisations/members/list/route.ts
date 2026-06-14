@@ -64,8 +64,9 @@ export async function GET(request: NextRequest) {
       return {
         user_id: m.user_id,
         role: m.role,
-        full_name: site?.site_name || profile?.email || m.user_id,
-        email: profile?.email || '',
+        full_name: profile?.email ?? m.user_id,
+        email: profile?.email ?? '',
+        site_name: site?.site_name ?? null,
         is_self: m.user_id === user.id,
       }
     })
