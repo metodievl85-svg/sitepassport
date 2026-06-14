@@ -258,6 +258,8 @@ export default function AgencyPage() {
   const [placementError, setPlacementError] = useState('')
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
   const [availableOnly, setAvailableOnly] = useState(false)
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [alertsExpanded, setAlertsExpanded] = useState(false)
   const messagesRef = useRef<HTMLDivElement>(null)
   const [statusMap, setStatusMap] = useState<Record<string, string>>({})
   const [notesMap, setNotesMap] = useState<Record<string, string>>({})
@@ -1133,11 +1135,13 @@ export default function AgencyPage() {
           const urgent: UrgentItem[] = []
 
           for (const w of workers) {
+            if (dismissedAlerts.has(`${w.workerId}-CSCS card`) && dismissedAlerts.has(`${w.workerId}-Right to work`)) continue
             const checks: { label: string; date: string | null | undefined }[] = [
               { label: 'CSCS card', date: w.cscsExpiry },
               { label: 'Right to work', date: w.rightToWorkExpiry },
             ]
             for (const check of checks) {
+              if (dismissedAlerts.has(`${w.workerId}-${check.label}`)) continue
               if (!check.date) continue
               const d = new Date(check.date)
               if (isNaN(d.getTime())) continue
@@ -1160,13 +1164,15 @@ export default function AgencyPage() {
 
           const expiredItems = urgent.filter(u => u.isExpired)
           const expiringItems = urgent.filter(u => !u.isExpired)
+          const visibleItems = alertsExpanded ? urgent : urgent.slice(0, 5)
+          const hasMore = urgent.length > 5
 
           return (
             <section style={{ marginBottom: 24, borderRadius: 18, overflow: 'hidden', border: '1.5px solid #fca5a5', background: '#fff' }}>
               {/* Header */}
               <div style={{ background: 'linear-gradient(135deg, #7f1d1d, #dc2626)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 20 }}>⚠️</span>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ color: '#fff', fontWeight: 900, fontSize: 16 }}>Action required</div>
                   <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600 }}>
                     {expiredItems.length > 0 && `${expiredItems.length} expired`}
@@ -1178,7 +1184,7 @@ export default function AgencyPage() {
 
               {/* Items */}
               <div style={{ padding: '8px 0' }}>
-                {urgent.map((u, i) => {
+                {visibleItems.map((u, i) => {
                   const placement = placements.find(p => p.worker_id === u.worker.workerId)
                   const placementLabel = placement ? `${placement.company_name} · ${placement.site_name}` : 'No placement'
                   const isExpired = u.isExpired
@@ -1190,10 +1196,10 @@ export default function AgencyPage() {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 14,
+                        gap: 12,
                         padding: '12px 20px',
                         background: bgColor,
-                        borderBottom: i < urgent.length - 1 ? '1px solid #f1f5f9' : 'none',
+                        borderBottom: i < visibleItems.length - 1 ? '1px solid #f1f5f9' : 'none',
                         flexWrap: 'wrap',
                       }}
                     >
@@ -1236,33 +1242,91 @@ export default function AgencyPage() {
                         </div>
                       </div>
 
-                      {/* Message button */}
-                      {u.worker.userId && (
-                        <button
-                          onClick={() => {
-                            handleScrollToMessages()
-                            setMessageTab('direct')
-                          }}
+                      {/* Action buttons */}
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+                        <a
+                          href={`/scan/${u.worker.workerId}`}
+                          target="_blank"
+                          rel="noreferrer"
                           style={{
                             fontSize: 12,
                             padding: '6px 14px',
                             borderRadius: 8,
-                            border: '1px solid #16307f',
-                            background: '#16307f',
-                            color: '#fff',
+                            border: '1px solid #d7e1ef',
+                            background: '#fff',
+                            color: '#09154b',
                             cursor: 'pointer',
                             fontWeight: 700,
                             whiteSpace: 'nowrap',
-                            flexShrink: 0,
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
                           }}
                         >
-                          💬 Message
+                          👤 View passport
+                        </a>
+                        {u.worker.userId && (
+                          <button
+                            onClick={() => {
+                              handleScrollToMessages()
+                              setMessageTab('direct')
+                            }}
+                            style={{
+                              fontSize: 12,
+                              padding: '6px 14px',
+                              borderRadius: 8,
+                              border: '1px solid #16307f',
+                              background: '#16307f',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            💬 Message
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDismissedAlerts(prev => new Set(prev).add(`${u.worker.workerId}-${u.label}`))}
+                          style={{
+                            fontSize: 12,
+                            padding: '6px 10px',
+                            borderRadius: 8,
+                            border: '1px solid #e2e8f0',
+                            background: '#f8fafc',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                          }}
+                          title="Dismiss this alert"
+                        >
+                          ✕
                         </button>
-                      )}
+                      </div>
                     </div>
                   )
                 })}
               </div>
+
+              {/* Show more / less */}
+              {hasMore && (
+                <div style={{ padding: '12px 20px', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                  <button
+                    onClick={() => setAlertsExpanded(o => !o)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#16307f',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {alertsExpanded ? '▲ Show less' : `▼ Show all ${urgent.length} alerts`}
+                  </button>
+                </div>
+              )}
             </section>
           )
         })()}
