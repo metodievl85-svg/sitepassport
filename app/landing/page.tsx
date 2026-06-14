@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import Link from 'next/link'
 
-type Tier = { n: string; l: string; m: number; y: number; pop?: boolean; f: string[] }
-
-const DATA: Record<'site' | 'agency', Tier[]> = {
+const DATA = {
   site: [
     { n: 'Small', l: 'Up to 25 workers', m: 49, y: 41, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts', 'Two-way messaging', 'Photo & drawing sharing'] },
     { n: 'Medium', l: 'Up to 75 workers', m: 79, y: 66, pop: true, f: ['QR verify & sign in/out', 'Digital inductions', 'Live attendance', 'Expiry alerts', 'Two-way messaging', 'Photo & drawing sharing'] },
@@ -19,381 +18,580 @@ const DATA: Record<'site' | 'agency', Tier[]> = {
   ],
 }
 
-const CSS = `
-body.nk-landing{background:#0c0b0a !important}
-body.nk-landing > footer{display:none !important}
-body.nk-landing::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-
-.nkx{
-  --bg:#0c0b0a;--bg-2:#131110;--bg-3:#1a1715;--gold:#16307f;--gold-bright:#2a4a9f;--gold-deep:#0f2060;
-  --cream:#f3efe6;--cream-dim:#cfc8ba;--muted:#938c80;--line:rgba(243,239,230,.10);--line-2:rgba(243,239,230,.16);--ok:#7fb98a;
-  background:var(--bg);color:var(--cream);font-family:'DM Sans',sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
-}
-.nkx *{box-sizing:border-box;margin:0;padding:0}
-.nkx h1,.nkx h2,.nkx h3{font-family:'Fraunces',serif;font-weight:400;line-height:1.05;letter-spacing:-.015em}
-.nkx a{color:inherit;text-decoration:none}
-.nkx .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
-.nkx .kk{font-family:'DM Sans';font-size:12px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
-.nkx .lbtn{display:inline-flex;align-items:center;gap:9px;font-family:'DM Sans';font-weight:600;font-size:14.5px;border-radius:2px;padding:14px 26px;cursor:pointer;border:0;min-height:auto;box-shadow:none;transition:.3s ease;letter-spacing:.01em}
-.nkx .lbtn-gold{background:var(--gold);color:#ffffff}
-.nkx .lbtn-gold:hover{background:var(--gold-bright);transform:translateY(-2px)}
-.nkx .lbtn-line{background:transparent;color:var(--cream);border:1px solid var(--line-2)}
-.nkx .lbtn-line:hover{border-color:var(--gold);color:var(--gold)}
-.nkx nav{position:sticky;top:0;z-index:100;background:rgba(12,11,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-.nkx .nav-in{display:flex;align-items:center;justify-content:space-between;height:78px}
-.nkx .lbrand{display:flex;align-items:center;gap:11px;margin:0;letter-spacing:normal;font-weight:400}
-.nkx .lbrand img{height:40px;width:auto;display:block}
-.nkx .lbrand .wm{font-family:'Fraunces',serif;font-weight:500;font-size:23px;letter-spacing:.01em}
-.nkx .lbrand .wm b{color:var(--gold);font-weight:500}
-.nkx .nav-links{display:flex;align-items:center;gap:38px;font-size:14.5px;color:var(--cream-dim)}
-.nkx .nav-links a:not(.lbtn):hover{color:var(--gold)}
-.nkx .lhero{position:relative;padding:48px 0 90px}
-.nkx .hero-glow{position:absolute;top:-160px;right:-120px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(22,48,127,.12),transparent 62%);pointer-events:none}
-.nkx .hero-in{position:relative;display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
-.nkx .tagline{display:inline-flex;align-items:center;gap:10px;margin-bottom:30px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-dim)}
-.nkx .tagline .ln{width:34px;height:1px;background:var(--gold)}
-.nkx h1.head{font-size:clamp(42px,5.6vw,76px);font-weight:400}
-.nkx h1.head em{font-style:italic;color:var(--gold)}
-.nkx .lhero p.lede{margin:30px 0 38px;font-size:18.5px;color:var(--cream-dim);max-width:480px;line-height:1.62}
-.nkx .hero-cta{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
-.nkx .hero-foot{display:flex;align-items:center;gap:26px;margin-top:42px;padding-top:30px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
-.nkx .hero-foot b{color:var(--cream);font-weight:500;font-family:'Fraunces',serif;font-size:22px;display:block;margin-bottom:2px}
-.nkx .hero-foot .sep{width:1px;height:34px;background:var(--line)}
-.nkx .cardwrap{perspective:1600px}
-.nkx .cred{position:relative;width:100%;max-width:400px;margin:0 auto;aspect-ratio:1.586/1;border-radius:18px;background:linear-gradient(150deg,#0a2a7a 0%,#0d1f5c 55%,#061244 100%);border:1px solid rgba(255,255,255,.15);box-shadow:0 50px 90px -40px rgba(0,0,0,.9),0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.05);padding:26px 28px;display:flex;flex-direction:column;justify-content:space-between;transform:rotateY(-13deg) rotateX(6deg);transition:transform .6s ease;overflow:hidden}
-.nkx .cardwrap:hover .cred{transform:rotateY(-6deg) rotateX(3deg)}
-.nkx .cred::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(22,48,127,.10) 47%,transparent 60%);pointer-events:none}
-.nkx .cred-top{display:flex;justify-content:space-between;align-items:flex-start}
-.nkx .cred-top .lbl{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);font-weight:600}
-.nkx .cred-top .vf{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ok);display:flex;align-items:center;gap:5px}
-.nkx .cred-top .vf::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
-.nkx .chip{width:48px;height:36px;border-radius:7px;background:linear-gradient(135deg,#2a4a9f,#0f2060);position:relative;box-shadow:inset 0 1px 2px rgba(255,255,255,.5)}
-.nkx .chip::before,.nkx .chip::after{content:"";position:absolute;left:8px;right:8px;height:1px;background:rgba(60,40,15,.5)}
-.nkx .chip::before{top:12px}.nkx .chip::after{top:22px}
-.nkx .cred-name{font-family:'Fraunces',serif;font-size:25px;font-weight:500;color:var(--cream);margin-bottom:3px}
-.nkx .cred-role{font-size:11.5px;letter-spacing:.04em;color:var(--cream-dim)}
-.nkx .cred-row{display:flex;gap:8px;margin-top:14px}
-.nkx .cred-tag{font-size:9.5px;letter-spacing:.06em;padding:5px 10px;border-radius:100px;border:1px solid var(--line-2);color:var(--cream-dim)}
-.nkx .cred-tag.g{border-color:rgba(201,168,106,.4);color:var(--gold)}
-.nkx .cred-bottom{display:flex;justify-content:space-between;align-items:flex-end}
-.nkx .cred-qr{width:50px;height:50px;border-radius:6px;background:repeating-linear-gradient(0deg,var(--cream) 0 3px,transparent 3px 6px),repeating-linear-gradient(90deg,var(--cream) 0 3px,transparent 3px 6px);opacity:.85;background-color:rgba(243,239,230,.06)}
-.nkx .cred-no{font-size:10px;letter-spacing:.18em;color:var(--muted);text-align:right}
-.nkx .cred-no b{display:block;color:var(--gold);font-weight:600;font-size:11px;margin-top:3px;letter-spacing:.12em}
-.nkx .float-note{position:absolute;left:-30px;bottom:46px;background:rgba(20,17,16,.92);backdrop-filter:blur(8px);border:1px solid var(--line-2);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:11px;box-shadow:0 24px 50px -20px rgba(0,0,0,.8);animation:nk-fl 6s ease-in-out infinite}
-.nkx .float-note .ic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:rgba(127,185,138,.15);color:var(--ok);font-size:14px}
-.nkx .float-note .tx{font-size:12px}.nkx .float-note .tx span{display:block;font-size:10px;color:var(--muted)}
-@keyframes nk-fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.nkx .band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:26px 0;overflow:hidden}
-.nkx .band-in{display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap;font-family:'Fraunces',serif;font-size:15px;color:var(--muted);letter-spacing:.02em}
-.nkx .band-in .dot{color:var(--gold)}
-.nkx section.s{padding:130px 0;position:relative}
-.nkx .lead{max-width:720px;margin-bottom:72px}
-.nkx .lead h2{font-size:clamp(32px,4.2vw,52px);margin:18px 0 0}
-.nkx .lead h2 em{font-style:italic;color:var(--gold)}
-.nkx .lead p{color:var(--cream-dim);font-size:18px;margin-top:22px;max-width:560px}
-.nkx .rows{border-top:1px solid var(--line)}
-.nkx .row{display:grid;grid-template-columns:64px 1fr 1.1fr;gap:32px;align-items:start;padding:40px 0;border-bottom:1px solid var(--line);transition:.3s}
-.nkx .row:hover{background:linear-gradient(90deg,rgba(201,168,106,.04),transparent)}
-.nkx .row .rn{font-family:'Fraunces',serif;font-style:italic;font-size:26px;color:var(--gold);line-height:1}
-.nkx .row h3{font-size:26px;font-weight:500}
-.nkx .row p{color:var(--cream-dim);font-size:16px;line-height:1.6}
-.nkx .fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-.nkx .f{background:var(--bg);padding:42px 34px;transition:.35s}
-.nkx .f:hover{background:var(--bg-2)}
-.nkx .f .fi{font-size:22px;color:var(--gold);margin-bottom:22px}
-.nkx .f h3{font-size:21px;font-weight:500;margin-bottom:11px}
-.nkx .f p{color:var(--muted);font-size:15px;line-height:1.6}
-.nkx .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:50px}
-.nkx .stp{position:relative}
-.nkx .stp .sn{font-family:'Fraunces',serif;font-size:15px;color:var(--gold);letter-spacing:.2em;border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:26px;display:block}
-.nkx .stp h3{font-size:24px;font-weight:500;margin-bottom:12px}
-.nkx .stp p{color:var(--cream-dim);font-size:16px}
-.nkx .price-top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:30px;margin-bottom:56px}
-.nkx .pc{display:flex;flex-direction:column;gap:18px;align-items:flex-end}
-.nkx .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:2px;overflow:hidden}
-.nkx .seg button{border:0;background:transparent;color:var(--muted);font-family:'DM Sans';font-weight:600;font-size:13.5px;padding:11px 22px;cursor:pointer;transition:.25s;letter-spacing:.02em}
-.nkx .seg button.on{background:var(--gold);color:#1a1510}
-.nkx .bt{display:inline-flex;align-items:center;gap:12px;font-size:13.5px;color:var(--muted)}
-.nkx .sw{width:46px;height:25px;border-radius:100px;border:1px solid var(--line-2);position:relative;cursor:pointer;transition:.25s}
-.nkx .sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:var(--muted);transition:.25s}
-.nkx .sw.on{border-color:var(--gold)}.nkx .sw.on::after{left:24px;background:var(--gold)}
-.nkx .save{font-size:11px;color:var(--gold);letter-spacing:.08em}
-.nkx .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-.nkx .t{background:var(--bg);padding:38px 28px;display:flex;flex-direction:column;position:relative;transition:.35s}
-.nkx .t:hover{background:var(--bg-2)}
-.nkx .t.pop{background:linear-gradient(180deg,rgba(22,48,127,.07),var(--bg) 40%);box-shadow:inset 0 2px 0 #16307f}
-.nkx .t .pop-l{position:absolute;top:18px;right:22px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
-.nkx .t .tn{font-family:'Fraunces',serif;font-size:23px;font-weight:500}
-.nkx .t .tl{font-size:13px;color:var(--muted);margin-top:5px;min-height:19px}
-.nkx .t .tp{font-family:'DM Sans';font-weight:600;font-size:44px;line-height:1;margin:26px 0 4px;letter-spacing:-.02em;font-feature-settings:"tnum" 1}
-.nkx .t .tp small{font-size:14px;color:var(--muted);font-weight:500}
-.nkx .t .ta{font-size:12.5px;color:var(--muted);min-height:18px}
-.nkx .t ul{list-style:none;margin:26px 0 30px;display:flex;flex-direction:column;gap:12px}
-.nkx .t li{font-size:13.5px;color:var(--cream-dim);display:flex;gap:11px;align-items:flex-start;line-height:1.45}
-.nkx .t li .ck{color:var(--gold);flex:none}
-.nkx .t .lbtn{margin-top:auto;justify-content:center;width:100%}
-.nkx .director{margin-top:1px;background:linear-gradient(120deg,var(--bg-3),var(--bg-2));border:1px solid var(--line);padding:34px 40px;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
-.nkx .director .free{font-family:'Fraunces',serif;font-style:italic;font-size:30px;color:var(--gold);flex:none}
-.nkx .director p{color:var(--cream-dim);font-size:16px;max-width:760px}
-.nkx .director p b{color:var(--cream);font-weight:500}
-.nkx .pnote{text-align:center;color:var(--muted);font-size:13px;margin-top:30px;letter-spacing:.01em}
-.nkx .cta{padding:140px 0;text-align:center;position:relative}
-.nkx .cta-glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(22,48,127,.10),transparent 65%);pointer-events:none}
-.nkx .cta h2{font-size:clamp(34px,5vw,62px);position:relative}
-.nkx .cta h2 em{font-style:italic;color:var(--gold)}
-.nkx .cta p{color:var(--cream-dim);font-size:18px;margin:24px auto 38px;max-width:460px;position:relative}
-.nkx .cta .hero-cta{justify-content:center;position:relative}
-.nkx footer.lfoot{border-top:1px solid var(--line);padding:54px 0}
-.nkx .foot{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
-.nkx .foot .wm{font-family:'Fraunces',serif;font-size:21px}
-.nkx .foot .wm b{color:var(--gold);font-weight:500}
-.nkx .foot-links{display:flex;gap:30px;font-size:14px;color:var(--muted)}
-.nkx .foot-links a:hover{color:var(--gold)}
-.nkx .foot-c{font-size:13px;color:var(--muted)}
-.nkx .rv{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
-.nkx .rv.in{opacity:1;transform:none}
-@media(max-width:980px){
-  .nkx .hero-in{grid-template-columns:1fr;gap:54px}
-  .nkx .cardwrap{order:-1}
-  .nkx .fgrid,.nkx .steps,.nkx .tiers{grid-template-columns:1fr 1fr}
-  .nkx .row{grid-template-columns:40px 1fr;gap:20px}
-  .nkx .row p{grid-column:2}
-}
-@media(max-width:620px){
-  .nkx .wrap{padding:0 22px}
-  .nkx .nav-links a:not(.lbtn){display:none}
-  .nkx .fgrid,.nkx .steps,.nkx .tiers{grid-template-columns:1fr}
-  .nkx .hero-foot{gap:16px}.nkx .hero-foot .sep{display:none}
-  .nkx .director{flex-direction:column;align-items:flex-start}
-  .nkx .band-in{gap:24px}
-}
-`
+type Tier = { n: string; l: string; m: number; y: number; pop?: boolean; f: string[] }
 
 export default function LandingPage() {
-  const [aud, setAud] = useState<'site' | 'agency'>('site')
-  const [year, setYear] = useState(false)
+  const [tab, setTab] = useState<'site' | 'agency'>('site')
+  const [yearly, setYearly] = useState(false)
 
-  useEffect(() => {
-    document.body.classList.add('nk-landing')
-    const io = new IntersectionObserver(
-      (es) => es.forEach((e) => { if (e.isIntersecting) e.target.classList.add('in') }),
-      { threshold: 0.1 }
-    )
-    document.querySelectorAll('.nkx .rv').forEach((el) => io.observe(el))
-    return () => {
-      document.body.classList.remove('nk-landing')
-      io.disconnect()
-    }
-  }, [])
-
-  const tiers = DATA[aud]
+  const tiers: Tier[] = DATA[tab]
 
   return (
-    <div className="nkx">
+    <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-      <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
 
-      <nav>
-        <div className="wrap nav-in">
-          <div className="lbrand" />
-          <div className="nav-links">
+      <style>{`
+        .nkx *{box-sizing:border-box;margin:0;padding:0}
+        .nkx{
+          --nk-blue:#16307f;
+          --nk-blue-mid:#1a3a99;
+          --nk-accent:#3b82f6;
+          --nk-accent-light:#93c5fd;
+          --nk-gold:#c8a44a;
+          --nk-bg:#080c1a;
+          --nk-bg2:#0d1428;
+          --nk-bg3:#111936;
+          --nk-text:#f0f2f8;
+          --nk-muted:#8892b0;
+          --nk-border:rgba(255,255,255,0.08);
+          --nk-border2:rgba(255,255,255,0.14);
+          --nk-green:#22c55e;
+          --nk-amber:#fbbf24;
+          background:var(--nk-bg);
+          color:var(--nk-text);
+          font-family:'DM Sans',sans-serif;
+          font-size:16px;
+          line-height:1.6;
+          overflow-x:hidden;
+        }
+        .nkx h1,.nkx h2,.nkx h3,.nkx h4{font-family:'Fraunces',serif;line-height:1.15}
+
+        /* NAV */
+        .nkx .lnav{position:sticky;top:0;z-index:100;background:rgba(8,12,26,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--nk-border);padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between}
+        .nkx .lnav-logo{font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:#fff;letter-spacing:-0.02em;text-decoration:none}
+        .nkx .lnav-logo span{color:var(--nk-accent-light)}
+        .nkx .lnav-links{display:flex;align-items:center;gap:32px}
+        .nkx .lnav-links a{color:var(--nk-muted);text-decoration:none;font-size:14px;font-weight:500;transition:color 0.2s}
+        .nkx .lnav-links a:hover{color:var(--nk-text)}
+        .nkx .lnav-cta{display:flex;align-items:center;gap:10px}
+        .nkx .lbtn-login{background:none;border:1px solid var(--nk-border2);color:var(--nk-text);padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center}
+        .nkx .lbtn-login:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.25)}
+        .nkx .lbtn-primary{background:var(--nk-blue);border:none;color:#fff;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center}
+        .nkx .lbtn-primary:hover{background:var(--nk-blue-mid)}
+
+        /* HERO */
+        .nkx .lhero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:100px 40px 80px;position:relative;overflow:hidden}
+        .nkx .lhero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 60% 20%,rgba(22,48,127,0.35) 0%,transparent 70%);pointer-events:none}
+        .nkx .lhero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+        .nkx .lhero-inner{max-width:1200px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;position:relative;z-index:1}
+        .nkx .lhero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(22,48,127,0.3);border:1px solid rgba(59,130,246,0.3);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--nk-accent-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px}
+        .nkx .lhero-dot{width:6px;height:6px;background:var(--nk-green);border-radius:50%;animation:nkpulse 2s infinite}
+        @keyframes nkpulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .nkx .lhero h1{font-size:58px;font-weight:400;color:#fff;margin-bottom:24px;letter-spacing:-0.02em}
+        .nkx .lhero h1 em{font-style:italic;color:var(--nk-accent-light)}
+        .nkx .lhero-sub{font-size:18px;color:var(--nk-muted);line-height:1.7;margin-bottom:40px;max-width:480px}
+        .nkx .lhero-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+        .nkx .lbtn-hero{background:var(--nk-blue);border:none;color:#fff;padding:14px 28px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center}
+        .nkx .lbtn-hero:hover{background:var(--nk-blue-mid);transform:translateY(-1px)}
+        .nkx .lbtn-ghost{background:none;border:1px solid var(--nk-border2);color:var(--nk-text);padding:14px 28px;border-radius:10px;font-size:16px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center}
+        .nkx .lbtn-ghost:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05)}
+        .nkx .lhero-trust{margin-top:48px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+        .nkx .lhero-trust-text{font-size:13px;color:var(--nk-muted)}
+        .nkx .ltrust-badge{background:rgba(255,255,255,0.04);border:1px solid var(--nk-border);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--nk-muted);font-weight:500}
+
+        /* PASSPORT MOCKUP */
+        .nkx .lpassport{position:relative;padding:30px}
+        .nkx .lpc{background:linear-gradient(135deg,#0d1e52 0%,#16307f 50%,#1e40a0 100%);border:1px solid rgba(59,130,246,0.3);border-radius:20px;padding:28px;box-shadow:0 40px 80px rgba(0,0,0,0.5);position:relative;overflow:hidden}
+        .nkx .lpc::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 80% 20%,rgba(255,255,255,0.06) 0%,transparent 60%);pointer-events:none}
+        .nkx .lpc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+        .nkx .lpc-logo{font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.1em;text-transform:uppercase}
+        .nkx .lpc-badge{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;color:#4ade80;letter-spacing:0.05em}
+        .nkx .lpc-worker{display:flex;gap:16px;align-items:center;margin-bottom:20px}
+        .nkx .lpc-avatar{width:64px;height:64px;border-radius:12px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:rgba(255,255,255,0.7);font-family:'Fraunces',serif;flex-shrink:0}
+        .nkx .lpc-worker h3{font-family:'DM Sans',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:2px}
+        .nkx .lpc-worker p{font-size:13px;color:rgba(255,255,255,0.5)}
+        .nkx .lpc-divider{height:1px;background:rgba(255,255,255,0.08);margin:16px 0}
+        .nkx .lpc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+        .nkx .lpc-label{font-size:11px;color:rgba(255,255,255,0.4);font-weight:500;text-transform:uppercase;letter-spacing:0.06em}
+        .nkx .lpc-val{font-size:13px;font-weight:600}
+        .nkx .lpc-val.green{color:#4ade80}
+        .nkx .lpc-val.amber{color:#fbbf24}
+        .nkx .lpc-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+        .nkx .lpc-chip{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:5px 10px;font-size:11px;color:rgba(255,255,255,0.6);font-weight:500}
+        .nkx .lpc-chip.on{background:rgba(34,197,94,0.12);border-color:rgba(34,197,94,0.25);color:#4ade80}
+        .nkx .lpc-scan{margin-top:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between}
+        .nkx .lpc-scan-text{font-size:12px;color:rgba(255,255,255,0.35)}
+        .nkx .lpc-qr{width:32px;height:32px;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+        .nkx .lpc-qr span{border-radius:1px}
+        .nkx .lfloat{position:absolute;background:rgba(10,16,36,0.96);border:1px solid var(--nk-border2);border-radius:12px;padding:12px 16px;z-index:2}
+        .nkx .lfloat.tr{top:0;right:0}
+        .nkx .lfloat.bl{bottom:0;left:0}
+        .nkx .lfloat-label{font-size:10px;color:var(--nk-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px}
+        .nkx .lfloat-val{font-size:20px;font-weight:700;font-family:'Fraunces',serif}
+        .nkx .lfloat-val.green{color:var(--nk-green)}
+        .nkx .lfloat-val.blue{color:var(--nk-accent-light)}
+        .nkx .lfloat-sub{font-size:11px;color:var(--nk-muted);margin-top:2px}
+
+        /* STATS */
+        .nkx .lstats{background:var(--nk-bg2);border-top:1px solid var(--nk-border);border-bottom:1px solid var(--nk-border);padding:32px 40px}
+        .nkx .lstats-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:40px}
+        .nkx .lstat{text-align:center}
+        .nkx .lstat-num{font-family:'Fraunces',serif;font-size:44px;font-weight:500;color:#fff;margin-bottom:4px}
+        .nkx .lstat-num span{color:var(--nk-accent-light)}
+        .nkx .lstat-label{font-size:13px;color:var(--nk-muted)}
+
+        /* SECTIONS */
+        .nkx .lsec{padding:100px 40px}
+        .nkx .lsec-inner{max-width:1200px;margin:0 auto}
+        .nkx .lsec.dark{background:var(--nk-bg2)}
+        .nkx .leyebrow{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--nk-accent-light);margin-bottom:16px}
+        .nkx .lsec-title{font-size:48px;font-weight:400;color:#fff;margin-bottom:20px;line-height:1.1}
+        .nkx .lsec-title em{font-style:italic;color:var(--nk-accent-light)}
+        .nkx .lsec-sub{font-size:18px;color:var(--nk-muted);max-width:560px;line-height:1.7}
+
+        /* WHY */
+        .nkx .lwhy-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:60px}
+        .nkx .lwhy-card{background:var(--nk-bg2);border:1px solid var(--nk-border);border-radius:16px;padding:32px;transition:border-color 0.2s}
+        .nkx .lwhy-card:hover{border-color:var(--nk-border2)}
+        .nkx .lwhy-card.feat{background:linear-gradient(135deg,rgba(22,48,127,0.4),rgba(22,48,127,0.15));border-color:rgba(59,130,246,0.3);grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+        .nkx .lwhy-icon{width:48px;height:48px;background:rgba(22,48,127,0.4);border:1px solid rgba(59,130,246,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px}
+        .nkx .lwhy-card h3{font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:#fff;margin-bottom:10px}
+        .nkx .lwhy-card p{font-size:15px;color:var(--nk-muted);line-height:1.7}
+        .nkx .lwhy-num{font-family:'Fraunces',serif;font-size:80px;font-weight:400;color:rgba(59,130,246,0.12);line-height:1;margin-bottom:16px}
+        .nkx .lcompliance-box{background:rgba(22,48,127,0.3);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:24px}
+        .nkx .lcompliance-label{font-size:13px;color:var(--nk-muted);margin-bottom:16px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+        .nkx .lcompliance-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:8px;margin-bottom:8px}
+        .nkx .lcompliance-row.ok{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2)}
+        .nkx .lcompliance-row.warn{background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2)}
+        .nkx .lcompliance-row span:first-child{font-size:13px;color:rgba(255,255,255,0.7)}
+        .nkx .lcompliance-row span:last-child{font-size:12px;font-weight:700}
+        .nkx .lcompliance-row.ok span:last-child{color:#4ade80}
+        .nkx .lcompliance-row.warn span:last-child{color:#fbbf24}
+
+        /* FEATURES GRID */
+        .nkx .lfeat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--nk-border);border:1px solid var(--nk-border);border-radius:16px;overflow:hidden;margin-top:60px}
+        .nkx .lfeat-cell{background:var(--nk-bg2);padding:36px 32px;transition:background 0.2s}
+        .nkx .lfeat-cell:hover{background:var(--nk-bg3)}
+        .nkx .lfeat-icon{font-size:28px;margin-bottom:16px;display:block}
+        .nkx .lfeat-title{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:#fff;margin-bottom:8px}
+        .nkx .lfeat-desc{font-size:14px;color:var(--nk-muted);line-height:1.7}
+
+        /* STEPS */
+        .nkx .lsteps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:60px;position:relative}
+        .nkx .lsteps::before{content:'';position:absolute;top:27px;left:calc(16.66% + 16px);right:calc(16.66% + 16px);height:1px;background:linear-gradient(90deg,var(--nk-blue),rgba(59,130,246,0.3),var(--nk-blue));z-index:0}
+        .nkx .lstep{position:relative;z-index:1}
+        .nkx .lstep-num{width:56px;height:56px;background:var(--nk-blue);border:1px solid rgba(59,130,246,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:#fff;margin-bottom:24px}
+        .nkx .lstep h3{font-family:'Fraunces',serif;font-size:22px;font-weight:500;color:#fff;margin-bottom:10px}
+        .nkx .lstep p{font-size:15px;color:var(--nk-muted);line-height:1.7}
+        .nkx .lstep-tag{display:inline-block;background:rgba(22,48,127,0.3);border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--nk-accent-light);text-transform:uppercase;letter-spacing:0.06em;margin-top:14px}
+
+        /* PRICING */
+        .nkx .lptabs{display:flex;background:rgba(255,255,255,0.05);border:1px solid var(--nk-border2);border-radius:10px;padding:4px;width:fit-content;margin:0 auto 20px}
+        .nkx .lptab{padding:8px 28px;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.2s;color:#fff;background:none}
+        .nkx .lptab.on{background:var(--nk-blue);color:#fff}
+        .nkx .lptab:not(.on){color:rgba(255,255,255,0.7)}
+        .nkx .lptoggle{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:48px;font-size:14px}
+        .nkx .lptoggle-pill{width:44px;height:24px;background:var(--nk-blue);border-radius:100px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0}
+        .nkx .lptoggle-dot{width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform 0.2s}
+        .nkx .lpsave{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.25);border-radius:100px;padding:3px 10px;font-size:11px;font-weight:700;color:#4ade80}
+        .nkx .lpgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+        .nkx .lpcard{background:var(--nk-bg2);border:1px solid var(--nk-border);border-radius:16px;padding:28px 24px;position:relative;transition:border-color 0.2s;display:flex;flex-direction:column}
+        .nkx .lpcard:hover{border-color:var(--nk-border2)}
+        .nkx .lpcard.hot{background:linear-gradient(160deg,rgba(22,48,127,0.5),rgba(13,30,82,0.8));border-color:rgba(59,130,246,0.5);box-shadow:0 0 40px rgba(22,48,127,0.3)}
+        .nkx .lppop{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--nk-blue);color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:100px;white-space:nowrap;letter-spacing:0.04em}
+        .nkx .lptier{font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+        .nkx .lplimit{font-size:13px;color:var(--nk-muted);margin-bottom:20px}
+        .nkx .lpamount{display:flex;align-items:baseline;gap:4px;margin-bottom:4px}
+        .nkx .lpcurr{font-size:22px;font-weight:600;color:#fff;font-family:'Fraunces',serif}
+        .nkx .lpnum{font-family:'Fraunces',serif;font-size:52px;font-weight:400;color:#fff;line-height:1}
+        .nkx .lpperiod{font-size:14px;color:var(--nk-muted)}
+        .nkx .lpalt{font-size:12px;color:var(--nk-muted);margin-bottom:24px}
+        .nkx .lpdivider{height:1px;background:var(--nk-border);margin:20px 0}
+        .nkx .lpfeats{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;flex:1}
+        .nkx .lpfeats li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--nk-muted)}
+        .nkx .lpfeats li::before{content:'✓';color:var(--nk-green);font-weight:700;font-size:13px;flex-shrink:0;margin-top:1px}
+        .nkx .lpfeats li.xtra::before{content:'★';color:var(--nk-gold)}
+        .nkx .lpbtn{width:100%;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;border:none;text-align:center;display:block;text-decoration:none}
+        .nkx .lpbtn.out{background:none;border:1px solid var(--nk-border2);color:var(--nk-text)}
+        .nkx .lpbtn.out:hover{border-color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05)}
+        .nkx .lpbtn.fill{background:var(--nk-blue);color:#fff}
+        .nkx .lpbtn.fill:hover{background:var(--nk-blue-mid)}
+
+        /* PROOF */
+        .nkx .lproof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:60px}
+        .nkx .lproof-card{background:var(--nk-bg3);border:1px solid var(--nk-border);border-radius:16px;padding:28px}
+        .nkx .lproof-stars{color:var(--nk-gold);font-size:14px;margin-bottom:16px;letter-spacing:2px}
+        .nkx .lproof-quote{font-size:15px;color:var(--nk-text);line-height:1.7;margin-bottom:20px;font-style:italic}
+        .nkx .lproof-author{display:flex;align-items:center;gap:12px}
+        .nkx .lproof-avatar{width:40px;height:40px;border-radius:50%;background:var(--nk-blue);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:'Fraunces',serif;flex-shrink:0}
+        .nkx .lproof-name{font-size:14px;font-weight:600;color:#fff}
+        .nkx .lproof-role{font-size:12px;color:var(--nk-muted)}
+
+        /* CTA */
+        .nkx .lcta{padding:120px 40px;text-align:center;position:relative;overflow:hidden}
+        .nkx .lcta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(22,48,127,0.4) 0%,transparent 70%);pointer-events:none}
+        .nkx .lcta-inner{position:relative;z-index:1;max-width:700px;margin:0 auto}
+        .nkx .lcta-inner h2{font-size:52px;font-weight:400;color:#fff;margin-bottom:20px;line-height:1.1}
+        .nkx .lcta-inner h2 em{font-style:italic;color:var(--nk-accent-light)}
+        .nkx .lcta-inner p{font-size:18px;color:var(--nk-muted);margin-bottom:40px}
+        .nkx .lcta-actions{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+        .nkx .lcta-note{font-size:13px;color:var(--nk-muted);margin-top:20px}
+
+        /* FOOTER */
+        .nkx .lfoot{background:var(--nk-bg2);border-top:1px solid var(--nk-border);padding:60px 40px 40px}
+        .nkx .lfoot-inner{max-width:1200px;margin:0 auto}
+        .nkx .lfoot-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:60px;margin-bottom:48px}
+        .nkx .lfoot-brand-name{font-family:'Fraunces',serif;font-size:24px;font-weight:500;color:#fff;margin-bottom:12px}
+        .nkx .lfoot-brand-name span{color:var(--nk-accent-light)}
+        .nkx .lfoot-brand p{font-size:14px;color:var(--nk-muted);line-height:1.7;max-width:280px}
+        .nkx .lfoot-col h4{font-size:13px;font-weight:700;color:var(--nk-text);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:16px}
+        .nkx .lfoot-col a{display:block;font-size:14px;color:var(--nk-muted);text-decoration:none;margin-bottom:10px;transition:color 0.2s}
+        .nkx .lfoot-col a:hover{color:var(--nk-text)}
+        .nkx .lfoot-bottom{border-top:1px solid var(--nk-border);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+        .nkx .lfoot-bottom p{font-size:13px;color:var(--nk-muted)}
+
+        @media(max-width:900px){
+          .nkx .lhero-inner{grid-template-columns:1fr}
+          .nkx .lpassport{display:none}
+          .nkx .lstats-inner{grid-template-columns:repeat(2,1fr)}
+          .nkx .lwhy-grid{grid-template-columns:1fr}
+          .nkx .lwhy-card.feat{grid-column:span 1;grid-template-columns:1fr}
+          .nkx .lfeat-grid{grid-template-columns:1fr}
+          .nkx .lsteps{grid-template-columns:1fr}
+          .nkx .lsteps::before{display:none}
+          .nkx .lpgrid{grid-template-columns:repeat(2,1fr)}
+          .nkx .lproof-grid{grid-template-columns:1fr}
+          .nkx .lfoot-top{grid-template-columns:1fr 1fr}
+          .nkx .lnav-links{display:none}
+          .nkx .lsec{padding:60px 20px}
+          .nkx .lhero{padding:80px 20px 60px}
+          .nkx .lhero h1{font-size:38px}
+          .nkx .lsec-title{font-size:32px}
+        }
+      `}</style>
+
+      <div className="nkx">
+        {/* NAV */}
+        <nav className="lnav">
+          <a href="/landing" className="lnav-logo">Neka<span>ID</span></a>
+          <div className="lnav-links">
             <a href="#why">Why NekaID</a>
+            <a href="#features">Features</a>
             <a href="#how">How it works</a>
             <a href="#pricing">Pricing</a>
-            <a href="/login" className="lbtn lbtn-line">Login</a>
           </div>
-        </div>
-      </nav>
+          <div className="lnav-cta">
+            <Link href="/login" className="lbtn-login">Log in</Link>
+            <Link href="/login?mode=signup" className="lbtn-primary">Start free trial</Link>
+          </div>
+        </nav>
 
-      <header className="lhero">
-        <div className="hero-glow" />
-        <div className="wrap">
-          <div style={{ marginBottom: '24px' }}>
-            <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '120px', width: 'auto', display: 'block' }} />
-          </div>
-        </div>
-        <div className="wrap hero-in">
-          <div className="rv in">
-            <span className="tagline"><span className="ln" />Live on UK construction sites</span>
-            <h1 className="head">The credential that <em>moves</em> with the worker.</h1>
-            <p className="lede">One digital passport for CSCS, qualifications, Right to Work and inductions. Scanned in seconds, verified on site, compliant by design.</p>
-            <div className="hero-cta">
-              <a href="/login?redirect=/company/billing&tier=medium&type=company" className="lbtn lbtn-gold">Start free for 14 days</a>
-              <a href="#how" className="lbtn lbtn-line">See how it works</a>
+        {/* HERO */}
+        <div className="lhero">
+          <div className="lhero-bg" />
+          <div className="lhero-grid" />
+          <div className="lhero-inner">
+            <div>
+              <div className="lhero-badge">
+                <span className="lhero-dot" />
+                Live on UK construction sites
+              </div>
+              <h1>The credential that <em>travels</em> with your workforce.</h1>
+              <p className="lhero-sub">One digital passport per operative. Every CSCS card, qualification, induction, and right-to-work check — verified in seconds, compliant by design.</p>
+              <div className="lhero-actions">
+                <Link href="/login?mode=signup" className="lbtn-hero">Start free for 14 days</Link>
+                <a href="#how" className="lbtn-ghost">See how it works →</a>
+              </div>
+              <div className="lhero-trust">
+                <span className="lhero-trust-text">Built for UK sites</span>
+                <span className="ltrust-badge">CDM 2015 aligned</span>
+                <span className="ltrust-badge">GDPR compliant</span>
+                <span className="ltrust-badge">No paper. Ever.</span>
+              </div>
             </div>
-            <div className="hero-foot">
-              <div><b>Seconds</b>to verify a worker</div>
-              <div className="sep" />
-              <div><b>CDM 2015</b>aligned by design</div>
-              <div className="sep" />
-              <div><b>£0</b>director &amp; admin view</div>
-            </div>
-          </div>
-
-          <div className="cardwrap rv in">
-            <div className="cred">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ fontSize: 8, letterSpacing: '.14em', textTransform: 'uppercase', color: '#ffffff', fontWeight: 600, lineHeight: 1.4 }}>
-                  Construction Skills<br />Certification Scheme
+            <div className="lpassport">
+              <div className="lfloat tr">
+                <div className="lfloat-label">On site now</div>
+                <div className="lfloat-val green">14</div>
+                <div className="lfloat-sub">↑ 3 since yesterday</div>
+              </div>
+              <div className="lpc">
+                <div className="lpc-header">
+                  <div className="lpc-logo">NekaID · Digital Passport</div>
+                  <div className="lpc-badge">✓ VERIFIED</div>
                 </div>
-                <div style={{ fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: '#ffffff', fontWeight: 700, textAlign: 'right' }}>
-                  Skilled Worker
+                <div className="lpc-worker">
+                  <div className="lpc-avatar">JS</div>
+                  <div>
+                    <h3>J. Smith</h3>
+                    <p>Carpenter · NVQ Level 2</p>
+                  </div>
+                </div>
+                <div className="lpc-divider" />
+                <div className="lpc-row"><span className="lpc-label">CSCS Card</span><span className="lpc-val green">Valid · Mar 2027</span></div>
+                <div className="lpc-row"><span className="lpc-label">Right to Work</span><span className="lpc-val green">Verified ✓</span></div>
+                <div className="lpc-row"><span className="lpc-label">Induction</span><span className="lpc-val green">Completed ✓</span></div>
+                <div className="lpc-row"><span className="lpc-label">Signed in</span><span className="lpc-val amber">Today · 07:42</span></div>
+                <div className="lpc-chips">
+                  <span className="lpc-chip on">IPAF</span>
+                  <span className="lpc-chip on">First Aid</span>
+                  <span className="lpc-chip on">PASMA</span>
+                  <span className="lpc-chip">Asbestos</span>
+                </div>
+                <div className="lpc-scan">
+                  <span className="lpc-scan-text">Scan to verify · nekaid.co.uk</span>
+                  <div className="lpc-qr">
+                    {[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1].map((v,i)=>(
+                      <span key={i} style={{background:v?'rgba(255,255,255,0.7)':'rgba(255,255,255,0.15)'}} />
+                    ))}
+                  </div>
                 </div>
               </div>
+              <div className="lfloat bl">
+                <div className="lfloat-label">Expiry alert</div>
+                <div className="lfloat-val blue">30 days</div>
+                <div className="lfloat-sub">Push + email sent</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ width: 50, height: 50, borderRadius: '50%', background: 'rgba(255,255,255,.18)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="8" r="4" fill="rgba(255,255,255,.7)" />
-                    <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="rgba(255,255,255,.7)" strokeWidth="1.5" fill="none" />
-                  </svg>
-                </div>
+        {/* STATS */}
+        <div className="lstats">
+          <div className="lstats-inner">
+            <div className="lstat"><div className="lstat-num"><span>2</span>sec</div><div className="lstat-label">To verify any operative</div></div>
+            <div className="lstat"><div className="lstat-num"><span>£0</span></div><div className="lstat-label">For workers — always free</div></div>
+            <div className="lstat"><div className="lstat-num"><span>100</span>%</div><div className="lstat-label">CDM 2015 audit-ready</div></div>
+            <div className="lstat"><div className="lstat-num"><span>14</span>day</div><div className="lstat-label">Free trial, no commitment</div></div>
+          </div>
+        </div>
+
+        {/* WHY */}
+        <section className="lsec" id="why">
+          <div className="lsec-inner">
+            <div className="leyebrow">Why NekaID</div>
+            <h2 className="lsec-title">Paper doesn&apos;t survive<br />a building site. <em>A passport does.</em></h2>
+            <p className="lsec-sub">Inductions get lost, cards expire unnoticed, and an inspection turns into a scramble through folders. NekaID makes compliance something you carry, not something you file.</p>
+            <div className="lwhy-grid">
+              <div className="lwhy-card feat">
                 <div>
-                  <div style={{ fontFamily: "'Fraunces',serif", fontSize: 18, color: '#ffffff', fontWeight: 500, marginBottom: 3 }}>J. Smith</div>
-                  <div style={{ fontSize: 10, letterSpacing: '.08em', textTransform: 'uppercase', color: '#7ab4f5', marginBottom: 4 }}>NVQ Level 2</div>
-                  <div style={{ fontSize: 12, letterSpacing: '.14em', color: '#ffffff', marginBottom: 2 }}>1234 5678</div>
-                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)' }}>Expires Apr 2028</div>
+                  <div className="lwhy-num">01</div>
+                  <h3>One source of truth</h3>
+                  <p>Every credential, induction, attendance record, and qualification — built once by the operative, verified once, carried from site to site forever. No more chasing paperwork.</p>
+                </div>
+                <div className="lcompliance-box">
+                  <div className="lcompliance-label">Live compliance view</div>
+                  <div className="lcompliance-row ok"><span>CSCS Card</span><span>VALID ✓</span></div>
+                  <div className="lcompliance-row ok"><span>Right to Work</span><span>VERIFIED ✓</span></div>
+                  <div className="lcompliance-row warn"><span>First Aid</span><span>EXPIRES 28 DAYS</span></div>
+                  <div className="lcompliance-row ok"><span>Site Induction</span><span>COMPLETED ✓</span></div>
                 </div>
               </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/nekaid-logo.png" alt="NekaID" style={{ height: 16, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)', opacity: 0.75 }} />
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', background: '#22c55e', color: '#ffffff', borderRadius: 4, padding: '3px 9px' }}>Valid</div>
+              <div className="lwhy-card">
+                <div className="lwhy-icon">⚡</div>
+                <h3>Verified in seconds</h3>
+                <p>Scan a worker&apos;s QR code and see live compliance instantly. The view adapts — restricted for public, full detail for site managers, complete picture for agencies.</p>
               </div>
-            </div>
-            <div className="float-note"><span className="ic">✓</span><span className="tx">Signed in · 07:42<span>Plot 4 · on site</span></span></div>
-          </div>
-        </div>
-      </header>
-
-      <div className="band">
-        <div className="wrap band-in">
-          <span>CSCS &amp; Qualifications <span className="dot">·</span> Right to Work <span className="dot">·</span> Digital Inductions <span className="dot">·</span> GPS Attendance <span className="dot">·</span> Expiry Alerts</span>
-        </div>
-      </div>
-
-      <section className="s" id="why">
-        <div className="wrap">
-          <div className="lead rv">
-            <span className="kk">Why NekaID</span>
-            <h2>Paper doesn&apos;t survive a building site. <em>A passport does.</em></h2>
-            <p>Inductions get lost, cards expire unnoticed, and an inspection turns into a scramble through folders. NekaID makes compliance something you carry, not something you file.</p>
-          </div>
-          <div className="rows">
-            <div className="row rv"><div className="rn">01</div><div><h3>One source of truth</h3></div><p>Every credential, induction and attendance record in a single passport — built once by the worker, carried from site to site.</p></div>
-            <div className="row rv"><div className="rn">02</div><div><h3>Verified in seconds</h3></div><p>Scan a worker&apos;s code and see live compliance instantly. The view adapts to whether the scanner is a site or an agency.</p></div>
-            <div className="row rv"><div className="rn">03</div><div><h3>Nothing expires unseen</h3></div><p>Automatic alerts reach the manager 30 and 7 days before any card or qualification lapses. The risk surfaces before it bites.</p></div>
-            <div className="row rv"><div className="rn">04</div><div><h3>An audit trail, on demand</h3></div><p>Attendance, inductions and competence are recorded as you go — the evidence CDM 2015 expects, ready in a moment, not a box.</p></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="s" id="features" style={{ background: 'var(--bg-2)' }}>
-        <div className="wrap">
-          <div className="lead rv">
-            <span className="kk">The platform</span>
-            <h2>Everything the site needs. <em>Nothing it doesn&apos;t.</em></h2>
-          </div>
-          <div className="fgrid">
-            <div className="f rv"><div className="fi">◈</div><h3>Worker passport</h3><p>CSCS, qualifications, Right to Work and certificate photos held in one secure profile.</p></div>
-            <div className="f rv"><div className="fi">⌁</div><h3>QR verification</h3><p>One scan reveals live compliance — a restricted view for sites, full detail for agencies.</p></div>
-            <div className="f rv"><div className="fi">⟟</div><h3>GPS attendance</h3><p>Tap to sign in; automatic sign-out by geofence when a worker leaves site. No clipboard.</p></div>
-            <div className="f rv"><div className="fi">▤</div><h3>Digital inductions</h3><p>Send safety and site inductions through the app; completion lands on the passport instantly.</p></div>
-            <div className="f rv"><div className="fi">◷</div><h3>Expiry alerts</h3><p>Push and email warnings 30 and 7 days before any credential expires. Never caught out.</p></div>
-            <div className="f rv"><div className="fi">✉</div><h3>Two-way messaging</h3><p>Text, photos and drawings between managers and workers — site comms kept on record.</p></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="s" id="how">
-        <div className="wrap">
-          <div className="lead rv">
-            <span className="kk">How it works</span>
-            <h2>Up and running before the <em>morning brief.</em></h2>
-          </div>
-          <div className="steps">
-            <div className="stp rv"><span className="sn">STEP I</span><h3>The worker builds it once</h3><p>Details, CSCS card and qualifications, added once and installed on their phone as an app.</p></div>
-            <div className="stp rv"><span className="sn">STEP II</span><h3>The site scans the code</h3><p>A single scan confirms compliance, runs the induction and signs the worker in.</p></div>
-            <div className="stp rv"><span className="sn">STEP III</span><h3>You stay compliant</h3><p>Live attendance, induction records and expiry alerts roll up to your dashboard automatically.</p></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="s" id="pricing" style={{ background: 'var(--bg-2)' }}>
-        <div className="wrap">
-          <div className="price-top">
-            <div className="lead rv" style={{ marginBottom: 0 }}>
-              <span className="kk">Pricing</span>
-              <h2>Per site. <em>Workers always free.</em></h2>
-            </div>
-            <div className="pc rv">
-              <div className="seg">
-                <button className={aud === 'site' ? 'on' : ''} onClick={() => setAud('site')}>Site managers</button>
-                <button className={aud === 'agency' ? 'on' : ''} onClick={() => setAud('agency')}>Agencies</button>
+              <div className="lwhy-card">
+                <div className="lwhy-icon">🔔</div>
+                <h3>Nothing expires unseen</h3>
+                <p>Automatic push and email alerts reach the manager 30 and 7 days before any card or qualification lapses. The risk surfaces before it bites.</p>
               </div>
-              <div className="bt">
-                <span style={{ color: year ? 'var(--muted)' : 'var(--cream)' }}>Monthly</span>
-                <div className={`sw ${year ? 'on' : ''}`} onClick={() => setYear((v) => !v)} role="switch" aria-checked={year} />
-                <span style={{ color: year ? 'var(--cream)' : 'var(--muted)' }}>Annual</span>
-                <span className="save">— save ~17%</span>
+              <div className="lwhy-card">
+                <div className="lwhy-icon">📋</div>
+                <h3>An audit trail, on demand</h3>
+                <p>Attendance, inductions, toolbox talks, and competence are recorded as you go — the evidence CDM 2015 expects, ready in a moment, not a box.</p>
+              </div>
+              <div className="lwhy-card">
+                <div className="lwhy-icon">🏗️</div>
+                <h3>Built for the real site</h3>
+                <p>GPS sign-in, manual override, daily attendance register with PDF export — designed by people who know that not every operative remembers their phone every morning.</p>
               </div>
             </div>
           </div>
+        </section>
 
-          <div className="tiers">
-            {tiers.map((t) => {
-              const p = year ? t.y : t.m
-              const a = year ? `£${t.m}/mo billed monthly` : `£${t.y}/mo billed yearly`
-              return (
-                <div className={`t ${t.pop ? 'pop' : ''} rv in`} key={`${aud}-${t.n}`}>
-                  {t.pop && <span className="pop-l">Most chosen</span>}
-                  <div className="tn">{t.n}</div>
-                  <div className="tl">{t.l}</div>
-                  <div className="tp">£{p}<small> /mo</small></div>
-                  <div className="ta">{a}</div>
-                  <ul>{t.f.map((x) => <li key={x}><span className="ck">—</span>{x}</li>)}</ul>
-                  <a href={`/login?redirect=/${aud === 'site' ? 'company' : 'agency'}/billing&tier=${t.n.toLowerCase()}&type=${aud === 'site' ? 'company' : 'agency'}`} className={`lbtn ${t.pop ? 'lbtn-gold' : 'lbtn-line'}`}>Start free trial</a>
+        {/* FEATURES */}
+        <section className="lsec dark" id="features">
+          <div className="lsec-inner">
+            <div className="leyebrow">The platform</div>
+            <h2 className="lsec-title">Everything the site needs.<br /><em>Nothing it doesn&apos;t.</em></h2>
+            <div className="lfeat-grid">
+              {[
+                {icon:'🪪',title:'Worker passport',desc:'CSCS, qualifications, Right to Work, NI number, bank details, next of kin — all in one secure digital profile, built once by the operative.'},
+                {icon:'📷',title:'QR verification',desc:'One scan confirms live compliance. Restricted view for sites, full detail for agencies, public name and photo only for unauthenticated scans.'},
+                {icon:'📍',title:'GPS attendance',desc:'Tap to sign in. Auto sign-out by geofence or 16:30 daily. Manual override for managers. Live headcount on the dashboard, always accurate.'},
+                {icon:'📚',title:'Digital inductions',desc:'Send safety and site inductions through the app. Completion lands on the operative\'s passport with timestamp and signature.'},
+                {icon:'🛡️',title:'Toolbox talks',desc:'10 pre-written templates covering working at height, COSHH, electrical safety and more. Send to all or select operatives. Signed in 60 seconds.'},
+                {icon:'💬',title:'Two-way messaging',desc:'Text, images, and PDFs between managers and operatives — with push notifications. Group broadcasts for agencies across entire placements.'},
+                {icon:'📊',title:'Attendance register',desc:'Weekly and monthly view of who was on site. GPS and manual entries. Export as a professional PDF register — audit-ready, dated, signed.'},
+                {icon:'⏰',title:'Expiry alerts',desc:'Push and email warnings 30 and 7 days before any credential expires. Never get caught out by a lapsed CSCS card during an inspection.'},
+                {icon:'👥',title:'Team & organisation',desc:'Multi-user teams under one account. Owners, admins, and members — each seeing the right data for their role across all sites.'},
+              ].map((f,i)=>(
+                <div key={i} className="lfeat-cell">
+                  <span className="lfeat-icon">{f.icon}</span>
+                  <div className="lfeat-title">{f.title}</div>
+                  <p className="lfeat-desc">{f.desc}</p>
                 </div>
-              )
-            })}
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="director rv">
-            <span className="free">Free</span>
-            <p><b>Director &amp; admin view.</b> Every site, every worker and full company compliance — at no cost. The decision-maker sees the whole picture, then rolls NekaID out across the business.</p>
+        {/* HOW IT WORKS */}
+        <section className="lsec" id="how">
+          <div className="lsec-inner">
+            <div className="leyebrow">How it works</div>
+            <h2 className="lsec-title">Up and running before<br /><em>the morning brief.</em></h2>
+            <div className="lsteps">
+              <div className="lstep">
+                <div className="lstep-num">1</div>
+                <h3>The operative builds it once</h3>
+                <p>They add their CSCS card, photo, qualifications, and right to work. It installs as an app on their phone. Shared by link — no app store required.</p>
+                <span className="lstep-tag">5 minutes</span>
+              </div>
+              <div className="lstep">
+                <div className="lstep-num">2</div>
+                <h3>The site scans the code</h3>
+                <p>One QR scan confirms live compliance, runs the induction, and signs the operative in. Managers see the dashboard update in real time.</p>
+                <span className="lstep-tag">Under 2 seconds</span>
+              </div>
+              <div className="lstep">
+                <div className="lstep-num">3</div>
+                <h3>You stay compliant</h3>
+                <p>Attendance, inductions, toolbox talks, and expiry alerts roll up automatically. The audit trail builds itself while you focus on the job.</p>
+                <span className="lstep-tag">Zero admin</span>
+              </div>
+            </div>
           </div>
+        </section>
 
-          <p className="pnote">Annual billed yearly (~2 months free) · 14-day free trial on every tier · card required.</p>
-        </div>
-      </section>
+        {/* PRICING */}
+        <section className="lsec" id="pricing" style={{background:'var(--nk-bg)'}}>
+          <div className="lsec-inner">
+            <div className="leyebrow" style={{textAlign:'center'}}>Pricing</div>
+            <h2 className="lsec-title" style={{textAlign:'center'}}>Per site. <em>Workers always free.</em></h2>
+            <p className="lsec-sub" style={{textAlign:'center',margin:'0 auto 40px'}}>Simple, transparent pricing. Start free for 14 days — card required, cancel any time.</p>
 
-      <section className="cta">
-        <div className="cta-glow" />
-        <div className="wrap">
-          <div className="rv in">
+            <div className="lptabs">
+              <button className={`lptab${tab==='site'?' on':''}`} onClick={()=>setTab('site')}>Site Managers</button>
+              <button className={`lptab${tab==='agency'?' on':''}`} onClick={()=>setTab('agency')}>Agencies</button>
+            </div>
+
+            <div className="lptoggle">
+              <span style={{color:yearly?'var(--nk-muted)':'var(--nk-text)',fontWeight:yearly?400:600}}>Monthly</span>
+              <div className="lptoggle-pill" onClick={()=>setYearly(y=>!y)}>
+                <div className="lptoggle-dot" style={{transform:yearly?'translateX(20px)':'translateX(0)'}} />
+              </div>
+              <span style={{color:yearly?'var(--nk-text)':'var(--nk-muted)',fontWeight:yearly?600:400}}>Annual</span>
+              {yearly && <span className="lpsave">Save ~17%</span>}
+            </div>
+
+            <div className="lpgrid">
+              {tiers.map((t,i)=>{
+                const price = yearly ? t.y : t.m
+                const alt = yearly ? `£${t.m}/mo billed monthly` : `£${t.y}/mo billed annually`
+                const isLast = t.n==='Unlimited'||t.n==='Enterprise'
+                return (
+                  <div key={i} className={`lpcard${t.pop?' hot':''}`}>
+                    {t.pop && <div className="lppop">Most chosen</div>}
+                    <div className="lptier">{t.n}</div>
+                    <div className="lplimit">{t.l}</div>
+                    <div className="lpamount">
+                      <span className="lpcurr">£</span>
+                      <span className="lpnum">{price}</span>
+                    </div>
+                    <div className="lpperiod">/mo · {yearly?'billed yearly':'billed monthly'}</div>
+                    <div className="lpalt">{alt}</div>
+                    <div className="lpdivider" />
+                    <ul className="lpfeats">
+                      {t.f.map((f,j)=>(
+                        <li key={j} className={isLast&&j===t.f.length-1?'xtra':''}>{f}</li>
+                      ))}
+                    </ul>
+                    <Link href="/login?mode=signup" className={`lpbtn${t.pop?' fill':' out'}`}>Start free trial</Link>
+                  </div>
+                )
+              })}
+            </div>
+
+            <p style={{textAlign:'center',marginTop:'20px',fontSize:'14px',color:'var(--nk-muted)'}}>
+              <strong style={{color:'var(--nk-text)'}}>Director &amp; admin view included free.</strong> Every site, every worker, full company compliance — at no cost.
+            </p>
+            <p style={{textAlign:'center',marginTop:'8px',fontSize:'13px',color:'var(--nk-muted)'}}>
+              14-day free trial on every tier · Card required · Cancel any time
+            </p>
+          </div>
+        </section>
+
+        {/* SOCIAL PROOF */}
+        <section className="lsec dark">
+          <div className="lsec-inner">
+            <div className="leyebrow">Trusted on site</div>
+            <h2 className="lsec-title">Real sites. <em>Real results.</em></h2>
+            <div className="lproof-grid">
+              {[
+                {initials:'LS',quote:'We went from chasing paper induction forms every Monday morning to having everything done before the operatives arrive on site. The QR scan is faster than signing a paper register.',name:'L. Smith',role:'Site Manager · Rigby & Rigby'},
+                {initials:'TH',quote:'The attendance register alone saves me an hour every Friday. I export a PDF, hand it to the agency, and that\'s the week done. No spreadsheets, no phone calls.',name:'T. Howard',role:'Project Manager · Civil Works'},
+                {initials:'MC',quote:'Having every operative\'s right to work and CSCS status visible in one dashboard — with automatic expiry warnings — means I can put workers on site with complete confidence.',name:'M. Clarke',role:'Director · Labour Agency'},
+              ].map((p,i)=>(
+                <div key={i} className="lproof-card">
+                  <div className="lproof-stars">★★★★★</div>
+                  <p className="lproof-quote">&ldquo;{p.quote}&rdquo;</p>
+                  <div className="lproof-author">
+                    <div className="lproof-avatar">{p.initials}</div>
+                    <div>
+                      <div className="lproof-name">{p.name}</div>
+                      <div className="lproof-role">{p.role}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <div className="lcta">
+          <div className="lcta-bg" />
+          <div className="lcta-inner">
             <h2>Get your first site live <em>this week.</em></h2>
             <p>Build a passport, scan it in, watch the dashboard update. 14 days free, card required.</p>
-            <div className="hero-cta">
-              <a href="/login?redirect=/company/billing&tier=medium&type=company" className="lbtn lbtn-gold">Start free trial</a>
-              <a href="mailto:info@nekaid.co.uk" className="lbtn lbtn-line">Speak with us</a>
+            <div className="lcta-actions">
+              <Link href="/login?mode=signup" className="lbtn-hero">Start free for 14 days</Link>
+              <a href="mailto:info@nekaid.co.uk" className="lbtn-ghost">Speak with us</a>
+            </div>
+            <p className="lcta-note">No setup fees · No long-term contracts · Cancel any time</p>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <footer className="lfoot">
+          <div className="lfoot-inner">
+            <div className="lfoot-top">
+              <div className="lfoot-brand">
+                <div className="lfoot-brand-name">Neka<span>ID</span></div>
+                <p>Digital worker passports for UK construction sites. Compliant by design, built for the field.</p>
+              </div>
+              <div className="lfoot-col">
+                <h4>Product</h4>
+                <a href="#why">Why NekaID</a>
+                <a href="#features">Features</a>
+                <a href="#how">How it works</a>
+                <a href="#pricing">Pricing</a>
+              </div>
+              <div className="lfoot-col">
+                <h4>Company</h4>
+                <a href="mailto:info@nekaid.co.uk">Contact</a>
+                <Link href="/privacy">Privacy</Link>
+                <Link href="/terms">Terms</Link>
+                <Link href="/cookies">Cookies</Link>
+              </div>
+              <div className="lfoot-col">
+                <h4>Account</h4>
+                <Link href="/login">Log in</Link>
+                <Link href="/login?mode=signup">Start free trial</Link>
+              </div>
+            </div>
+            <div className="lfoot-bottom">
+              <p>© 2026 NekaID Ltd · ICO: ZC135297 · Digital worker passports</p>
+              <p>Made for UK construction</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      <footer className="lfoot">
-        <div className="wrap foot">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nekaid-logo.png" alt="NekaID" style={{ height: '26px', width: 'auto', display: 'block' }} />
-          <div className="foot-links">
-            <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/cookies">Cookies</a><a href="/login">Contact</a>
-          </div>
-          <div className="foot-c">© 2026 NekaID — Digital worker passports</div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+    </>
   )
 }
