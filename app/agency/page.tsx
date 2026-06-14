@@ -257,6 +257,7 @@ export default function AgencyPage() {
   const [placementLoading, setPlacementLoading] = useState(false)
   const [placementError, setPlacementError] = useState('')
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
+  const [availableOnly, setAvailableOnly] = useState(false)
   const messagesRef = useRef<HTMLDivElement>(null)
   const [statusMap, setStatusMap] = useState<Record<string, string>>({})
   const [notesMap, setNotesMap] = useState<Record<string, string>>({})
@@ -814,6 +815,7 @@ export default function AgencyPage() {
   })
 
   const displayedWorkers = filteredWorkers.filter((w) => {
+    if (availableOnly) return (statusMap[w.agencyWorkerId] ?? 'Active') === 'Available'
     if (complianceFilter === 'all') return true
     const now = new Date()
     const in30 = new Date(); in30.setDate(in30.getDate() + 30)
@@ -1213,11 +1215,11 @@ export default function AgencyPage() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
             {(['all', 'expiring', 'expired'] as const).map(f => {
               const labels = { all: 'All', expiring: 'Expiring Soon', expired: 'Expired' }
-              const isActive = complianceFilter === f
+              const isActive = complianceFilter === f && !availableOnly
               return (
                 <button
                   key={f}
-                  onClick={() => setComplianceFilter(f)}
+                  onClick={() => { setComplianceFilter(f); setAvailableOnly(false) }}
                   style={{
                     padding: '8px 20px',
                     borderRadius: 99,
@@ -1238,6 +1240,22 @@ export default function AgencyPage() {
                 </button>
               )
             })}
+            <button
+              onClick={() => { setAvailableOnly(o => !o); setComplianceFilter('all') }}
+              style={{
+                padding: '8px 20px',
+                borderRadius: 99,
+                border: '2px solid',
+                borderColor: availableOnly ? '#16307f' : '#e2e8f0',
+                background: availableOnly ? '#16307f' : '#fff',
+                color: availableOnly ? '#fff' : '#64748b',
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: 'pointer',
+              }}
+            >
+              🟢 Available for deployment
+            </button>
           </div>
 
           {workers.length === 0 ? (
@@ -1363,11 +1381,13 @@ export default function AgencyPage() {
                           fontWeight: 500,
                           cursor: 'pointer',
                           color: statusMap[worker.agencyWorkerId] === 'Inactive' ? '#64748b' :
-                                 statusMap[worker.agencyWorkerId] === 'Unavailable' ? '#dc2626' : '#16a34a',
+                                 statusMap[worker.agencyWorkerId] === 'Unavailable' ? '#dc2626' :
+                                 statusMap[worker.agencyWorkerId] === 'Available' ? '#16307f' : '#16a34a',
                           background: '#fff',
                         }}
                       >
                         <option value="Active">Active</option>
+                        <option value="Available">Available</option>
                         <option value="Inactive">Inactive</option>
                         <option value="Unavailable">Unavailable</option>
                       </select>
