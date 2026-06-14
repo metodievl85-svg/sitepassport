@@ -92,7 +92,7 @@ export async function GET(
       : (workerMap[m.sender_id] ?? 'Operative'),
   }))
 
-  return NextResponse.json(messages)
+  return NextResponse.json({ messages })
 }
 
 export async function POST(
