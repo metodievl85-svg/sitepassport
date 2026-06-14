@@ -13,6 +13,7 @@ import CompanyDashboardMenu from './components/CompanyDashboardMenu'
 import CompanySettings from './components/CompanySettings'
 import CompanyMessages from './components/CompanyMessages'
 import OrganisationPanel from './components/OrganisationPanel'
+import AttendanceRegister from './components/AttendanceRegister'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
 type SavedWorkerRow = {
@@ -411,6 +412,7 @@ export default function CompanyPage() {
   const [viewingSiteData, setViewingSiteData] = useState<{ saved_workers: any[]; site_attendance: any[]; company_sites: any[] } | null>(null)
   const [viewingSiteLoading, setViewingSiteLoading] = useState(false)
   const [billingSuccess, setBillingSuccess] = useState(false)
+  const [companySite, setCompanySite] = useState<CompanySiteRow | null>(null)
 
   usePushNotifications(companyId)
 
@@ -775,6 +777,7 @@ export default function CompanyPage() {
       }
 
       if (site && typeof window !== 'undefined') {
+        setCompanySite(site)
         setSiteLink(`${window.location.origin}/site/${site.site_qr_token}`)
 
         if (!companySites.find((item) => item.id === site.id)) {
@@ -2472,6 +2475,14 @@ export default function CompanyPage() {
             />
           </div>
         )}
+
+        <div id="attendance-register" style={{ marginTop: '2rem' }}>
+          <AttendanceRegister
+            companyId={companyId}
+            siteId={companySite?.id ?? ''}
+            siteName={companySite?.site_name ?? 'Site'}
+          />
+        </div>
       </div>
 
       <style jsx>{`

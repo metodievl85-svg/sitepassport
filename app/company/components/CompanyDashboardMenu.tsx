@@ -65,6 +65,7 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport, h
           {[
             { label: '➕ Add Operative', action: () => { onAddOperative(); close() } },
             { label: '💬 Messages', action: () => { document.querySelector('#messages')?.scrollIntoView({ behavior: 'smooth' }); close() } },
+            { label: '📋 Attendance Register', action: () => { document.querySelector('#attendance-register')?.scrollIntoView({ behavior: 'smooth' }); close() } },
             { label: '📊 Export Compliance Report', action: () => { onExportReport(); close() } },
           ].map(item => (
             <button
