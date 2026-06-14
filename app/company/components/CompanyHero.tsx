@@ -7,9 +7,10 @@ type Props = {
   handleLogout: () => void
   onAddOperative: () => void
   onExportReport: () => void
+  onToolboxTalk: () => void
 }
 
-export default function CompanyHero({ email, handleLogout, onAddOperative, onExportReport }: Props) {
+export default function CompanyHero({ email, handleLogout, onAddOperative, onExportReport, onToolboxTalk }: Props) {
   const isRigby = email === 'leroy.smith@rigbyandrigby.com'
 
   return (
@@ -166,7 +167,7 @@ export default function CompanyHero({ email, handleLogout, onAddOperative, onExp
           </div>
         </div>
 
-        <CompanyDashboardMenu onAddOperative={onAddOperative} onExportReport={onExportReport} handleLogout={handleLogout} />
+        <CompanyDashboardMenu onAddOperative={onAddOperative} onExportReport={onExportReport} onToolboxTalk={onToolboxTalk} handleLogout={handleLogout} />
       </div>
 
       {isRigby && (

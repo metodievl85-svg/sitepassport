@@ -6,10 +6,11 @@ import Link from 'next/link'
 type Props = {
   onAddOperative: () => void
   onExportReport: () => void
+  onToolboxTalk: () => void
   handleLogout: () => void
 }
 
-export default function CompanyDashboardMenu({ onAddOperative, onExportReport, handleLogout }: Props) {
+export default function CompanyDashboardMenu({ onAddOperative, onExportReport, onToolboxTalk, handleLogout }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -66,6 +67,7 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport, h
             { label: '➕ Add Operative', action: () => { onAddOperative(); close() } },
             { label: '💬 Messages', action: () => { document.querySelector('#messages')?.scrollIntoView({ behavior: 'smooth' }); close() } },
             { label: '📋 Attendance Register', action: () => { document.querySelector('#attendance-register')?.scrollIntoView({ behavior: 'smooth' }); close() } },
+            { label: '🛡️ Toolbox Talk', action: () => { onToolboxTalk(); close() } },
             { label: '📊 Export Compliance Report', action: () => { onExportReport(); close() } },
           ].map(item => (
             <button

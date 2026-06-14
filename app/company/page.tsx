@@ -14,6 +14,7 @@ import CompanySettings from './components/CompanySettings'
 import CompanyMessages from './components/CompanyMessages'
 import OrganisationPanel from './components/OrganisationPanel'
 import AttendanceRegister from './components/AttendanceRegister'
+import ToolboxTalkModal from './components/ToolboxTalkModal'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
 type SavedWorkerRow = {
@@ -413,6 +414,7 @@ export default function CompanyPage() {
   const [viewingSiteLoading, setViewingSiteLoading] = useState(false)
   const [billingSuccess, setBillingSuccess] = useState(false)
   const [companySite, setCompanySite] = useState<CompanySiteRow | null>(null)
+  const [showToolboxModal, setShowToolboxModal] = useState(false)
 
   usePushNotifications(companyId)
 
@@ -1873,6 +1875,13 @@ export default function CompanyPage() {
     <main className="page-shell">
       <VisitorsModal />
       <AddOperativeModal />
+      {showToolboxModal && (
+        <ToolboxTalkModal
+          workers={savedWorkers.map((w) => ({ workerId: w.workerId, fullName: w.fullName, role: w.role }))}
+          onClose={() => setShowToolboxModal(false)}
+          onSent={() => setShowToolboxModal(false)}
+        />
+      )}
 
       <div className="container">
         {viewingSite && (
@@ -1911,7 +1920,7 @@ export default function CompanyPage() {
             </button>
           </div>
         )}
-        <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => setAddOperativeOpen(true)} onExportReport={() => void exportComplianceReport()} />
+        <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => setAddOperativeOpen(true)} onExportReport={() => void exportComplianceReport()} onToolboxTalk={() => setShowToolboxModal(true)} />
 
         {(() => {
           const now = new Date()

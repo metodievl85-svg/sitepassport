@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 import { usePushNotifications } from '../lib/usePushNotifications'
 import WorkerMessages from './components/WorkerMessages'
+import WorkerToolboxTalks from './components/WorkerToolboxTalks'
 
 type Qualification = {
   id: string
@@ -947,6 +948,8 @@ export default function WorkerPage() {
         </section>
 
         <InductionCard />
+
+        <WorkerToolboxTalks userId={passport.user_id ?? ''} />
 
         <section
           className="card"
