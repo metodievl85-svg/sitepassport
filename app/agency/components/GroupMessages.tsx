@@ -122,7 +122,7 @@ export default function GroupMessages({ agencyId, placements }: Props) {
     })
     if (res.ok) {
       const data = await res.json()
-      setMessages(data)
+      setMessages(data.messages || [])
     }
     setLoadingMessages(false)
   }
