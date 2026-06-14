@@ -525,6 +525,114 @@ export default function AgencyPage() {
     doc.save(`NekaID-${safeName}-${new Date().toISOString().slice(0, 10)}.pdf`)
   }
 
+  const exportPlacementPDF = (placementKey: string, placementWorkers: AgencyWorker[]) => {
+    const placement = placements.find(p => p.worker_id === placementWorkers[0]?.workerId)
+    const companyName = placement?.company_name ?? 'Unassigned'
+    const siteName = placement?.site_name ?? ''
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageWidth = 210
+    const margin = 16
+    const contentWidth = pageWidth - margin * 2
+
+    // HEADER
+    doc.setFillColor(22, 48, 127)
+    doc.rect(0, 0, pageWidth, 36, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`${companyName}${siteName ? ' · ' + siteName : ''}`, margin, 13)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Agency: ${email}`, margin, 21)
+    doc.text(`Exported: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, margin, 27)
+    doc.setFontSize(8)
+    doc.text('Powered by NekaID — nekaid.co.uk', pageWidth - margin, 27, { align: 'right' })
+
+    let y = 44
+
+    for (const w of placementWorkers) {
+      if (y > 250) { doc.addPage(); y = 20 }
+
+      const now = new Date()
+      const in30 = new Date(); in30.setDate(in30.getDate() + 30)
+      const expiryDates = [w.cscsExpiry, w.rightToWorkExpiry].filter(Boolean).map(d => new Date(d!))
+      const isExpired = expiryDates.some(d => d < now)
+      const isExpiringSoon = !isExpired && expiryDates.some(d => d <= in30)
+      const statusLabel = isExpired ? 'EXPIRED' : isExpiringSoon ? 'EXPIRING SOON' : 'VALID'
+      const [sr, sg, sb]: [number, number, number] = isExpired ? [220, 38, 38] : isExpiringSoon ? [217, 119, 6] : [22, 163, 74]
+
+      const cardHeight = 48
+      doc.setFillColor(248, 250, 252)
+      doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'F')
+      doc.setDrawColor(220, 220, 220)
+      doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'S')
+
+      // Status badge
+      doc.setFillColor(sr, sg, sb)
+      doc.roundedRect(pageWidth - margin - 28, y + 5, 26, 7, 2, 2, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(6)
+      doc.setFont('helvetica', 'bold')
+      doc.text(statusLabel, pageWidth - margin - 15, y + 10, { align: 'center' })
+
+      // Name
+      doc.setTextColor(15, 23, 42)
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text(w.fullName, margin + 4, y + 12)
+
+      // Trade
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 116, 139)
+      doc.text(w.trade || '—', margin + 4, y + 19)
+
+      doc.setDrawColor(226, 232, 240)
+      doc.line(margin + 4, y + 22, margin + contentWidth - 4, y + 22)
+
+      const col1 = margin + 4
+      const col2 = margin + 60
+      const col3 = margin + 116
+
+      const fmtDate = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString('en-GB') : '—'
+
+      doc.setFontSize(7)
+      doc.setTextColor(100, 116, 139)
+      doc.setFont('helvetica', 'normal')
+      doc.text('CSCS EXPIRY', col1, y + 28)
+      doc.text('RIGHT TO WORK', col2, y + 28)
+      doc.text('PHONE', col3, y + 28)
+
+      doc.setTextColor(15, 23, 42)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.text(fmtDate(w.cscsExpiry), col1, y + 35)
+      doc.text(fmtDate(w.rightToWorkExpiry), col2, y + 35)
+      doc.text(w.phone || '—', col3, y + 35)
+
+      doc.setFontSize(7)
+      doc.setTextColor(100, 116, 139)
+      doc.setFont('helvetica', 'normal')
+      doc.text('NI NUMBER', col1, y + 41)
+      doc.setTextColor(15, 23, 42)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(8)
+      doc.text(w.niNumber || '—', col1, y + 47)
+
+      y += cardHeight + 8
+    }
+
+    // Footer
+    doc.setFontSize(7.5)
+    doc.setTextColor(148, 163, 184)
+    doc.setFont('helvetica', 'normal')
+    doc.text('NekaID Agency Compliance Export  ·  nekaid.co.uk', pageWidth / 2, 292, { align: 'center' })
+
+    const safeName = `${companyName}-${siteName}`.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')
+    doc.save(`NekaID-Placement-${safeName}-${new Date().toISOString().slice(0, 10)}.pdf`)
+  }
+
   const filteredWorkers = workers.filter((w) => {
     const term = search.trim().toLowerCase()
     if (!term) return true
@@ -877,6 +985,126 @@ export default function AgencyPage() {
             <p style={{ marginTop: 10, color: '#167342', fontWeight: 700, fontSize: 14 }}>{addLinkSuccess}</p>
           )}
         </section>
+
+        {workers.length > 0 && (() => {
+          // Group workers by placement
+          const placementGroups: Record<string, { label: string; companyName: string; siteName: string; workers: AgencyWorker[] }> = {}
+
+          for (const w of workers) {
+            const p = placements.find(pl => pl.worker_id === w.workerId)
+            const key = p ? `${p.company_name}||${p.site_name}` : '__unassigned__'
+            if (!placementGroups[key]) {
+              placementGroups[key] = {
+                label: p ? `${p.company_name} · ${p.site_name}` : 'Unassigned',
+                companyName: p?.company_name ?? '',
+                siteName: p?.site_name ?? '',
+                workers: [],
+              }
+            }
+            placementGroups[key].workers.push(w)
+          }
+
+          const groups = Object.entries(placementGroups).sort(([a], [b]) => {
+            if (a === '__unassigned__') return 1
+            if (b === '__unassigned__') return -1
+            return a.localeCompare(b)
+          })
+
+          return (
+            <section className="card" style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div>
+                  <h2 className="section-title" style={{ marginBottom: 2 }}>Placement overview</h2>
+                  <p className="section-subtitle" style={{ margin: 0 }}>Workers grouped by active placement with compliance summary.</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {groups.map(([key, group]) => {
+                  const expiredCount = group.workers.filter(w => w.complianceStatus === 'expired').length
+                  const expiringCount = group.workers.filter(w => w.complianceStatus === 'expiring').length
+                  const borderColor = expiredCount > 0 ? '#dc2626' : expiringCount > 0 ? '#d97706' : '#16a34a'
+                  const bgColor = expiredCount > 0 ? '#fff1f1' : expiringCount > 0 ? '#fff8ea' : '#f0fdf4'
+                  const statusText = expiredCount > 0
+                    ? `${expiredCount} expired`
+                    : expiringCount > 0
+                    ? `${expiringCount} expiring soon`
+                    : 'All compliant'
+                  const statusColor = expiredCount > 0 ? '#b42318' : expiringCount > 0 ? '#9b5d00' : '#167342'
+
+                  return (
+                    <div
+                      key={key}
+                      style={{
+                        border: `1.5px solid ${borderColor}`,
+                        borderRadius: 16,
+                        background: bgColor,
+                        padding: '14px 18px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 900, fontSize: 16, color: '#09154b' }}>
+                            {group.label}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#62779a', fontWeight: 600, marginTop: 2 }}>
+                            {group.workers.length} {group.workers.length === 1 ? 'worker' : 'workers'} · <span style={{ color: statusColor, fontWeight: 700 }}>{statusText}</span>
+                          </div>
+                        </div>
+                        {key !== '__unassigned__' && (
+                          <button
+                            onClick={() => exportPlacementPDF(key, group.workers)}
+                            style={{
+                              fontSize: 13,
+                              padding: '7px 16px',
+                              borderRadius: 10,
+                              border: '1px solid #16307f',
+                              background: '#16307f',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            📄 Export PDF
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                        {group.workers.map(w => {
+                          const badge =
+                            w.complianceStatus === 'expired'
+                              ? { bg: '#fff1f1', color: '#b42318', border: '1px solid #efc1c1' }
+                              : w.complianceStatus === 'expiring'
+                              ? { bg: '#fff8ea', color: '#9b5d00', border: '1px solid #efd6ac' }
+                              : { bg: '#ecfdf3', color: '#167342', border: '1px solid #b7e4c7' }
+                          return (
+                            <span
+                              key={w.workerId}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '5px 12px',
+                                borderRadius: 999,
+                                fontSize: 13,
+                                fontWeight: 700,
+                                background: badge.bg,
+                                color: badge.color,
+                                border: badge.border,
+                              }}
+                            >
+                              {w.fullName || 'Unnamed'}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )
+        })()}
 
         <section className="card" style={{ marginBottom: 24 }}>
           <h2 className="section-title">Your operatives</h2>
