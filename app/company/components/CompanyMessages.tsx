@@ -50,7 +50,7 @@ export default function CompanyMessages({ companyId, workers }: Props) {
   }, [companyId])
 
   useEffect(() => {
-    if (!companyId || !accessToken) return
+    if (!companyId) return
 
     const channel = supabase
       .channel(`messages-company-${companyId}`)
@@ -60,12 +60,12 @@ export default function CompanyMessages({ companyId, workers }: Props) {
         table: 'messages',
         filter: `company_id=eq.${companyId}`,
       }, () => {
-        void loadMessages(accessToken)
+        void init()
       })
       .subscribe()
 
     return () => { void supabase.removeChannel(channel) }
-  }, [companyId, accessToken])
+  }, [companyId])
 
   useEffect(() => {
     if (!selectedWorkerId) return
