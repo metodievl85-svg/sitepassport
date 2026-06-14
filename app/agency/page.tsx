@@ -1118,6 +1118,155 @@ export default function AgencyPage() {
           </div>
         </div>
 
+        {(() => {
+          const now = new Date()
+          const in30 = new Date(); in30.setDate(now.getDate() + 30)
+
+          type UrgentItem = {
+            worker: AgencyWorker
+            label: string
+            expiry: Date
+            daysLeft: number
+            isExpired: boolean
+          }
+
+          const urgent: UrgentItem[] = []
+
+          for (const w of workers) {
+            const checks: { label: string; date: string | null | undefined }[] = [
+              { label: 'CSCS card', date: w.cscsExpiry },
+              { label: 'Right to work', date: w.rightToWorkExpiry },
+            ]
+            for (const check of checks) {
+              if (!check.date) continue
+              const d = new Date(check.date)
+              if (isNaN(d.getTime())) continue
+              const daysLeft = Math.ceil((d.getTime() - now.getTime()) / 86400000)
+              if (daysLeft <= 30) {
+                urgent.push({
+                  worker: w,
+                  label: check.label,
+                  expiry: d,
+                  daysLeft,
+                  isExpired: daysLeft < 0,
+                })
+              }
+            }
+          }
+
+          if (urgent.length === 0) return null
+
+          urgent.sort((a, b) => a.daysLeft - b.daysLeft)
+
+          const expiredItems = urgent.filter(u => u.isExpired)
+          const expiringItems = urgent.filter(u => !u.isExpired)
+
+          return (
+            <section style={{ marginBottom: 24, borderRadius: 18, overflow: 'hidden', border: '1.5px solid #fca5a5', background: '#fff' }}>
+              {/* Header */}
+              <div style={{ background: 'linear-gradient(135deg, #7f1d1d, #dc2626)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>⚠️</span>
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 16 }}>Action required</div>
+                  <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600 }}>
+                    {expiredItems.length > 0 && `${expiredItems.length} expired`}
+                    {expiredItems.length > 0 && expiringItems.length > 0 && ' · '}
+                    {expiringItems.length > 0 && `${expiringItems.length} expiring within 30 days`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div style={{ padding: '8px 0' }}>
+                {urgent.map((u, i) => {
+                  const placement = placements.find(p => p.worker_id === u.worker.workerId)
+                  const placementLabel = placement ? `${placement.company_name} · ${placement.site_name}` : 'No placement'
+                  const isExpired = u.isExpired
+                  const bgColor = isExpired ? '#fff1f1' : i % 2 === 0 ? '#fff' : '#fafcff'
+
+                  return (
+                    <div
+                      key={`${u.worker.workerId}-${u.label}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 14,
+                        padding: '12px 20px',
+                        background: bgColor,
+                        borderBottom: i < urgent.length - 1 ? '1px solid #f1f5f9' : 'none',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {/* Avatar */}
+                      {(u.worker.facePhoto || u.worker.photo) ? (
+                        <img
+                          src={u.worker.facePhoto || u.worker.photo}
+                          alt={u.worker.fullName}
+                          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 40, height: 40, borderRadius: '50%',
+                          background: '#dbe5f3', color: '#4d648c',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: 900, fontSize: 14, flexShrink: 0,
+                        }}>
+                          {u.worker.fullName.split(' ').map(p => p[0] ?? '').slice(0, 2).join('').toUpperCase() || '?'}
+                        </div>
+                      )}
+
+                      {/* Info */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: 14, color: '#09154b' }}>{u.worker.fullName}</div>
+                        <div style={{ fontSize: 12, color: '#62779a', fontWeight: 600, marginTop: 1 }}>{placementLabel}</div>
+                      </div>
+
+                      {/* Document + expiry */}
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#09154b' }}>{u.label}</div>
+                        <div style={{
+                          fontSize: 12, fontWeight: 800,
+                          color: isExpired ? '#b42318' : u.daysLeft <= 7 ? '#9b5d00' : '#d97706',
+                          marginTop: 2,
+                        }}>
+                          {isExpired
+                            ? `Expired ${Math.abs(u.daysLeft)} day${Math.abs(u.daysLeft) !== 1 ? 's' : ''} ago`
+                            : u.daysLeft === 0 ? 'Expires today'
+                            : `${u.daysLeft} day${u.daysLeft !== 1 ? 's' : ''} left`}
+                        </div>
+                      </div>
+
+                      {/* Message button */}
+                      {u.worker.userId && (
+                        <button
+                          onClick={() => {
+                            handleScrollToMessages()
+                            setMessageTab('direct')
+                          }}
+                          style={{
+                            fontSize: 12,
+                            padding: '6px 14px',
+                            borderRadius: 8,
+                            border: '1px solid #16307f',
+                            background: '#16307f',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0,
+                          }}
+                        >
+                          💬 Message
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )
+        })()}
+
         <section className="card" style={{ marginBottom: 24 }}>
           <h2 className="section-title">Add Operative</h2>
           <p className="section-subtitle">
