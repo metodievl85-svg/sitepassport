@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const userIds = members.map((m) => m.user_id)
     const { data: profiles } = await admin
       .from('profiles')
-      .select('id, full_name, email')
+      .select('id, email')
       .in('id', userIds)
 
     const { data: sites } = await admin

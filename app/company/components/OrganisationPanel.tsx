@@ -328,7 +328,7 @@ export default function OrganisationPanel({ onViewSite }: Props) {
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#09154b', wordBreak: 'break-word' }}>
-                  {member.email || member.user_id}
+                  {member.email || `User ${member.user_id.slice(0, 8)}...`}
                 </span>
                 {member.site_name && (
                   <span style={{ fontSize: 12, fontWeight: 600, color: '#5a6f96' }}>
