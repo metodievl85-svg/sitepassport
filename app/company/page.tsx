@@ -397,6 +397,8 @@ export default function CompanyPage() {
   const [addLinkError, setAddLinkError] = useState('')
   const [addLinkSuccess, setAddLinkSuccess] = useState('')
   const [filter, setFilter] = useState<FilterValue>('all')
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [alertsExpanded, setAlertsExpanded] = useState(false)
   const [sortBy, setSortBy] = useState<SortValue>('newest')
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [sendingInductionId, setSendingInductionId] = useState<string | null>(null)
@@ -1870,6 +1872,200 @@ export default function CompanyPage() {
           </div>
         )}
         <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => setAddOperativeOpen(true)} onExportReport={() => void exportComplianceReport()} />
+
+        {(() => {
+          const now = new Date()
+
+          type UrgentItem = {
+            worker: SavedWorkerCard
+            label: string
+            daysLeft: number
+            isExpired: boolean
+          }
+
+          const urgent: UrgentItem[] = []
+
+          for (const w of savedWorkers) {
+            const checks: { label: string; date: string | null | undefined }[] = [
+              { label: 'CSCS card', date: w.cscsExpiry },
+              { label: 'Right to work', date: w.rightToWorkExpiry },
+            ]
+            for (const check of checks) {
+              if (dismissedAlerts.has(`${w.workerId}-${check.label}`)) continue
+              if (!check.date) continue
+              const d = new Date(check.date)
+              if (isNaN(d.getTime())) continue
+              const daysLeft = Math.ceil((d.getTime() - now.getTime()) / 86400000)
+              if (daysLeft <= 30) {
+                urgent.push({
+                  worker: w,
+                  label: check.label,
+                  daysLeft,
+                  isExpired: daysLeft < 0,
+                })
+              }
+            }
+          }
+
+          if (urgent.length === 0) return null
+
+          urgent.sort((a, b) => a.daysLeft - b.daysLeft)
+
+          const expiredItems = urgent.filter(u => u.isExpired)
+          const expiringItems = urgent.filter(u => !u.isExpired)
+          const visibleItems = alertsExpanded ? urgent : urgent.slice(0, 5)
+          const hasMore = urgent.length > 5
+
+          return (
+            <section style={{ marginBottom: 24, borderRadius: 18, overflow: 'hidden', border: '1.5px solid #fca5a5', background: '#fff' }}>
+              <div style={{ background: 'linear-gradient(135deg, #7f1d1d, #dc2626)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 20 }}>⚠️</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 16 }}>Action required</div>
+                  <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 600 }}>
+                    {expiredItems.length > 0 && `${expiredItems.length} expired`}
+                    {expiredItems.length > 0 && expiringItems.length > 0 && ' · '}
+                    {expiringItems.length > 0 && `${expiringItems.length} expiring within 30 days`}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ padding: '8px 0' }}>
+                {visibleItems.map((u, i) => {
+                  const isExpired = u.isExpired
+                  const bgColor = isExpired ? '#fff1f1' : i % 2 === 0 ? '#fff' : '#fafcff'
+
+                  return (
+                    <div
+                      key={`${u.worker.workerId}-${u.label}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '12px 20px',
+                        background: bgColor,
+                        borderBottom: i < visibleItems.length - 1 ? '1px solid #f1f5f9' : 'none',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {(u.worker.facePhoto || u.worker.photo) ? (
+                        <img
+                          src={u.worker.facePhoto || u.worker.photo}
+                          alt={u.worker.fullName}
+                          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 40, height: 40, borderRadius: '50%',
+                          background: '#dbe5f3', color: '#4d648c',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: 900, fontSize: 14, flexShrink: 0,
+                        }}>
+                          {u.worker.fullName.split(' ').map(p => p[0] ?? '').slice(0, 2).join('').toUpperCase() || '?'}
+                        </div>
+                      )}
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: 14, color: '#09154b' }}>{u.worker.fullName}</div>
+                        <div style={{ fontSize: 12, color: '#62779a', fontWeight: 600, marginTop: 1 }}>{u.worker.role || u.worker.company || '—'}</div>
+                      </div>
+
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#09154b' }}>{u.label}</div>
+                        <div style={{
+                          fontSize: 12, fontWeight: 800,
+                          color: isExpired ? '#b42318' : u.daysLeft <= 7 ? '#9b5d00' : '#d97706',
+                          marginTop: 2,
+                        }}>
+                          {isExpired
+                            ? `Expired ${Math.abs(u.daysLeft)} day${Math.abs(u.daysLeft) !== 1 ? 's' : ''} ago`
+                            : u.daysLeft === 0 ? 'Expires today'
+                            : `${u.daysLeft} day${u.daysLeft !== 1 ? 's' : ''} left`}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+                        <a
+                          href={`/scan/${u.worker.workerId}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            fontSize: 12,
+                            padding: '6px 14px',
+                            borderRadius: 8,
+                            border: '1px solid #d7e1ef',
+                            background: '#fff',
+                            color: '#09154b',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                          }}
+                        >
+                          👤 View passport
+                        </a>
+                        {u.worker.userId && (
+                          <button
+                            onClick={() => document.getElementById('messages')?.scrollIntoView({ behavior: 'smooth' })}
+                            style={{
+                              fontSize: 12,
+                              padding: '6px 14px',
+                              borderRadius: 8,
+                              border: '1px solid #16307f',
+                              background: '#16307f',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            💬 Message
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDismissedAlerts(prev => new Set(prev).add(`${u.worker.workerId}-${u.label}`))}
+                          style={{
+                            fontSize: 12,
+                            padding: '6px 10px',
+                            borderRadius: 8,
+                            border: '1px solid #e2e8f0',
+                            background: '#f8fafc',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                          title="Dismiss this alert"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {hasMore && (
+                <div style={{ padding: '12px 20px', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                  <button
+                    onClick={() => setAlertsExpanded(o => !o)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#16307f',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {alertsExpanded ? '▲ Show less' : `▼ Show all ${urgent.length} alerts`}
+                  </button>
+                </div>
+              )}
+            </section>
+          )
+        })()}
 
         <CompanyStats
           savedWorkersCount={displayWorkers.length}
