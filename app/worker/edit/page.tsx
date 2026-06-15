@@ -837,7 +837,7 @@ export default function EditWorkerPassportPage() {
           cscs_card: form.cscsCard.trim(),
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
-          employment_status: form.employmentStatus || null,
+          employment_status: form.employmentStatus && form.employmentStatus !== '' ? form.employmentStatus : null,
           notes: form.notes.trim(),
           medical_info: form.medicalInfo.trim(),
           photo: photoValue,
