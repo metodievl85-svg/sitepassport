@@ -1065,7 +1065,15 @@ export default function AgencyPage() {
         {workers.length > 0 && (() => {
           const total = workers.length
           const compliantCount = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length
-          const expiringCount = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length
+          const today = new Date()
+        const in30 = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+        const expiringCount = workers.filter(w => {
+          const dates = [w.cscsExpiry, w.rightToWorkExpiry].filter(Boolean)
+          return dates.some(d => {
+            const exp = new Date(d!)
+            return exp >= today && exp <= in30
+          })
+        }).length
           const expiredCount2 = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length
           const compliantPct = Math.round((compliantCount / total) * 100)
           const expiringPct = Math.round((expiringCount / total) * 100)
