@@ -76,7 +76,14 @@ export default function CompanyMessages({ companyId, workers }: Props) {
     const {
       data: { session },
     } = await supabase.auth.getSession()
-    if (!session?.access_token) return
+    if (!session?.access_token) {
+      await supabase.auth.refreshSession()
+      const { data: { session: refreshed } } = await supabase.auth.getSession()
+      if (!refreshed?.access_token) return
+      setAccessToken(refreshed.access_token)
+      await loadMessages(refreshed.access_token)
+      return
+    }
     setAccessToken(session.access_token)
     await loadMessages(session.access_token)
   }
