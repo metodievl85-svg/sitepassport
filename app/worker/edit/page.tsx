@@ -826,7 +826,6 @@ export default function EditWorkerPassportPage() {
         rightToWorkPhotoValue = rtwPath
       }
 
-      console.log('employment_status value being sent:', form.employmentStatus, '→', form.employmentStatus && form.employmentStatus !== '' ? form.employmentStatus : null)
       const { error: workerError } = await supabase
         .from('workers')
         .update({
