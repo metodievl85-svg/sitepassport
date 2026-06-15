@@ -1060,113 +1060,57 @@ export default function AgencyPage() {
           `}</style>
         </section>
 
-        {workers.length > 0 && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '12px',
-            padding: '0 24px 24px',
-            maxWidth: '900px',
-            margin: '0 auto'
-          }}>
-            {[
-              { label: 'Total workforce', value: workers.length, color: '#16307f', bg: '#eff3ff', filterValue: 'all' as const },
-              { label: 'Fully compliant', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length, color: '#15803d', bg: '#f0fdf4', filterValue: 'valid' as const },
-              { label: 'Expiring soon', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length, color: '#b45309', bg: '#fffbeb', filterValue: 'expiring' as const },
-              { label: 'Expired', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length, color: '#b91c1c', bg: '#fef2f2', filterValue: 'expired' as const },
-            ].map(stat => {
-              const isActive = complianceFilter === stat.filterValue
-              const isHovered = hoveredStat === stat.label
-              return (
-                <div
-                  key={stat.label}
-                  onClick={() => { setComplianceFilter(stat.filterValue); setAvailableOnly(false) }}
-                  onMouseEnter={() => setHoveredStat(stat.label)}
-                  onMouseLeave={() => setHoveredStat(null)}
-                  style={{
-                    background: stat.bg,
-                    borderRadius: '12px',
-                    padding: '16px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    outline: isActive ? `2px solid ${stat.color}` : 'none',
-                    boxShadow: isHovered && !isActive ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
-                    transition: 'box-shadow 150ms ease-out',
-                  }}
-                >
-                  <div style={{ fontSize: '28px', fontWeight: '700', color: stat.color, lineHeight: 1 }}>
-                    {stat.value}
+        {workers.length > 0 && (() => {
+          const stats = [
+            { label: 'Total workforce', value: workers.length, filterValue: 'all' as const, color: '#16307f', bg: 'white', border: '#dbeafe', numColor: '#16307f' },
+            { label: 'Fully compliant', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length, filterValue: 'valid' as const, color: '#15803d', bg: 'white', border: '#bbf7d0', numColor: '#15803d' },
+            { label: 'Expiring soon', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length, filterValue: 'expiring' as const, color: '#b45309', bg: 'white', border: '#fde68a', numColor: '#b45309' },
+            { label: 'Expired', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length, filterValue: 'expired' as const, color: '#b91c1c', bg: 'white', border: '#fecaca', numColor: '#b91c1c' },
+          ]
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '0 24px 32px', maxWidth: '960px', margin: '0 auto' }}>
+              {stats.map(stat => {
+                const isActive = complianceFilter === stat.filterValue
+                const isHovered = hoveredStat === stat.label
+                return (
+                  <div
+                    key={stat.label}
+                    onClick={() => { setComplianceFilter(stat.filterValue); setAvailableOnly(false) }}
+                    onMouseEnter={() => setHoveredStat(stat.label)}
+                    onMouseLeave={() => setHoveredStat(null)}
+                    style={{
+                      background: isActive ? stat.bg : 'white',
+                      borderRadius: '14px',
+                      padding: '24px 20px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      border: `2px solid ${isActive ? stat.border : isHovered ? stat.border : '#f0f0f0'}`,
+                      boxShadow: isActive
+                        ? `0 4px 20px ${stat.color}22`
+                        : isHovered
+                        ? '0 4px 16px rgba(0,0,0,0.08)'
+                        : '0 2px 8px rgba(0,0,0,0.04)',
+                      transition: 'box-shadow 150ms ease-out, border-color 150ms ease-out',
+                    }}
+                  >
+                    <div style={{ fontSize: '40px', fontWeight: '800', color: stat.numColor, lineHeight: 1, letterSpacing: '-1px' }}>
+                      {stat.value}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#555', marginTop: '8px', fontWeight: '500', letterSpacing: '0.01em' }}>
+                      {stat.label}
+                    </div>
+                    {isActive && (
+                      <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: '600', color: stat.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Filtering ↑
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#555', marginTop: '6px', fontWeight: '500' }}>
-                    {stat.label}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 16,
-            marginBottom: 24,
-          }}
-        >
-          <div className="card" style={{ padding: 20 }}>
-            <div style={{ fontSize: 48, fontWeight: 900, color: '#09154b', lineHeight: 1 }}>
-              {workers.length}
+                )
+              })}
             </div>
-            <div className="meta-label" style={{ marginTop: 8 }}>Total operatives</div>
-          </div>
+          )
+        })()}
 
-          <div
-            className="card"
-            style={{
-              padding: 20,
-              background: expiringSoonCount > 0 ? '#fff8ea' : undefined,
-              boxShadow: expiringSoonCount > 0
-                ? '0 18px 50px rgba(15,23,42,0.05), 0 0 0 1px #efd6ac'
-                : undefined,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 48,
-                fontWeight: 900,
-                color: expiringSoonCount > 0 ? '#9b5d00' : '#09154b',
-                lineHeight: 1,
-              }}
-            >
-              {expiringSoonCount}
-            </div>
-            <div className="meta-label" style={{ marginTop: 8 }}>Expiring soon</div>
-          </div>
-
-          <div
-            className="card"
-            style={{
-              padding: 20,
-              background: expiredCount > 0 ? '#fff1f1' : undefined,
-              boxShadow: expiredCount > 0
-                ? '0 18px 50px rgba(15,23,42,0.05), 0 0 0 1px #efc1c1'
-                : undefined,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 48,
-                fontWeight: 900,
-                color: expiredCount > 0 ? '#b42318' : '#09154b',
-                lineHeight: 1,
-              }}
-            >
-              {expiredCount}
-            </div>
-            <div className="meta-label" style={{ marginTop: 8 }}>Expired</div>
-          </div>
-        </div>
 
         {(() => {
           const now = new Date()
