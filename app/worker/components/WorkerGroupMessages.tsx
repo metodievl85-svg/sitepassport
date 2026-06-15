@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '@/app/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 type GroupChat = {
   id: string
