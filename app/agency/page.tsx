@@ -1071,7 +1071,7 @@ export default function AgencyPage() {
           return (
             <div style={{ padding: '0 24px 32px', maxWidth: '960px', margin: '0 auto' }}>
               <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', minHeight: '120px' }}>
+                <div id="compliance-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', minHeight: '120px' }}>
 
                   <div
                     onClick={() => { setComplianceFilter('all'); setAvailableOnly(false) }}
@@ -1158,6 +1158,28 @@ export default function AgencyPage() {
                   </div>
                   <span style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap' as const }}>Overall compliance</span>
                 </div>
+
+                <style>{`
+                  @media (max-width: 600px) {
+                    #compliance-grid {
+                      grid-template-columns: 1fr 1fr !important;
+                    }
+                    #compliance-grid > div {
+                      border-right: none !important;
+                      border-bottom: 1px solid #e5e7eb;
+                    }
+                    #compliance-grid > div:nth-child(1),
+                    #compliance-grid > div:nth-child(2) {
+                      border-bottom: 1px solid #e5e7eb;
+                    }
+                    #compliance-grid > div:nth-child(1) {
+                      border-right: 1px solid #e5e7eb !important;
+                    }
+                    #compliance-grid > div:nth-child(3) {
+                      border-right: 1px solid #e5e7eb !important;
+                    }
+                  }
+                `}</style>
 
               </div>
             </div>
