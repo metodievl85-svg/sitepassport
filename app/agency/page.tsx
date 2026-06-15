@@ -1065,56 +1065,101 @@ export default function AgencyPage() {
           const compliantCount = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length
           const expiringCount = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length
           const expiredCount2 = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length
-          const stats = [
-            { label: 'Total workforce', value: total, pct: null, filterValue: 'all' as const, color: '#16307f', bg: '#eff3ff', border: '#c7d7ff', numColor: '#16307f', labelColor: '#1e3a8a', barColor: '#16307f', icon: '👥', pillLabel: 'ALL' },
-            { label: 'Fully compliant', value: compliantCount, pct: Math.round((compliantCount / total) * 100), filterValue: 'valid' as const, color: '#15803d', bg: '#f0fdf4', border: '#86efac', numColor: '#15803d', labelColor: '#166534', barColor: '#22c55e', icon: null, pillLabel: null },
-            { label: 'Expiring soon', value: expiringCount, pct: Math.round((expiringCount / total) * 100), filterValue: 'expiring' as const, color: '#b45309', bg: '#fffbeb', border: '#fde68a', numColor: '#b45309', labelColor: '#92400e', barColor: '#f59e0b', icon: null, pillLabel: null },
-            { label: 'Expired', value: expiredCount2, pct: Math.round((expiredCount2 / total) * 100), filterValue: 'expired' as const, color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', numColor: '#b91c1c', labelColor: '#991b1b', barColor: '#ef4444', icon: null, pillLabel: null },
-          ]
+          const compliantPct = Math.round((compliantCount / total) * 100)
+          const expiringPct = Math.round((expiringCount / total) * 100)
+          const expiredPct = Math.round((expiredCount2 / total) * 100)
           return (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '0 24px 32px', maxWidth: '960px', margin: '0 auto' }}>
-              {stats.map(stat => {
-                const isActive = complianceFilter === stat.filterValue
-                const isHovered = hoveredStat === stat.label
-                return (
+            <div style={{ padding: '0 24px 32px', maxWidth: '960px', margin: '0 auto' }}>
+              <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', minHeight: '120px' }}>
+
                   <div
-                    key={stat.label}
-                    onClick={() => { setComplianceFilter(stat.filterValue); setAvailableOnly(false) }}
-                    onMouseEnter={() => setHoveredStat(stat.label)}
-                    onMouseLeave={() => setHoveredStat(null)}
-                    style={{
-                      background: stat.bg,
-                      borderRadius: '14px',
-                      border: `${isActive ? '2px' : '1.5px'} solid ${isActive ? stat.color : isHovered ? stat.border : stat.border}`,
-                      padding: '24px 20px',
-                      display: 'flex',
-                      flexDirection: 'column' as const,
-                      gap: '10px',
-                      cursor: 'pointer',
-                      boxShadow: isActive ? `0 4px 20px ${stat.color}33` : isHovered ? '0 4px 16px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.04)',
-                      transition: 'box-shadow 150ms ease-out, border-color 150ms ease-out',
-                    }}
+                    onClick={() => { setComplianceFilter('all'); setAvailableOnly(false) }}
+                    style={{ padding: '24px 28px', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', cursor: 'pointer', background: complianceFilter === 'all' ? '#f0f4ff' : 'white', transition: 'background 150ms ease-out' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: stat.labelColor, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{stat.label}</span>
-                      {stat.pillLabel ? (
-                        <span style={{ background: `${stat.color}22`, color: stat.color, borderRadius: '20px', fontSize: '11px', fontWeight: 600, padding: '3px 10px' }}>{stat.pillLabel}</span>
-                      ) : (
-                        <span style={{ background: `${stat.color}18`, color: stat.color, borderRadius: '20px', fontSize: '11px', fontWeight: 600, padding: '3px 10px' }}>{stat.pct}%</span>
-                      )}
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#555', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>Total workforce</span>
+                      <span style={{ fontSize: '16px', color: '#16307f' }}>👥</span>
                     </div>
-                    <div style={{ fontSize: '48px', fontWeight: 800, color: stat.numColor, lineHeight: 1, letterSpacing: '-2px' }}>
-                      {stat.value}
+                    <div>
+                      <div style={{ fontSize: '52px', fontWeight: 800, color: '#16307f', lineHeight: 1, letterSpacing: '-3px' }}>{total}</div>
+                      <div style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>operatives tracked</div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ flex: 1, height: '3px', background: `${stat.barColor}33`, borderRadius: '2px' }}>
-                        <div style={{ width: stat.pct !== null ? `${stat.pct}%` : '100%', height: '100%', background: stat.barColor, borderRadius: '2px', transition: 'width 400ms ease-out' }} />
+                    <div style={{ height: '2px', background: '#16307f', borderRadius: '1px', marginTop: '16px', opacity: complianceFilter === 'all' ? 1 : 0.2, transition: 'opacity 150ms ease-out' }} />
+                  </div>
+
+                  <div
+                    onClick={() => { setComplianceFilter('valid'); setAvailableOnly(false) }}
+                    style={{ padding: '24px 24px', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', cursor: 'pointer', background: complianceFilter === 'valid' ? '#f0fdf4' : 'white', transition: 'background 150ms ease-out' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#15803d', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>Compliant</span>
+                      <span style={{ fontSize: '14px' }}>✅</span>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '52px', fontWeight: 800, color: '#15803d', lineHeight: 1, letterSpacing: '-3px' }}>{compliantCount}</span>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{compliantPct}%</span>
                       </div>
-                      {isActive && <span style={{ fontSize: '10px', fontWeight: 700, color: stat.color, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Active</span>}
+                      <div style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>fully valid docs</div>
+                    </div>
+                    <div style={{ height: '2px', background: '#e5e7eb', borderRadius: '1px', marginTop: '16px', position: 'relative' as const }}>
+                      <div style={{ position: 'absolute' as const, left: 0, top: 0, height: '100%', width: `${compliantPct}%`, background: '#22c55e', borderRadius: '1px' }} />
                     </div>
                   </div>
-                )
-              })}
+
+                  <div
+                    onClick={() => { setComplianceFilter('expiring'); setAvailableOnly(false) }}
+                    style={{ padding: '24px 24px', borderRight: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', cursor: 'pointer', background: complianceFilter === 'expiring' ? '#fffbeb' : '#fffdf7', transition: 'background 150ms ease-out' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>Expiring soon</span>
+                      <span style={{ fontSize: '14px' }}>⚠️</span>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '52px', fontWeight: 800, color: '#b45309', lineHeight: 1, letterSpacing: '-3px' }}>{expiringCount}</span>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: '#f59e0b' }}>{expiringPct}%</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>within 30 days</div>
+                    </div>
+                    <div style={{ height: '2px', background: '#e5e7eb', borderRadius: '1px', marginTop: '16px', position: 'relative' as const }}>
+                      <div style={{ position: 'absolute' as const, left: 0, top: 0, height: '100%', width: `${expiringPct}%`, background: '#f59e0b', borderRadius: '1px' }} />
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => { setComplianceFilter('expired'); setAvailableOnly(false) }}
+                    style={{ padding: '24px 24px', display: 'flex', flexDirection: 'column' as const, justifyContent: 'space-between', cursor: 'pointer', background: complianceFilter === 'expired' ? '#fef2f2' : '#fff8f8', transition: 'background 150ms ease-out' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#b91c1c', textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>Expired</span>
+                      <span style={{ fontSize: '14px' }}>🚨</span>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '52px', fontWeight: 800, color: '#b91c1c', lineHeight: 1, letterSpacing: '-3px' }}>{expiredCount2}</span>
+                        <span style={{ fontSize: '18px', fontWeight: 700, color: '#ef4444' }}>{expiredPct}%</span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#888', marginTop: '6px' }}>action required</div>
+                    </div>
+                    <div style={{ height: '2px', background: '#e5e7eb', borderRadius: '1px', marginTop: '16px', position: 'relative' as const }}>
+                      <div style={{ position: 'absolute' as const, left: 0, top: 0, height: '100%', width: `${expiredPct}%`, background: '#ef4444', borderRadius: '1px' }} />
+                    </div>
+                  </div>
+
+                </div>
+
+                <div style={{ padding: '10px 28px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '10px', background: '#f9fafb' }}>
+                  <div style={{ flex: 1, height: '6px', background: '#e5e7eb', borderRadius: '3px', overflow: 'hidden', display: 'flex' }}>
+                    <div style={{ width: `${compliantPct}%`, background: '#22c55e' }} />
+                    <div style={{ width: `${expiringPct}%`, background: '#f59e0b' }} />
+                    <div style={{ width: `${expiredPct}%`, background: '#ef4444' }} />
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#888', whiteSpace: 'nowrap' as const }}>Overall compliance</span>
+                </div>
+
+              </div>
             </div>
           )
         })()}
