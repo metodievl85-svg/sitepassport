@@ -1058,6 +1058,38 @@ export default function AgencyPage() {
           `}</style>
         </section>
 
+        {workers.length > 0 && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            padding: '0 24px 24px',
+            maxWidth: '900px',
+            margin: '0 auto'
+          }}>
+            {[
+              { label: 'Total workforce', value: workers.length, color: '#16307f', bg: '#eff3ff' },
+              { label: 'Fully compliant', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length, color: '#15803d', bg: '#f0fdf4' },
+              { label: 'Expiring soon', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length, color: '#b45309', bg: '#fffbeb' },
+              { label: 'Expired', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length, color: '#b91c1c', bg: '#fef2f2' },
+            ].map(stat => (
+              <div key={stat.label} style={{
+                background: stat.bg,
+                borderRadius: '12px',
+                padding: '16px 20px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '28px', fontWeight: '700', color: stat.color, lineHeight: 1 }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: '12px', color: '#555', marginTop: '6px', fontWeight: '500' }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div
           style={{
             display: 'grid',
