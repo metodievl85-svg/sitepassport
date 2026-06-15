@@ -89,6 +89,7 @@ export default function EditWorkerPassportPage() {
     cscsCard: '',
     cscsExpiry: '',
     rightToWorkExpiry: '',
+    employmentStatus: '',
     notes: '',
     medicalInfo: '',
     photo: '',
@@ -193,6 +194,7 @@ export default function EditWorkerPassportPage() {
         cscsCard: workerRow.cscs_card ?? '',
         cscsExpiry: workerRow.cscs_expiry ?? '',
         rightToWorkExpiry: workerRow.right_to_work_expiry ?? '',
+        employmentStatus: workerRow.employment_status || '',
         notes: workerRow.notes ?? '',
         medicalInfo: workerRow.medical_info ?? '',
         photo: workerRow.photo ?? '',
@@ -835,6 +837,7 @@ export default function EditWorkerPassportPage() {
           cscs_card: form.cscsCard.trim(),
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
+          employment_status: form.employmentStatus || null,
           notes: form.notes.trim(),
           medical_info: form.medicalInfo.trim(),
           photo: photoValue,
@@ -1922,6 +1925,34 @@ export default function EditWorkerPassportPage() {
                   value={form.rightToWorkExpiry}
                   onChange={handleChange}
                 />
+              </div>
+            </div>
+
+            <div className="form-grid" style={{ marginTop: 18 }}>
+              <div className="field" style={{ gridColumn: '1 / -1' }}>
+                <label style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: '#62779a', textTransform: 'uppercase' }}>Employment status</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                  {['PAYE', 'CIS', 'Umbrella', 'Ltd Company'].map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, employmentStatus: f.employmentStatus === opt ? '' : opt }))}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: 20,
+                        border: '2px solid',
+                        borderColor: form.employmentStatus === opt ? '#16307f' : '#d1d5db',
+                        background: form.employmentStatus === opt ? '#16307f' : '#fff',
+                        color: form.employmentStatus === opt ? '#fff' : '#374151',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 

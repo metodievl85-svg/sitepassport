@@ -48,6 +48,7 @@ type AgencyWorker = {
   bankName: string
   bankAccountNumber: string
   bankSortCode: string
+  employmentStatus?: string | null
 }
 
 type PlacementGroup = {
@@ -313,7 +314,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code)')
+        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code, employment_status)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -374,6 +375,7 @@ export default function AgencyPage() {
             bankName: (w.bank_name as string) ?? '',
             bankAccountNumber: (w.bank_account_number as string) ?? '',
             bankSortCode: (w.bank_sort_code as string) ?? '',
+            employmentStatus: (w.employment_status as string) ?? null,
           }
         })
         .filter(Boolean) as AgencyWorker[]
@@ -1629,6 +1631,13 @@ export default function AgencyPage() {
                       {(worker.trade || worker.company) && (
                         <div style={{ fontSize: 13, color: '#62779a', fontWeight: 700, marginTop: 2 }}>
                           {[worker.trade, worker.company].filter(Boolean).join(' • ')}
+                        </div>
+                      )}
+                      {worker.employmentStatus && (
+                        <div style={{ marginTop: 4 }}>
+                          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: '#f0f4ff', color: '#16307f', letterSpacing: 0.4 }}>
+                            {worker.employmentStatus}
+                          </span>
                         </div>
                       )}
                       <span
