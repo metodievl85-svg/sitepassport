@@ -1061,11 +1061,15 @@ export default function AgencyPage() {
         </section>
 
         {workers.length > 0 && (() => {
+          const total = workers.length
+          const compliantCount = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length
+          const expiringCount = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length
+          const expiredCount2 = workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length
           const stats = [
-            { label: 'Total workforce', value: workers.length, filterValue: 'all' as const, color: '#16307f', bg: 'white', border: '#dbeafe', numColor: '#16307f' },
-            { label: 'Fully compliant', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length, filterValue: 'valid' as const, color: '#15803d', bg: 'white', border: '#bbf7d0', numColor: '#15803d' },
-            { label: 'Expiring soon', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length, filterValue: 'expiring' as const, color: '#b45309', bg: 'white', border: '#fde68a', numColor: '#b45309' },
-            { label: 'Expired', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length, filterValue: 'expired' as const, color: '#b91c1c', bg: 'white', border: '#fecaca', numColor: '#b91c1c' },
+            { label: 'Total workforce', value: total, pct: null, filterValue: 'all' as const, color: '#16307f', bg: '#eff3ff', border: '#c7d7ff', numColor: '#16307f', labelColor: '#1e3a8a', barColor: '#16307f', icon: '👥', pillLabel: 'ALL' },
+            { label: 'Fully compliant', value: compliantCount, pct: Math.round((compliantCount / total) * 100), filterValue: 'valid' as const, color: '#15803d', bg: '#f0fdf4', border: '#86efac', numColor: '#15803d', labelColor: '#166534', barColor: '#22c55e', icon: null, pillLabel: null },
+            { label: 'Expiring soon', value: expiringCount, pct: Math.round((expiringCount / total) * 100), filterValue: 'expiring' as const, color: '#b45309', bg: '#fffbeb', border: '#fde68a', numColor: '#b45309', labelColor: '#92400e', barColor: '#f59e0b', icon: null, pillLabel: null },
+            { label: 'Expired', value: expiredCount2, pct: Math.round((expiredCount2 / total) * 100), filterValue: 'expired' as const, color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', numColor: '#b91c1c', labelColor: '#991b1b', barColor: '#ef4444', icon: null, pillLabel: null },
           ]
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '0 24px 32px', maxWidth: '960px', margin: '0 auto' }}>
@@ -1079,31 +1083,35 @@ export default function AgencyPage() {
                     onMouseEnter={() => setHoveredStat(stat.label)}
                     onMouseLeave={() => setHoveredStat(null)}
                     style={{
-                      background: isActive ? stat.bg : 'white',
+                      background: stat.bg,
                       borderRadius: '14px',
+                      border: `${isActive ? '2px' : '1.5px'} solid ${isActive ? stat.color : isHovered ? stat.border : stat.border}`,
                       padding: '24px 20px',
-                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column' as const,
+                      gap: '10px',
                       cursor: 'pointer',
-                      border: `2px solid ${isActive ? stat.border : isHovered ? stat.border : '#f0f0f0'}`,
-                      boxShadow: isActive
-                        ? `0 4px 20px ${stat.color}22`
-                        : isHovered
-                        ? '0 4px 16px rgba(0,0,0,0.08)'
-                        : '0 2px 8px rgba(0,0,0,0.04)',
+                      boxShadow: isActive ? `0 4px 20px ${stat.color}33` : isHovered ? '0 4px 16px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.04)',
                       transition: 'box-shadow 150ms ease-out, border-color 150ms ease-out',
                     }}
                   >
-                    <div style={{ fontSize: '40px', fontWeight: '800', color: stat.numColor, lineHeight: 1, letterSpacing: '-1px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: stat.labelColor, textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>{stat.label}</span>
+                      {stat.pillLabel ? (
+                        <span style={{ background: `${stat.color}22`, color: stat.color, borderRadius: '20px', fontSize: '11px', fontWeight: 600, padding: '3px 10px' }}>{stat.pillLabel}</span>
+                      ) : (
+                        <span style={{ background: `${stat.color}18`, color: stat.color, borderRadius: '20px', fontSize: '11px', fontWeight: 600, padding: '3px 10px' }}>{stat.pct}%</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '48px', fontWeight: 800, color: stat.numColor, lineHeight: 1, letterSpacing: '-2px' }}>
                       {stat.value}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#555', marginTop: '8px', fontWeight: '500', letterSpacing: '0.01em' }}>
-                      {stat.label}
-                    </div>
-                    {isActive && (
-                      <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: '600', color: stat.color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Filtering ↑
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ flex: 1, height: '3px', background: `${stat.barColor}33`, borderRadius: '2px' }}>
+                        <div style={{ width: stat.pct !== null ? `${stat.pct}%` : '100%', height: '100%', background: stat.barColor, borderRadius: '2px', transition: 'width 400ms ease-out' }} />
                       </div>
-                    )}
+                      {isActive && <span style={{ fontSize: '10px', fontWeight: 700, color: stat.color, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>Active</span>}
+                    </div>
                   </div>
                 )
               })}
