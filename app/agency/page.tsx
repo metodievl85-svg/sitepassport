@@ -256,8 +256,9 @@ export default function AgencyPage() {
   const [placementForm, setPlacementForm] = useState({ company_name: '', site_name: '', start_date: '', end_date: '' })
   const [placementLoading, setPlacementLoading] = useState(false)
   const [placementError, setPlacementError] = useState('')
-  const [complianceFilter, setComplianceFilter] = useState<'all' | 'expiring' | 'expired'>('all')
+  const [complianceFilter, setComplianceFilter] = useState<'all' | 'valid' | 'expiring' | 'expired'>('all')
   const [availableOnly, setAvailableOnly] = useState(false)
+  const [hoveredStat, setHoveredStat] = useState<string | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
   const [alertsExpanded, setAlertsExpanded] = useState(false)
   const messagesRef = useRef<HTMLDivElement>(null)
@@ -826,6 +827,7 @@ export default function AgencyPage() {
     const isExpiringSoon = !isExpired && dates.some((d) => d <= in30)
     if (complianceFilter === 'expired') return isExpired
     if (complianceFilter === 'expiring') return isExpiringSoon
+    if (complianceFilter === 'valid') return getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid'
     return true
   })
 
@@ -1068,25 +1070,39 @@ export default function AgencyPage() {
             margin: '0 auto'
           }}>
             {[
-              { label: 'Total workforce', value: workers.length, color: '#16307f', bg: '#eff3ff' },
-              { label: 'Fully compliant', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length, color: '#15803d', bg: '#f0fdf4' },
-              { label: 'Expiring soon', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length, color: '#b45309', bg: '#fffbeb' },
-              { label: 'Expired', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length, color: '#b91c1c', bg: '#fef2f2' },
-            ].map(stat => (
-              <div key={stat.label} style={{
-                background: stat.bg,
-                borderRadius: '12px',
-                padding: '16px 20px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: stat.color, lineHeight: 1 }}>
-                  {stat.value}
+              { label: 'Total workforce', value: workers.length, color: '#16307f', bg: '#eff3ff', filterValue: 'all' as const },
+              { label: 'Fully compliant', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'valid').length, color: '#15803d', bg: '#f0fdf4', filterValue: 'valid' as const },
+              { label: 'Expiring soon', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expiring').length, color: '#b45309', bg: '#fffbeb', filterValue: 'expiring' as const },
+              { label: 'Expired', value: workers.filter(w => getComplianceStatus([w.cscsExpiry, w.rightToWorkExpiry]) === 'expired').length, color: '#b91c1c', bg: '#fef2f2', filterValue: 'expired' as const },
+            ].map(stat => {
+              const isActive = complianceFilter === stat.filterValue
+              const isHovered = hoveredStat === stat.label
+              return (
+                <div
+                  key={stat.label}
+                  onClick={() => { setComplianceFilter(stat.filterValue); setAvailableOnly(false) }}
+                  onMouseEnter={() => setHoveredStat(stat.label)}
+                  onMouseLeave={() => setHoveredStat(null)}
+                  style={{
+                    background: stat.bg,
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    outline: isActive ? `2px solid ${stat.color}` : 'none',
+                    boxShadow: isHovered && !isActive ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'box-shadow 150ms ease-out',
+                  }}
+                >
+                  <div style={{ fontSize: '28px', fontWeight: '700', color: stat.color, lineHeight: 1 }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#555', marginTop: '6px', fontWeight: '500' }}>
+                    {stat.label}
+                  </div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#555', marginTop: '6px', fontWeight: '500' }}>
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
