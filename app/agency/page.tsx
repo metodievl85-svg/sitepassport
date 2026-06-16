@@ -1915,7 +1915,7 @@ export default function AgencyPage() {
       <AgencyTeamModal
         open={teamModalOpen}
         onClose={() => setTeamModalOpen(false)}
-        onRoleResolved={setIsTeamOwner}
+        onRoleResolved={(role) => setIsTeamOwner(role === null ? null : role === 'owner')}
       />
     </main>
   )
