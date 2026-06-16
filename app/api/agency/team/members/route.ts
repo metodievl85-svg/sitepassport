@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Not in an agency team.' }, { status: 404 })
     }
 
-    const org = membership.organisations as { id: string; name: string; type: string }
+    const org = membership.organisations as unknown as { id: string; name: string; type: string }
     const callerRole = membership.role
 
     // Fetch all members of this org
