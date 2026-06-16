@@ -35,18 +35,22 @@ export async function GET(req: NextRequest) {
 
     const admin = getAdminClient()
 
+    const { data: ownerRow } = await admin
+      .from('organisation_members')
+      .select('organisation_id')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
+      .maybeSingle()
+
+    if (!ownerRow) {
+      return NextResponse.json({ code: null, has_org: false })
+    }
+
     const { data: org } = await admin
       .from('organisations')
       .select('id, name, join_code')
+      .eq('id', ownerRow.organisation_id)
       .eq('type', 'agency')
-      .in(
-        'id',
-        admin
-          .from('organisation_members')
-          .select('organisation_id')
-          .eq('user_id', user.id)
-          .eq('role', 'owner')
-      )
       .maybeSingle()
 
     if (!org) {
@@ -85,23 +89,24 @@ export async function POST(req: NextRequest) {
     // Find existing agency org where caller is owner
     let orgId: string | null = null
 
-    const { data: existingOrg } = await admin
-      .from('organisations')
-      .select('id')
-      .eq('type', 'agency')
-      .in(
-        'id',
-        admin
-          .from('organisation_members')
-          .select('organisation_id')
-          .eq('user_id', user.id)
-          .eq('role', 'owner')
-      )
+    const { data: ownerRow } = await admin
+      .from('organisation_members')
+      .select('organisation_id')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
       .maybeSingle()
 
-    if (existingOrg) {
-      orgId = existingOrg.id
-    } else {
+    if (ownerRow) {
+      const { data: existingOrg } = await admin
+        .from('organisations')
+        .select('id')
+        .eq('id', ownerRow.organisation_id)
+        .eq('type', 'agency')
+        .maybeSingle()
+      if (existingOrg) orgId = existingOrg.id
+    }
+
+    if (!orgId) {
       // Create new org
       const orgName =
         profile.company_name?.trim() ||

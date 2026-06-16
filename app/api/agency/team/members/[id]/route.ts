@@ -31,25 +31,29 @@ export async function DELETE(
     const admin = getAdminClient()
 
     // Verify caller is owner of an agency org
-    const { data: callerMembership } = await admin
-      .from('organisations')
-      .select('id')
-      .eq('type', 'agency')
-      .in(
-        'id',
-        admin
-          .from('organisation_members')
-          .select('organisation_id')
-          .eq('user_id', user.id)
-          .eq('role', 'owner')
-      )
+    const { data: ownerRow } = await admin
+      .from('organisation_members')
+      .select('organisation_id')
+      .eq('user_id', user.id)
+      .eq('role', 'owner')
       .maybeSingle()
 
-    if (!callerMembership) {
+    if (!ownerRow) {
       return NextResponse.json({ error: 'Not authorised.' }, { status: 403 })
     }
 
-    const callerOrgId = callerMembership.id
+    const { data: callerOrg } = await admin
+      .from('organisations')
+      .select('id')
+      .eq('id', ownerRow.organisation_id)
+      .eq('type', 'agency')
+      .maybeSingle()
+
+    if (!callerOrg) {
+      return NextResponse.json({ error: 'Not authorised.' }, { status: 403 })
+    }
+
+    const callerOrgId = callerOrg.id
 
     // Fetch the target membership row
     const { data: row } = await admin
