@@ -10,16 +10,25 @@ type Props = {
   onScanQR: () => void
   onTeamClick?: () => void
   isOwner?: boolean | null
+  teamRole?: 'owner' | 'member' | null
+  openSettingsSignal?: number
+  onJoinedTeam?: () => void
 }
 
-export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR, onTeamClick, isOwner }: Props) {
+export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR, onTeamClick, isOwner, teamRole, openSettingsSignal, onJoinedTeam }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [agencyName, setAgencyName] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joining, setJoining] = useState(false)
+  const [joinError, setJoinError] = useState('')
+  const [joinSuccess, setJoinSuccess] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const joinInputRef = useRef<HTMLInputElement>(null)
+  const openedViaSignalRef = useRef(false)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -33,6 +42,19 @@ export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR, o
     if (showSettings) void loadAgencyName()
   }, [showSettings])
 
+  useEffect(() => {
+    if (!openSettingsSignal) return
+    openedViaSignalRef.current = true
+    setShowSettings(true)
+  }, [openSettingsSignal])
+
+  useEffect(() => {
+    if (showSettings && openedViaSignalRef.current && teamRole === null) {
+      openedViaSignalRef.current = false
+      setTimeout(() => joinInputRef.current?.focus(), 100)
+    }
+  }, [showSettings, teamRole])
+
   async function loadAgencyName() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return
@@ -42,6 +64,41 @@ export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR, o
       .eq('id', session.user.id)
       .single()
     setAgencyName(data?.company_name ?? '')
+  }
+
+  async function handleJoin() {
+    if (joinCode.trim().length !== 9) return
+    setJoining(true)
+    setJoinError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) { setJoining(false); setJoinError('Not logged in.'); return }
+      const res = await fetch('/api/agency/team/join', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ code: joinCode.trim() }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setJoinSuccess(json.agency_name)
+        setTimeout(() => {
+          if (onJoinedTeam) { onJoinedTeam() } else { window.location.reload() }
+        }, 800)
+      } else if (res.status === 404) {
+        setJoinError("That code didn't match any agency. Check it and try again.")
+      } else if (res.status === 403) {
+        setJoinError('Only agency accounts can join a team.')
+      } else {
+        setJoinError((json as { error?: string }).error || 'Something went wrong. Please try again.')
+      }
+    } catch {
+      setJoinError('Unexpected error. Please try again.')
+    } finally {
+      setJoining(false)
+    }
   }
 
   async function saveAgencyName() {
@@ -195,6 +252,67 @@ export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR, o
             >
               {saving ? 'Saving...' : saveSuccess ? '✓ Saved' : 'Save'}
             </button>
+
+            <div style={{ borderTop: '1px solid #e5e7eb', marginTop: 20, paddingTop: 20 }}>
+              {teamRole === 'member' ? (
+                <p style={{ fontSize: 13, color: '#166534', margin: 0 }}>✓ You&apos;re a member of your agency&apos;s team</p>
+              ) : teamRole === 'owner' ? (
+                <p style={{ fontSize: 13, color: '#555', margin: 0 }}>You own this team. Manage members from the Team menu.</p>
+              ) : (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Join a team</div>
+                  <p style={{ fontSize: 13, color: '#555', marginBottom: 10, marginTop: 0 }}>Paste the code your agency gave you.</p>
+                  {joinSuccess ? (
+                    <p style={{ fontSize: 14, color: '#166534', fontWeight: 600, margin: 0 }}>✓ Joined {joinSuccess}. Refreshing...</p>
+                  ) : (
+                    <>
+                      <input
+                        ref={joinInputRef}
+                        value={joinCode}
+                        onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 9))}
+                        placeholder="XXXX-XXXX"
+                        maxLength={9}
+                        style={{
+                          width: '100%',
+                          border: '1px solid #d1d5db',
+                          borderRadius: 8,
+                          padding: '10px 14px',
+                          fontSize: 16,
+                          letterSpacing: '1px',
+                          fontFamily: 'monospace',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                        onFocus={e => { e.currentTarget.style.border = '1px solid #16307f'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(22,48,127,0.15)' }}
+                        onBlur={e => { e.currentTarget.style.border = '1px solid #d1d5db'; e.currentTarget.style.boxShadow = 'none' }}
+                      />
+                      {joinError && (
+                        <p style={{ fontSize: 13, color: '#ef4444', marginTop: 8, marginBottom: 0 }}>{joinError}</p>
+                      )}
+                      <button
+                        onClick={() => void handleJoin()}
+                        disabled={joining || joinCode.length !== 9}
+                        style={{
+                          width: '100%',
+                          background: '#16307f',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '12px',
+                          marginTop: 8,
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: joining || joinCode.length !== 9 ? 'not-allowed' : 'pointer',
+                          opacity: joining || joinCode.length !== 9 ? 0.5 : 1,
+                        }}
+                      >
+                        {joining ? 'Joining...' : 'Join team'}
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

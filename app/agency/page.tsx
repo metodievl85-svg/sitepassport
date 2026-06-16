@@ -271,6 +271,11 @@ export default function AgencyPage() {
   const [billingSuccess, setBillingSuccess] = useState(false)
   const [teamModalOpen, setTeamModalOpen] = useState(false)
   const [isTeamOwner, setIsTeamOwner] = useState<boolean | null>(null)
+  const [teamRole, setTeamRole] = useState<'owner' | 'member' | null>(null)
+  const [joinBannerDismissed, setJoinBannerDismissed] = useState(false)
+  const [openSettingsSignal, setOpenSettingsSignal] = useState(0)
+
+  const openSettingsToJoin = () => setOpenSettingsSignal(n => n + 1)
 
   usePushNotifications(agencyId)
 
@@ -280,6 +285,30 @@ export default function AgencyPage() {
 
   useEffect(() => {
     void load()
+  }, [])
+
+  useEffect(() => {
+    async function resolveTeamRole() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+        const res = await fetch('/api/agency/team/members', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const json = await res.json()
+          const role = json.caller_role as 'owner' | 'member' | null
+          setTeamRole(role)
+          setIsTeamOwner(role === null ? null : role === 'owner')
+        } else if (res.status === 404) {
+          setTeamRole(null)
+          setIsTeamOwner(null)
+        }
+      } catch {
+        // leave as null
+      }
+    }
+    void resolveTeamRole()
   }, [])
 
   useEffect(() => {
@@ -1036,7 +1065,7 @@ export default function AgencyPage() {
                 {email}
               </div>
             </div>
-            <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} onTeamClick={() => setTeamModalOpen(true)} isOwner={isTeamOwner} />
+            <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} onTeamClick={() => setTeamModalOpen(true)} isOwner={isTeamOwner} teamRole={teamRole} openSettingsSignal={openSettingsSignal} onJoinedTeam={() => window.location.reload()} />
           </div>
 
           <style>{`
@@ -1064,6 +1093,31 @@ export default function AgencyPage() {
             }
           `}</style>
         </section>
+
+        {teamRole === null && !joinBannerDismissed && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0a1628 0%, #16307f 100%)',
+            borderRadius: 12, padding: '16px 18px', marginBottom: 16,
+            display: 'flex', alignItems: 'center', gap: 12, color: '#fff',
+          }}>
+            <span style={{ fontSize: 22 }}>👋</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, fontSize: 15 }}>Joining a team?</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
+                If your agency gave you a team code, enter it to see their workforce.
+              </div>
+            </div>
+            <button onClick={openSettingsToJoin} style={{
+              background: '#fff', color: '#16307f', border: 'none',
+              borderRadius: 8, padding: '10px 16px', fontWeight: 500,
+              fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap',
+            }}>Enter code</button>
+            <button onClick={() => setJoinBannerDismissed(true)} aria-label="Dismiss" style={{
+              background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none',
+              borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 16,
+            }}>×</button>
+          </div>
+        )}
 
         {workers.length > 0 && (() => {
           const total = workers.length
@@ -1915,7 +1969,10 @@ export default function AgencyPage() {
       <AgencyTeamModal
         open={teamModalOpen}
         onClose={() => setTeamModalOpen(false)}
-        onRoleResolved={(role) => setIsTeamOwner(role === null ? null : role === 'owner')}
+        onRoleResolved={(role) => {
+          setTeamRole(role)
+          setIsTeamOwner(role === null ? null : role === 'owner')
+        }}
       />
     </main>
   )
