@@ -271,7 +271,7 @@ export default function AgencyPage() {
   const [billingSuccess, setBillingSuccess] = useState(false)
   const [teamModalOpen, setTeamModalOpen] = useState(false)
   const [isTeamOwner, setIsTeamOwner] = useState<boolean | null>(null)
-  const [teamRole, setTeamRole] = useState<'owner' | 'member' | null>(null)
+  const [teamRole, setTeamRole] = useState<'owner' | 'member' | null | undefined>(undefined)
   const [joinBannerDismissed, setJoinBannerDismissed] = useState(false)
   const [openSettingsSignal, setOpenSettingsSignal] = useState(0)
 
@@ -300,12 +300,13 @@ export default function AgencyPage() {
           const role = json.caller_role as 'owner' | 'member' | null
           setTeamRole(role)
           setIsTeamOwner(role === null ? null : role === 'owner')
-        } else if (res.status === 404) {
+        } else {
           setTeamRole(null)
           setIsTeamOwner(null)
         }
       } catch {
-        // leave as null
+        setTeamRole(null)
+        setIsTeamOwner(null)
       }
     }
     void resolveTeamRole()
