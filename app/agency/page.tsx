@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import CompanyMessages from '../company/components/CompanyMessages'
 import GroupMessages from './components/GroupMessages'
 import AgencyDashboardMenu from './components/AgencyDashboardMenu'
+import AgencyTeamModal from './components/AgencyTeamModal'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
@@ -268,6 +269,8 @@ export default function AgencyPage() {
   const [removingWorkerId, setRemovingWorkerId] = useState<string | null>(null)
   const [messageTab, setMessageTab] = useState<'direct' | 'groups'>('direct')
   const [billingSuccess, setBillingSuccess] = useState(false)
+  const [teamModalOpen, setTeamModalOpen] = useState(false)
+  const [isTeamOwner, setIsTeamOwner] = useState<boolean | null>(null)
 
   usePushNotifications(agencyId)
 
@@ -1033,7 +1036,7 @@ export default function AgencyPage() {
                 {email}
               </div>
             </div>
-            <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} />
+            <AgencyDashboardMenu onMessages={handleScrollToMessages} onSignOut={handleLogout} onScanQR={() => { router.push('/scan') }} onTeamClick={() => setTeamModalOpen(true)} isOwner={isTeamOwner} />
           </div>
 
           <style>{`
@@ -1909,6 +1912,11 @@ export default function AgencyPage() {
         </div>,
         document.body
       )}
+      <AgencyTeamModal
+        open={teamModalOpen}
+        onClose={() => setTeamModalOpen(false)}
+        onRoleResolved={setIsTeamOwner}
+      />
     </main>
   )
 }

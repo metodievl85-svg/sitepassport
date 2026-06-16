@@ -8,9 +8,11 @@ type Props = {
   onMessages: () => void
   onSignOut: () => void
   onScanQR: () => void
+  onTeamClick?: () => void
+  isOwner?: boolean | null
 }
 
-export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR }: Props) {
+export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR, onTeamClick, isOwner }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -100,7 +102,8 @@ export default function AgencyDashboardMenu({ onMessages, onSignOut, onScanQR }:
               { label: '💬 Messages', action: () => { onMessages(); setOpen(false) } },
               { label: '📷 Scan QR', action: () => { onScanQR(); setOpen(false) } },
               { label: '⚙️ Agency settings', action: () => { setShowSettings(true); setOpen(false) } },
-              { label: '💳 Billing', action: () => { router.push('/agency/billing'); setOpen(false) } },
+              { label: '👥 Team', action: () => { onTeamClick?.(); setOpen(false) } },
+              ...(isOwner !== false ? [{ label: '💳 Billing', action: () => { router.push('/agency/billing'); setOpen(false) } }] : []),
             ].map(item => (
               <button
                 key={item.label}
