@@ -36,7 +36,7 @@ function CompanyBillingContent() {
     const res = await fetch('/api/billing/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-      body: JSON.stringify({ plan: selectedPlan, interval, account_type: 'company' }),
+      body: JSON.stringify({ plan: selectedPlan, interval, account_type: 'company', skip_trial: new URLSearchParams(window.location.search).get('paynow') === '1' }),
     });
     const { url, error } = await res.json();
     if (error) { alert(error); setCheckoutLoading(false); return; }

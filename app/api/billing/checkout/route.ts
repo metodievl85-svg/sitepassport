@@ -7,11 +7,11 @@ const PRICE_IDS: Record<string, Record<string, string>> = {
     small_month: 'price_1ThCOkAl0WsHIwKI5gGP8ydC',
     small_year: 'price_1ThCXhAl0WsHIwKIZJGe9wLs',
     medium_month: 'price_1ThChUAl0WsHIwKILWUHsv93',
-    medium_year: 'price_1ThCi4Al0WsHIwKIKaMA5rC9',
+    medium_year: 'price_1TjOk9Al0WsHIwKIPGdQp2Ym',
     large_month: 'price_1ThCjIAl0WsHIwKIgwDdypWE',
-    large_year: 'price_1ThCjkAl0WsHIwKIMjTvdu4Z',
+    large_year: 'price_1TjOjJAl0WsHIwKIT6et4Gul',
     unlimited_month: 'price_1ThCkmAl0WsHIwKI5TQj7FPE',
-    unlimited_year: 'price_1ThClAAl0WsHIwKIMNdrT7co',
+    unlimited_year: 'price_1TjOnYAl0WsHIwKIcFmdI2DC',
   },
   agency: {
     small_month: 'price_1ThCmLAl0WsHIwKIol8DCxaH',
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { plan, interval, account_type, organisation_id } = await req.json();
+    const { plan, interval, account_type, organisation_id, skip_trial } = await req.json();
 
     const priceKey = `${plan}_${interval}`;
     const priceId = PRICE_IDS[account_type]?.[priceKey];
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        trial_period_days: 14,
+        ...(skip_trial ? {} : { trial_period_days: 14 }),
         metadata: {
           user_id: user.id,
           account_type,
