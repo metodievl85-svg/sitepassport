@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { plan, interval, account_type, organisation_id, skip_trial } = await req.json();
+    const { plan, interval, account_type, organisation_id } = await req.json();
 
     const priceKey = `${plan}_${interval}`;
     const priceId = PRICE_IDS[account_type]?.[priceKey];
@@ -58,7 +58,6 @@ export async function POST(req: NextRequest) {
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       subscription_data: {
-        ...(skip_trial ? {} : { trial_period_days: 14 }),
         metadata: {
           user_id: user.id,
           account_type,

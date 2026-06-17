@@ -40,7 +40,7 @@ function CompanyBillingContent() {
     const res = await fetch('/api/billing/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
-      body: JSON.stringify({ plan: selectedPlan, interval, account_type: 'company', skip_trial: searchParams.get('paynow') === '1' }),
+      body: JSON.stringify({ plan: selectedPlan, interval, account_type: 'company' }),
     });
     const { url, error } = await res.json();
     if (error) { alert(error); setCheckoutLoading(false); return; }
@@ -135,11 +135,6 @@ function CompanyBillingContent() {
               ))}
             </div>
 
-            {searchParams.get('paynow') !== '1' && (
-              <p style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
-                14-day free trial. Card required. Cancel anytime.
-              </p>
-            )}
 
             <button
               className="btn"
@@ -147,7 +142,7 @@ function CompanyBillingContent() {
               onClick={handleSubscribe}
               disabled={checkoutLoading}
             >
-              {checkoutLoading ? 'Redirecting...' : searchParams.get('paynow') === '1' ? 'Subscribe now' : 'Start free trial'}
+              {checkoutLoading ? 'Redirecting...' : 'Subscribe now'}
             </button>
 
             <button
