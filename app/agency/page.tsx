@@ -341,8 +341,25 @@ export default function AgencyPage() {
         return
       }
 
-      const currentAgencyId = profile.id as string
-      setAgencyId(currentAgencyId)
+      // Resolve true agency_id — for team members this is the owner's user_id
+      let resolvedAgencyId = profile.id as string
+      try {
+        const teamRes = await fetch('/api/agency/team/members', {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        })
+        if (teamRes.ok) {
+          const teamData = await teamRes.json()
+          if (teamData.organisation) {
+            // Find the owner's user_id from the members list
+            const ownerMember = teamData.members?.find((m: any) => m.role === 'owner')
+            if (ownerMember?.user_id) {
+              resolvedAgencyId = ownerMember.user_id
+            }
+          }
+        }
+      } catch (_) {}
+      setAgencyId(resolvedAgencyId)
+      const currentAgencyId = resolvedAgencyId
       setEmail(session.user.email ?? '')
 
       const { data: poolRows, error: poolError } = await supabase
