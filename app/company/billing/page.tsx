@@ -135,9 +135,11 @@ function CompanyBillingContent() {
               ))}
             </div>
 
-            <p style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
-              14-day free trial. Card required. Cancel anytime.
-            </p>
+            {searchParams.get('paynow') !== '1' && (
+              <p style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
+                14-day free trial. Card required. Cancel anytime.
+              </p>
+            )}
 
             <button
               className="btn"
