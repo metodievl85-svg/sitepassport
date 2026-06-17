@@ -49,13 +49,33 @@ export async function POST(req: NextRequest) {
     // Check caller is not already in any agency org
     const { data: existingMembership } = await admin
       .from('organisation_members')
-      .select('id, organisations!inner(type)')
+      .select('id, organisation_id, organisations!inner(type)')
       .eq('user_id', user.id)
       .eq('organisations.type', 'agency')
       .maybeSingle()
 
     if (existingMembership) {
-      return NextResponse.json({ error: 'You are already in an agency team.' }, { status: 409 })
+      // Allow backfill solo owners with no workforce to join a team
+      const orgId = (existingMembership as any).organisation_id
+
+      const [{ count: memberCount }, { data: ownWorkers }, { data: ownPlacements }] = await Promise.all([
+        admin.from('organisation_members').select('id', { count: 'exact', head: true }).eq('organisation_id', orgId),
+        admin.from('agency_workers').select('id').eq('agency_id', user.id).limit(1),
+        admin.from('agency_placements').select('id').eq('agency_id', user.id).limit(1),
+      ])
+
+      const isSoloWithNoData =
+        memberCount === 1 &&
+        (!ownWorkers || ownWorkers.length === 0) &&
+        (!ownPlacements || ownPlacements.length === 0)
+
+      if (!isSoloWithNoData) {
+        return NextResponse.json({ error: 'You are already in an agency team.' }, { status: 409 })
+      }
+
+      // Clean up their empty solo org so they can join the new team
+      await admin.from('organisation_members').delete().eq('id', existingMembership.id)
+      await admin.from('organisations').delete().eq('id', orgId)
     }
 
     // Check caller has no existing workforce
