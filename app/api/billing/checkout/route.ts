@@ -7,11 +7,11 @@ const PRICE_IDS: Record<string, Record<string, string>> = {
     small_month: 'price_1ThCOkAl0WsHIwKI5gGP8ydC',
     small_year: 'price_1ThCXhAl0WsHIwKIZJGe9wLs',
     medium_month: 'price_1ThChUAl0WsHIwKILWUHsv93',
-    medium_year: 'price_1TjOk9Al0WsHIwKIPGdQp2Ym',
+    medium_year: 'price_1TjPEwAl0WsHIwKIDMJVevY5',
     large_month: 'price_1ThCjIAl0WsHIwKIgwDdypWE',
     large_year: 'price_1TjOjJAl0WsHIwKIT6et4Gul',
     unlimited_month: 'price_1ThCkmAl0WsHIwKI5TQj7FPE',
-    unlimited_year: 'price_1TjOnYAl0WsHIwKIcFmdI2DC',
+    unlimited_year: 'price_1TjPGCAl0WsHIwKIhOiT3u7l',
   },
   agency: {
     small_month: 'price_1ThCmLAl0WsHIwKIol8DCxaH',
