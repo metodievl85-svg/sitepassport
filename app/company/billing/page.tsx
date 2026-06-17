@@ -20,6 +20,10 @@ function CompanyBillingContent() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
+    setCheckoutLoading(false);
+  }, []);
+
+  useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
@@ -132,7 +136,7 @@ function CompanyBillingContent() {
             </div>
 
             <p style={{ fontSize: 13, color: '#666', marginBottom: 16 }}>
-              14-day free trial. Card required. Cancel anytime. All prices exclude VAT.
+              14-day free trial. Card required. Cancel anytime.
             </p>
 
             <button
@@ -141,7 +145,7 @@ function CompanyBillingContent() {
               onClick={handleSubscribe}
               disabled={checkoutLoading}
             >
-              {checkoutLoading ? 'Redirecting...' : 'Start free trial'}
+              {checkoutLoading ? 'Redirecting...' : searchParams.get('paynow') === '1' ? 'Subscribe now' : 'Start free trial'}
             </button>
 
             <button
