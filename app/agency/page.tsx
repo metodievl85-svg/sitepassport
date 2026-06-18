@@ -1897,6 +1897,10 @@ export default function AgencyPage() {
                     if (res.ok) {
                       setShowAssignWorker(null)
                       loadPlacementsForClient(clientId!)
+                    } else {
+                      const err = await res.json()
+                      console.error('[assign worker] API error:', err)
+                      alert(`Error: ${err.error || 'Unknown error'}`)
                     }
                     setAssignSaving(false)
                   }}
