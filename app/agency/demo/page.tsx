@@ -9,6 +9,8 @@ const CLIENTS = [
   { name: 'Rigby & Rigby', site: '11 Relton Mews', siteCode: 'RI3686', limit: '£10k', workers: 2, status: 'active' },
   { name: 'Walton Wagner Ltd', site: '2 Maryon, Hambleden, Henley-on-Thames RG9 6SL', siteCode: 'WA7851', limit: '£10k', workers: 2, status: 'active' },
   { name: 'PJ Carey (Contractors) Ltd', site: 'Wembley', siteCode: 'CA2961', limit: '£25k', workers: 1, status: 'active' },
+  { name: 'Interior Lab', site: '19 Wadham Gardens, Primrose Hill, London NW3 3DN', siteCode: 'IN6546', limit: '£10k', workers: 6, status: 'active' },
+  { name: 'Interior Lab', site: '42 Lansdowne Road, W11 2LU', siteCode: 'IN7466', limit: '£10k', workers: 1, status: 'active' },
 ]
 
 export default function AgencyDemoPage() {
