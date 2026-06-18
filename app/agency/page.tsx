@@ -330,6 +330,12 @@ export default function AgencyPage() {
         return
       }
 
+      const ALLOWED_EMAILS = ['metodievl85+4@gmail.com']
+      if (!ALLOWED_EMAILS.includes(session.user.email ?? '')) {
+        router.replace('/login')
+        return
+      }
+
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, role')
