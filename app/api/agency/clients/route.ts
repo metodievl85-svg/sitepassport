@@ -11,7 +11,12 @@ async function getAgencyId(req: NextRequest): Promise<string | null> {
   if (!token) return null
   const { data: { user } } = await supabaseAdmin.auth.getUser(token)
   if (!user) return null
-  const { data } = await supabaseAdmin.rpc('get_my_agency_owner_id', {}, { headers: { Authorization: `Bearer ${token}` } })
+  const userClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { global: { headers: { Authorization: `Bearer ${token}` } } }
+  )
+  const { data } = await userClient.rpc('get_my_agency_owner_id')
   return data || user.id
 }
 
