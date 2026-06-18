@@ -280,6 +280,8 @@ export default function AgencyPage() {
   const [clientSaving, setClientSaving] = useState(false)
   const [expandedClientId, setExpandedClientId] = useState<string | null>(null)
   const [clientPlacements, setClientPlacements] = useState<Record<string, any[]>>({})
+  const [editingClient, setEditingClient] = useState<any | null>(null)
+  const [editSaving, setEditSaving] = useState(false)
 
   const openSettingsToJoin = () => setOpenSettingsSignal(n => n + 1)
 
@@ -1592,8 +1594,16 @@ export default function AgencyPage() {
                     <td style={{ padding: '13px 16px' }}>
                       <span style={{ background: '#f0fdf4', color: '#16a34a', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>Active</span>
                     </td>
-                    <td style={{ padding: '13px 16px', color: '#9ca3af', fontSize: 16 }}>
-                      {expandedClientId === client.id ? '▾' : '›'}
+                    <td style={{ padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={e => { e.stopPropagation(); setEditingClient(client) }}
+                        style={{ background: 'none', border: '1px solid #d1d5db', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer', color: '#555' }}
+                      >
+                        Edit
+                      </button>
+                      <span style={{ color: '#9ca3af', fontSize: 16 }}>
+                        {expandedClientId === client.id ? '▾' : '›'}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -1651,6 +1661,75 @@ export default function AgencyPage() {
                   style={{ flex: 1, padding: '11px', borderRadius: 8, border: 'none', background: '#16307f', color: '#fff', fontSize: 14, fontWeight: 600, cursor: clientSaving ? 'not-allowed' : 'pointer', opacity: clientSaving ? 0.6 : 1 }}
                 >
                   {clientSaving ? 'Saving...' : 'Save client'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {editingClient && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 440 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Edit client</h3>
+                <button onClick={() => setEditingClient(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#888' }}>×</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Client name</label>
+                  <input value={editingClient.name} onChange={e => setEditingClient((p: any) => ({ ...p, name: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Site</label>
+                  <input value={editingClient.site} onChange={e => setEditingClient((p: any) => ({ ...p, site: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Site code</label>
+                  <input value={editingClient.site_code} onChange={e => setEditingClient((p: any) => ({ ...p, site_code: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Credit limit</label>
+                  <input value={editingClient.credit_limit || ''} onChange={e => setEditingClient((p: any) => ({ ...p, credit_limit: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <button
+                  onClick={async () => {
+                    if (!confirm('Delete this client?')) return
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) return
+                    await fetch(`/api/agency/clients?id=${editingClient.id}`, {
+                      method: 'DELETE',
+                      headers: { Authorization: `Bearer ${session.access_token}` }
+                    })
+                    setEditingClient(null)
+                    await loadClients()
+                  }}
+                  style={{ padding: '11px 16px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Delete
+                </button>
+                <button onClick={() => setEditingClient(null)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                <button
+                  disabled={editSaving}
+                  onClick={async () => {
+                    setEditSaving(true)
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) return
+                    const res = await fetch('/api/agency/clients', {
+                      method: 'PATCH',
+                      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify(editingClient)
+                    })
+                    if (res.ok) {
+                      setEditingClient(null)
+                      await loadClients()
+                    }
+                    setEditSaving(false)
+                  }}
+                  style={{ flex: 1, padding: '11px', borderRadius: 8, border: 'none', background: '#16307f', color: '#fff', fontSize: 14, fontWeight: 600, cursor: editSaving ? 'not-allowed' : 'pointer', opacity: editSaving ? 0.6 : 1 }}
+                >
+                  {editSaving ? 'Saving...' : 'Save changes'}
                 </button>
               </div>
             </div>
