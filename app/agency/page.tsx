@@ -1660,7 +1660,7 @@ export default function AgencyPage() {
                                     const pay = parseFloat(p.pay_rate) || 0
                                     const ni = parseFloat(p.ni_rate) || 0
                                     const hours = parseFloat(p.hours) || 0
-                                    const marginPerHour = charge - pay - ni
+                                    const marginPerHour = charge - pay
                                     const cost = pay * hours
                                     const marginGBP = marginPerHour * hours
                                     const marginPct = charge > 0 ? ((marginPerHour / charge) * 100).toFixed(2) : '0.00'
