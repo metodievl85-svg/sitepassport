@@ -274,6 +274,12 @@ export default function AgencyPage() {
   const [teamRole, setTeamRole] = useState<'owner' | 'member' | null | undefined>(undefined)
   const [joinBannerDismissed, setJoinBannerDismissed] = useState(false)
   const [openSettingsSignal, setOpenSettingsSignal] = useState(0)
+  const [clients, setClients] = useState<any[]>([])
+  const [showAddClient, setShowAddClient] = useState(false)
+  const [newClient, setNewClient] = useState({ name: '', site: '', site_code: '', credit_limit: '' })
+  const [clientSaving, setClientSaving] = useState(false)
+  const [expandedClientId, setExpandedClientId] = useState<string | null>(null)
+  const [clientPlacements, setClientPlacements] = useState<Record<string, any[]>>({})
 
   const openSettingsToJoin = () => setOpenSettingsSignal(n => n + 1)
 
@@ -459,8 +465,21 @@ export default function AgencyPage() {
           .eq('agency_id', currentAgencyId)
         setPlacements(pData || [])
       }
+      await loadClients()
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadClients() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const res = await fetch('/api/agency/clients', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    if (res.ok) {
+      const json = await res.json()
+      setClients(json.clients || [])
     }
   }
 
@@ -1522,6 +1541,121 @@ export default function AgencyPage() {
             <p style={{ marginTop: 10, color: '#167342', fontWeight: 700, fontSize: 14 }}>{addLinkSuccess}</p>
           )}
         </section>
+
+        <section className="card" style={{ marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <h2 className="section-title" style={{ marginBottom: 2 }}>Clients & Placements</h2>
+              <p className="section-subtitle" style={{ margin: 0 }}>{clients.length} client{clients.length !== 1 ? 's' : ''}</p>
+            </div>
+            <button
+              onClick={() => setShowAddClient(true)}
+              style={{ background: '#16307f', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+            >
+              + Add client
+            </button>
+          </div>
+
+          {/* Clients table */}
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #e8edf5' }}>
+                  <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 600, color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Client</th>
+                  <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 600, color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Site</th>
+                  <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 600, color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Code</th>
+                  <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 600, color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Limit</th>
+                  <th style={{ textAlign: 'left', padding: '10px 16px', fontWeight: 600, color: '#555', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</th>
+                  <th style={{ padding: '10px 16px' }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {clients.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '24px 16px', textAlign: 'center', color: '#888', fontSize: 14 }}>
+                      No clients yet. Add your first client above.
+                    </td>
+                  </tr>
+                )}
+                {clients.map((client) => (
+                  <tr
+                    key={client.id}
+                    onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)}
+                    style={{ borderBottom: '1px solid #f0f2f7', cursor: 'pointer', background: expandedClientId === client.id ? '#f0f4ff' : '#fff', transition: 'background 120ms' }}
+                  >
+                    <td style={{ padding: '13px 16px', fontWeight: 600, color: '#1a1a1a' }}>{client.name}</td>
+                    <td style={{ padding: '13px 16px', color: '#555' }}>{client.site}</td>
+                    <td style={{ padding: '13px 16px' }}>
+                      <span style={{ background: '#dbeafe', color: '#1d4ed8', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>{client.site_code}</span>
+                    </td>
+                    <td style={{ padding: '13px 16px', color: '#555' }}>{client.credit_limit || '—'}</td>
+                    <td style={{ padding: '13px 16px' }}>
+                      <span style={{ background: '#f0fdf4', color: '#16a34a', fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 6 }}>Active</span>
+                    </td>
+                    <td style={{ padding: '13px 16px', color: '#9ca3af', fontSize: 16 }}>
+                      {expandedClientId === client.id ? '▾' : '›'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Add client modal */}
+        {showAddClient && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 440 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Add client</h3>
+                <button onClick={() => setShowAddClient(false)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#888' }}>×</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Client name</label>
+                  <input value={newClient.name} onChange={e => setNewClient(p => ({ ...p, name: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} placeholder="e.g. Rigby & Rigby" />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Site</label>
+                  <input value={newClient.site} onChange={e => setNewClient(p => ({ ...p, site: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} placeholder="e.g. 11 Relton Mews" />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Site code</label>
+                  <input value={newClient.site_code} onChange={e => setNewClient(p => ({ ...p, site_code: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} placeholder="e.g. RI3686" />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Credit limit</label>
+                  <input value={newClient.credit_limit} onChange={e => setNewClient(p => ({ ...p, credit_limit: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }} placeholder="e.g. £10k" />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <button onClick={() => setShowAddClient(false)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                <button
+                  disabled={clientSaving || !newClient.name || !newClient.site || !newClient.site_code}
+                  onClick={async () => {
+                    setClientSaving(true)
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) return
+                    const res = await fetch('/api/agency/clients', {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newClient)
+                    })
+                    if (res.ok) {
+                      setNewClient({ name: '', site: '', site_code: '', credit_limit: '' })
+                      setShowAddClient(false)
+                      await loadClients()
+                    }
+                    setClientSaving(false)
+                  }}
+                  style={{ flex: 1, padding: '11px', borderRadius: 8, border: 'none', background: '#16307f', color: '#fff', fontSize: 14, fontWeight: 600, cursor: clientSaving ? 'not-allowed' : 'pointer', opacity: clientSaving ? 0.6 : 1 }}
+                >
+                  {clientSaving ? 'Saving...' : 'Save client'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {workers.length > 0 && (() => {
           const placementGroups: Record<string, { label: string; companyName: string; siteName: string; workers: AgencyWorker[] }> = {}
