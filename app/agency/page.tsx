@@ -11,6 +11,7 @@ import GroupMessages from './components/GroupMessages'
 import AgencyDashboardMenu from './components/AgencyDashboardMenu'
 import AgencyTeamModal from './components/AgencyTeamModal'
 import { usePushNotifications } from '../lib/usePushNotifications'
+import * as XLSX from 'xlsx'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
 
@@ -499,6 +500,69 @@ export default function AgencyPage() {
       const json = await res.json()
       setPlacementsByClient(prev => ({ ...prev, [clientId]: json.placements || [] }))
     }
+  }
+
+  async function exportToExcel() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    const rows: any[] = []
+
+    for (const client of clients) {
+      const res = await fetch(`/api/agency/clients/${client.id}/placements`, {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      })
+      if (!res.ok) continue
+      const json = await res.json()
+      const placements = json.placements || []
+
+      for (const p of placements) {
+        const worker = workers.find(w => w.workerId === p.worker_id)
+        const charge = parseFloat(p.charge_rate) || 0
+        const pay = parseFloat(p.pay_rate) || 0
+        const ni = parseFloat(p.ni_rate) || 0
+        const hours = parseFloat(p.hours) || 0
+        const marginPerHour = charge - pay
+        const cost = pay * hours
+        const marginGBP = marginPerHour * hours
+        const marginPct = charge > 0 ? ((marginPerHour / charge) * 100).toFixed(2) + '%' : '0.00%'
+
+        rows.push({
+          'Client': client.name,
+          'Limit': client.credit_limit || '',
+          'Trade': worker?.trade || '',
+          'Site': client.site,
+          'Site Code': client.site_code,
+          'Temp': worker?.fullName || '',
+          'Ref': p.ref || '',
+          'Payroll': p.payroll_type || '',
+          'o/n': '',
+          'Supplier': p.supplier || '',
+          'Start': p.start_date || '',
+          'Charge': charge,
+          'Pay': pay,
+          'NI': ni,
+          'Margin £': marginGBP,
+          'Margin %': marginPct,
+          'Hours': hours,
+          'Cost': cost,
+          'Margin': marginGBP,
+          'DOB': worker?.niNumber || '',
+          'Number': worker?.phone || '',
+          'Finishing': p.finishing_date || 'Ongoing',
+        })
+      }
+    }
+
+    if (rows.length === 0) {
+      alert('No placements to export.')
+      return
+    }
+
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Placements')
+    XLSX.writeFile(wb, `placements-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
   async function handleAddOperative() {
@@ -1566,12 +1630,20 @@ export default function AgencyPage() {
               <h2 className="section-title" style={{ marginBottom: 2 }}>Clients & Placements</h2>
               <p className="section-subtitle" style={{ margin: 0 }}>{clients.length} client{clients.length !== 1 ? 's' : ''}</p>
             </div>
-            <button
-              onClick={() => setShowAddClient(true)}
-              style={{ background: '#16307f', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-            >
-              + Add client
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={exportToExcel}
+                style={{ background: '#fff', color: '#16307f', border: '1px solid #16307f', borderRadius: 8, padding: '10px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Export Excel
+              </button>
+              <button
+                onClick={() => setShowAddClient(true)}
+                style={{ background: '#16307f', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+              >
+                + Add client
+              </button>
+            </div>
           </div>
 
           {/* Clients table */}
