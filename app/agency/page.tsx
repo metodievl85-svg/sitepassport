@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Fragment } from 'react'
 import { createPortal } from 'react-dom'
 import jsPDF from 'jspdf'
 import Link from 'next/link'
@@ -282,6 +282,10 @@ export default function AgencyPage() {
   const [clientPlacements, setClientPlacements] = useState<Record<string, any[]>>({})
   const [editingClient, setEditingClient] = useState<any | null>(null)
   const [editSaving, setEditSaving] = useState(false)
+  const [placementsByClient, setPlacementsByClient] = useState<Record<string, any[]>>({})
+  const [showAssignWorker, setShowAssignWorker] = useState<string | null>(null)
+  const [assignWorkerData, setAssignWorkerData] = useState({ worker_id: '', ref: '', payroll_type: '', supplier: '', charge_rate: '', pay_rate: '', ni_rate: '', start_date: '', finishing_date: '' })
+  const [assignSaving, setAssignSaving] = useState(false)
 
   const openSettingsToJoin = () => setOpenSettingsSignal(n => n + 1)
 
@@ -482,6 +486,18 @@ export default function AgencyPage() {
     if (res.ok) {
       const json = await res.json()
       setClients(json.clients || [])
+    }
+  }
+
+  async function loadPlacementsForClient(clientId: string) {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const res = await fetch(`/api/agency/clients/${clientId}/placements`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    if (res.ok) {
+      const json = await res.json()
+      setPlacementsByClient(prev => ({ ...prev, [clientId]: json.placements || [] }))
     }
   }
 
@@ -1580,9 +1596,13 @@ export default function AgencyPage() {
                   </tr>
                 )}
                 {clients.map((client) => (
+                  <Fragment key={client.id}>
                   <tr
-                    key={client.id}
-                    onClick={() => setExpandedClientId(expandedClientId === client.id ? null : client.id)}
+                    onClick={() => {
+                      const next = expandedClientId === client.id ? null : client.id
+                      setExpandedClientId(next)
+                      if (next) loadPlacementsForClient(next)
+                    }}
                     style={{ borderBottom: '1px solid #f0f2f7', cursor: 'pointer', background: expandedClientId === client.id ? '#f0f4ff' : '#fff', transition: 'background 120ms' }}
                   >
                     <td style={{ padding: '13px 16px', fontWeight: 600, color: '#1a1a1a' }}>{client.name}</td>
@@ -1606,6 +1626,92 @@ export default function AgencyPage() {
                       </span>
                     </td>
                   </tr>
+                  {expandedClientId === client.id && (
+                    <tr key={`${client.id}-expanded`}>
+                      <td colSpan={6} style={{ padding: 0, background: '#f8faff', borderBottom: '2px solid #dbeafe' }}>
+                        <div style={{ padding: '16px 20px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: '#16307f' }}>
+                              {(placementsByClient[client.id] || []).length} worker{(placementsByClient[client.id] || []).length !== 1 ? 's' : ''} placed
+                            </span>
+                            <button
+                              onClick={e => { e.stopPropagation(); setShowAssignWorker(client.id); setAssignWorkerData({ worker_id: '', ref: '', payroll_type: '', supplier: '', charge_rate: '', pay_rate: '', ni_rate: '', start_date: '', finishing_date: '' }) }}
+                              style={{ background: '#16307f', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                            >
+                              + Assign worker
+                            </button>
+                          </div>
+
+                          {(placementsByClient[client.id] || []).length === 0 ? (
+                            <p style={{ fontSize: 13, color: '#888', margin: 0 }}>No workers assigned yet.</p>
+                          ) : (
+                            <div style={{ overflowX: 'auto' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid #dbeafe' }}>
+                                    {['Worker', 'Trade', 'Ref', 'Payroll', 'Supplier', 'Start', 'Charge', 'Pay', 'NI', 'Margin £', 'Margin %', 'Hours', 'Cost', 'Finishing'].map(h => (
+                                      <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 600, color: '#555', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(placementsByClient[client.id] || []).map((p: any) => {
+                                    const charge = parseFloat(p.charge_rate) || 0
+                                    const pay = parseFloat(p.pay_rate) || 0
+                                    const ni = parseFloat(p.ni_rate) || 0
+                                    const hours = parseFloat(p.hours) || 0
+                                    const marginPerHour = charge - pay - ni
+                                    const cost = pay * hours
+                                    const marginGBP = marginPerHour * hours
+                                    const marginPct = charge > 0 ? ((marginPerHour / charge) * 100).toFixed(2) : '0.00'
+                                    const workerName = workers.find(w => w.workerId === p.worker_id)?.fullName || '—'
+                                    const workerTrade = workers.find(w => w.workerId === p.worker_id)?.trade || '—'
+                                    return (
+                                      <tr key={p.id} style={{ borderBottom: '1px solid #f0f4ff' }}>
+                                        <td style={{ padding: '9px 10px', fontWeight: 600, color: '#1a1a1a', whiteSpace: 'nowrap' }}>{workerName}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555', whiteSpace: 'nowrap' }}>{workerTrade}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555' }}>{p.ref || '—'}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555', whiteSpace: 'nowrap' }}>{p.payroll_type || '—'}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555', whiteSpace: 'nowrap' }}>{p.supplier || '—'}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555', whiteSpace: 'nowrap' }}>{p.start_date || '—'}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555' }}>£{charge.toFixed(2)}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555' }}>£{pay.toFixed(2)}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555' }}>£{ni.toFixed(2)}</td>
+                                        <td style={{ padding: '9px 10px', color: '#22c55e', fontWeight: 600 }}>£{marginGBP.toFixed(2)}</td>
+                                        <td style={{ padding: '9px 10px', color: '#22c55e', fontWeight: 600 }}>{marginPct}%</td>
+                                        <td style={{ padding: '9px 10px' }}>
+                                          <input
+                                            type="number"
+                                            defaultValue={hours}
+                                            onClick={e => e.stopPropagation()}
+                                            onBlur={async e => {
+                                              const newHours = parseFloat(e.target.value) || 0
+                                              const { data: { session } } = await supabase.auth.getSession()
+                                              if (!session) return
+                                              await fetch(`/api/agency/clients/${client.id}/placements`, {
+                                                method: 'PATCH',
+                                                headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ id: p.id, hours: newHours })
+                                              })
+                                              loadPlacementsForClient(client.id)
+                                            }}
+                                            style={{ width: 60, border: '1px solid #d1d5db', borderRadius: 6, padding: '4px 8px', fontSize: 13, textAlign: 'center' }}
+                                          />
+                                        </td>
+                                        <td style={{ padding: '9px 10px', color: '#555' }}>£{cost.toFixed(2)}</td>
+                                        <td style={{ padding: '9px 10px', color: '#555', whiteSpace: 'nowrap' }}>{p.finishing_date || 'Ongoing'}</td>
+                                      </tr>
+                                    )
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
@@ -1730,6 +1836,73 @@ export default function AgencyPage() {
                   style={{ flex: 1, padding: '11px', borderRadius: 8, border: 'none', background: '#16307f', color: '#fff', fontSize: 14, fontWeight: 600, cursor: editSaving ? 'not-allowed' : 'pointer', opacity: editSaving ? 0.6 : 1 }}
                 >
                   {editSaving ? 'Saving...' : 'Save changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAssignWorker && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setShowAssignWorker(null)}>
+            <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Assign worker</h3>
+                <button onClick={() => setShowAssignWorker(null)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#888' }}>×</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>Worker</label>
+                  <select value={assignWorkerData.worker_id} onChange={e => setAssignWorkerData(p => ({ ...p, worker_id: e.target.value }))} style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }}>
+                    <option value="">Select worker...</option>
+                    {workers.map(w => (
+                      <option key={w.workerId} value={w.workerId}>{w.fullName} — {w.trade}</option>
+                    ))}
+                  </select>
+                </div>
+                {[
+                  { label: 'Ref', key: 'ref', placeholder: 'e.g. MET57521' },
+                  { label: 'Payroll type', key: 'payroll_type', placeholder: 'e.g. ROCKET - CIS' },
+                  { label: 'Supplier', key: 'supplier', placeholder: 'e.g. ROCKET - CIS' },
+                  { label: 'Charge rate (£/hr)', key: 'charge_rate', placeholder: 'e.g. 29.00' },
+                  { label: 'Pay rate (£/hr)', key: 'pay_rate', placeholder: 'e.g. 25.00' },
+                  { label: 'NI (£/hr)', key: 'ni_rate', placeholder: 'e.g. 4.00' },
+                  { label: 'Start date', key: 'start_date', placeholder: 'YYYY-MM-DD' },
+                  { label: 'Finishing date', key: 'finishing_date', placeholder: 'Leave blank for Ongoing' },
+                ].map(({ label, key, placeholder }) => (
+                  <div key={key}>
+                    <label style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 5 }}>{label}</label>
+                    <input
+                      value={(assignWorkerData as any)[key]}
+                      onChange={e => setAssignWorkerData(p => ({ ...p, [key]: e.target.value }))}
+                      placeholder={placeholder}
+                      style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 14, boxSizing: 'border-box' }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <button onClick={() => setShowAssignWorker(null)} style={{ flex: 1, padding: '11px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+                <button
+                  disabled={assignSaving || !assignWorkerData.worker_id}
+                  onClick={async () => {
+                    setAssignSaving(true)
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) return
+                    const clientId = showAssignWorker
+                    const res = await fetch(`/api/agency/clients/${clientId}/placements`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...assignWorkerData, client_id: clientId })
+                    })
+                    if (res.ok) {
+                      setShowAssignWorker(null)
+                      loadPlacementsForClient(clientId!)
+                    }
+                    setAssignSaving(false)
+                  }}
+                  style={{ flex: 2, padding: '11px', borderRadius: 8, border: 'none', background: '#16307f', color: '#fff', fontSize: 14, fontWeight: 600, cursor: assignSaving ? 'not-allowed' : 'pointer', opacity: assignSaving ? 0.6 : 1 }}
+                >
+                  {assignSaving ? 'Assigning...' : 'Assign worker'}
                 </button>
               </div>
             </div>
