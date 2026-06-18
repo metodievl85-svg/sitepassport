@@ -45,7 +45,11 @@ export async function POST(req: NextRequest) {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
       const priceId = subscription.items.data[0].price.id;
       const interval = subscription.items.data[0].price.recurring?.interval === 'year' ? 'year' : 'month';
-      const periodEnd = subscription.current_period_end ?? subscription.trial_end ?? null;
+      const periodEnd = (subscription.current_period_end && subscription.current_period_end > 0)
+        ? subscription.current_period_end
+        : (subscription.trial_end && subscription.trial_end > 0)
+        ? subscription.trial_end
+        : null;
       const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000).toISOString() : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
       const status = subscription.status;
       const customerId = subscription.customer as string;
@@ -104,16 +108,16 @@ export async function POST(req: NextRequest) {
                 <div style="margin-bottom: 32px;">
                   <img src="https://nekaid.co.uk/nekaid-logo.png" alt="NekaID" style="height: 36px; max-width: 140px; display: block;" />
                 </div>
-                <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 16px;">Your free trial has started</h1>
-                <p style="font-size: 16px; color: #444; margin: 0 0 24px;">Thanks for subscribing to NekaID. Your 14-day free trial is now active.</p>
+                <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 16px;">Your subscription is active</h1>
+                <p style="font-size: 16px; color: #444; margin: 0 0 24px;">Your NekaID subscription is now active. You have full access to your dashboard.</p>
                 <div style="background: #f5f7ff; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;">
                   <div style="margin-bottom: 12px;">
                     <span style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.05em;">Plan</span>
                     <div style="font-size: 16px; font-weight: 600; margin-top: 2px;">${planLabel[plan] || plan} — ${intervalLabel}</div>
                   </div>
                   <div>
-                    <span style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.05em;">Trial ends</span>
-                    <div style="font-size: 16px; font-weight: 600; margin-top: 2px;">${trialEnd}</div>
+                    <span style="font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.05em;">Renews</span>
+                    <div style="font-size: 16px; font-weight: 600; margin-top: 2px;">${new Date(currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}</div>
                   </div>
                 </div>
                 <a href="https://nekaid.co.uk${accountType === 'agency' ? '/agency' : '/company'}" style="display: inline-block; background: #16307f; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; font-weight: 600;">Go to dashboard</a>
