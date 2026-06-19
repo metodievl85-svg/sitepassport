@@ -551,7 +551,7 @@ export default function AttendanceRegister({ siteId }: Props) {
                             borderBottom: '1px solid #f0f0f0',
                           }}
                         >
-                          {isPresent ? (isManual ? '✏️' : '✅') : ''}
+                          {isPresent ? '✅' : ''}
                         </td>
                       )
                     })}
