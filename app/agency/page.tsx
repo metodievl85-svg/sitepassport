@@ -51,6 +51,8 @@ type AgencyWorker = {
   bankAccountNumber: string
   bankSortCode: string
   employmentStatus?: string | null
+  dob: string
+  fullAddress: string
 }
 
 type PlacementGroup = {
