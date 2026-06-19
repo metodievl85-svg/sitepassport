@@ -285,6 +285,9 @@ export default function AgencyPage() {
   const [clientPlacements, setClientPlacements] = useState<Record<string, any[]>>({})
   const [editingClient, setEditingClient] = useState<any | null>(null)
   const [editSaving, setEditSaving] = useState(false)
+  const [editingPlacement, setEditingPlacement] = useState<any>(null)
+  const [editingClientId, setEditingClientId] = useState<string | null>(null)
+  const [confirmDeletePlacement, setConfirmDeletePlacement] = useState(false)
   const [placementsByClient, setPlacementsByClient] = useState<Record<string, any[]>>({})
   const [showAssignWorker, setShowAssignWorker] = useState<string | null>(null)
   const [assignWorkerData, setAssignWorkerData] = useState({ worker_id: '', ref: '', payroll_type: '', supplier: '', charge_rate: '', pay_rate: '', ni_rate: '', start_date: '', finishing_date: '' })
@@ -1745,7 +1748,7 @@ export default function AgencyPage() {
                                     const workerName = workers.find(w => w.workerId === p.worker_id)?.fullName || '—'
                                     const workerTrade = workers.find(w => w.workerId === p.worker_id)?.trade || '—'
                                     return (
-                                      <tr key={p.id} style={{ borderBottom: '1px solid #f0f4ff' }}>
+                                      <tr key={p.id} onClick={() => { setEditingPlacement(p); setEditingClientId(client.id); setConfirmDeletePlacement(false) }} style={{ borderBottom: '1px solid #f0f4ff', cursor: 'pointer' }}>
                                         <td style={{ padding: '9px 10px', fontWeight: 600, color: '#1a1a1a', whiteSpace: 'nowrap' }}>{workerName}</td>
                                         <td style={{ padding: '9px 10px', color: '#555', whiteSpace: 'nowrap' }}>{workerTrade}</td>
                                         <td style={{ padding: '9px 10px', color: '#555' }}>{p.ref || '—'}</td>
@@ -1846,6 +1849,80 @@ export default function AgencyPage() {
                 >
                   {clientSaving ? 'Saving...' : 'Save client'}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {editingPlacement && (
+          <div onClick={() => setEditingPlacement(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>Edit placement</h3>
+                <button onClick={() => setEditingPlacement(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#888', lineHeight: 1 }}>×</button>
+              </div>
+              {[
+                { key: 'ref', label: 'Ref', type: 'text' },
+                { key: 'payroll_type', label: 'Payroll type', type: 'text' },
+                { key: 'supplier', label: 'Supplier', type: 'text' },
+                { key: 'charge_rate', label: 'Charge rate (£)', type: 'number' },
+                { key: 'pay_rate', label: 'Pay rate (£)', type: 'number' },
+                { key: 'ni_rate', label: 'NI rate (£)', type: 'number' },
+                { key: 'start_date', label: 'Start date', type: 'date' },
+                { key: 'finishing_date', label: 'Finishing date', type: 'date' },
+              ].map(f => (
+                <div key={f.key} style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 4 }}>{f.label}</label>
+                  <input
+                    type={f.type}
+                    defaultValue={editingPlacement[f.key] || ''}
+                    onChange={e => setEditingPlacement({ ...editingPlacement, [f.key]: e.target.value })}
+                    style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 8, padding: '10px 14px', fontSize: 16, boxSizing: 'border-box' }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                <button
+                  onClick={async () => {
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) return
+                    await fetch(`/api/agency/clients/${editingClientId}/placements`, {
+                      method: 'PATCH',
+                      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        id: editingPlacement.id,
+                        ref: editingPlacement.ref,
+                        payroll_type: editingPlacement.payroll_type,
+                        supplier: editingPlacement.supplier,
+                        charge_rate: editingPlacement.charge_rate,
+                        pay_rate: editingPlacement.pay_rate,
+                        ni_rate: editingPlacement.ni_rate,
+                        start_date: editingPlacement.start_date,
+                        finishing_date: editingPlacement.finishing_date,
+                      })
+                    })
+                    const cid = editingClientId
+                    setEditingPlacement(null)
+                    if (cid) loadPlacementsForClient(cid)
+                  }}
+                  style={{ flex: 1, background: '#16307f', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                >Save changes</button>
+                <button
+                  onClick={async () => {
+                    if (!confirmDeletePlacement) { setConfirmDeletePlacement(true); return }
+                    const { data: { session } } = await supabase.auth.getSession()
+                    if (!session) return
+                    await fetch(`/api/agency/clients/${editingClientId}/placements`, {
+                      method: 'DELETE',
+                      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ id: editingPlacement.id })
+                    })
+                    const cid = editingClientId
+                    setEditingPlacement(null)
+                    if (cid) loadPlacementsForClient(cid)
+                  }}
+                  style={{ flex: 1, background: confirmDeletePlacement ? '#ef4444' : '#fff', color: confirmDeletePlacement ? '#fff' : '#ef4444', border: '1px solid #ef4444', borderRadius: 8, padding: '12px 20px', fontSize: 15, fontWeight: 600, cursor: 'pointer', minHeight: 44 }}
+                >{confirmDeletePlacement ? 'Confirm delete?' : 'Delete placement'}</button>
               </div>
             </div>
           </div>
