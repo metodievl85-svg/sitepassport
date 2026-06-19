@@ -26,12 +26,12 @@ async function getAgencyId(req: NextRequest): Promise<string | null> {
 //   { manager_email, manager_name, notes }         — metadata update
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const agencyId = await getAgencyId(req)
   if (!agencyId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id } = params
+  const { id } = await params
   const body = await req.json()
 
   // Verify ownership

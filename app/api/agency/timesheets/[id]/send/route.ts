@@ -33,12 +33,12 @@ function formatWeekDate(weekStart: string): string {
 // POST /api/agency/timesheets/[id]/send
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const agencyId = await getAgencyId(req)
   if (!agencyId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { id } = params
+  const { id } = await params
 
   // Fetch timesheet
   const { data: ts, error: tsError } = await supabaseAdmin

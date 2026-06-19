@@ -11,9 +11,9 @@ const supabaseAdmin = createClient(
 // Returns timesheet data for the manager to view and fill
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params
+  const { token } = await params
 
   const { data: ts, error } = await supabaseAdmin
     .from('timesheets')
@@ -69,9 +69,9 @@ export async function GET(
 // Body: { entries: [{ id, hours, notes? }] }
 export async function POST(
   req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params
+  const { token } = await params
 
   const { data: ts, error } = await supabaseAdmin
     .from('timesheets')
