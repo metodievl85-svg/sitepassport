@@ -663,7 +663,7 @@ export default function CompanyPage() {
             .from('workers')
             .select('id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status')
             .in('id', workerIds)
-            .limit(50)
+            .limit(500)
 
           if (workersError) {
             console.error(workersError)
@@ -2163,6 +2163,9 @@ export default function CompanyPage() {
               <p style={{ marginTop: 10, fontSize: 16, color: '#5a6f96' }}>
                 Search, filter and manage your workforce. Attendance status is shown on
                 each operative passport card.
+              </p>
+              <p style={{ margin: '6px 0 0', fontSize: 13, color: '#888' }}>
+                Showing {savedWorkers.length} operative{savedWorkers.length !== 1 ? 's' : ''}
               </p>
             </div>
 

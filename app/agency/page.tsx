@@ -451,15 +451,22 @@ export default function AgencyPage() {
         })
         .filter(Boolean) as AgencyWorker[]
 
+      const allPhotoPaths = [...new Set([
+        ...mapped.filter(w => w.photo && !w.photo.startsWith('http')).map(w => w.photo),
+        ...mapped.filter(w => w.facePhoto && !w.facePhoto.startsWith('http')).map(w => w.facePhoto),
+      ])]
+      const signedMap: Record<string, string> = {}
+      if (allPhotoPaths.length > 0) {
+        const { data: signedList } = await supabase.storage
+          .from('worker-photos')
+          .createSignedUrls(allPhotoPaths, 3600)
+        for (const entry of signedList ?? []) {
+          if (entry.signedUrl) signedMap[entry.path] = entry.signedUrl
+        }
+      }
       for (const w of mapped) {
-        if (w.photo && !w.photo.startsWith('http')) {
-          const { data: photoSigned } = await supabase.storage.from('worker-photos').createSignedUrl(w.photo, 3600)
-          if (photoSigned?.signedUrl) w.photo = photoSigned.signedUrl
-        }
-        if (w.facePhoto && !w.facePhoto.startsWith('http')) {
-          const { data: faceSigned } = await supabase.storage.from('worker-photos').createSignedUrl(w.facePhoto, 3600)
-          if (faceSigned?.signedUrl) w.facePhoto = faceSigned.signedUrl
-        }
+        if (w.photo && signedMap[w.photo]) w.photo = signedMap[w.photo]
+        if (w.facePhoto && signedMap[w.facePhoto]) w.facePhoto = signedMap[w.facePhoto]
       }
 
       setWorkers(mapped)

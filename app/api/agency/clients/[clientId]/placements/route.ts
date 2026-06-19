@@ -1,24 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAgencyId } from '@/lib/agency'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
-
-async function getAgencyId(req: NextRequest): Promise<string | null> {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  const { data: { user } } = await supabaseAdmin.auth.getUser(token)
-  if (!user) return null
-  const userClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { global: { headers: { Authorization: `Bearer ${token}` } } }
-  )
-  const { data } = await userClient.rpc('get_my_agency_owner_id')
-  return data || user.id
-}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params
