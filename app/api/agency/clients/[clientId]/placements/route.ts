@@ -70,11 +70,37 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ cl
   const agencyId = await getAgencyId(req)
   if (!agencyId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
-  const { id, hours } = body
+  const { id } = body
+  const allowed = ['hours', 'ref', 'payroll_type', 'supplier', 'charge_rate', 'pay_rate', 'ni_rate', 'start_date', 'finishing_date']
+  const updates: Record<string, any> = {}
+  for (const key of allowed) {
+    if (key in body) {
+      const val = body[key]
+      updates[key] = (val === '' ? null : val)
+    }
+  }
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   const { data, error } = await supabaseAdmin
     .from('agency_placements')
-    .update({ hours })
+    .update(updates)
+    .eq('id', id)
+    .eq('agency_id', agencyId)
+    .select()
+    .single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ placement: data })
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ clientId: string }> }) {
+  const { clientId } = await params
+  const agencyId = await getAgencyId(req)
+  if (!agencyId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const body = await req.json()
+  const { id } = body
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  const { data, error } = await supabaseAdmin
+    .from('agency_placements')
+    .delete()
     .eq('id', id)
     .eq('agency_id', agencyId)
     .select()
