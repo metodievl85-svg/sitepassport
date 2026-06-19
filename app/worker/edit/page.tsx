@@ -86,6 +86,8 @@ export default function EditWorkerPassportPage() {
     company: '',
     email: '',
     phone: '',
+    dob: '',
+    fullAddress: '',
     cscsCard: '',
     cscsExpiry: '',
     rightToWorkExpiry: '',
@@ -201,6 +203,8 @@ export default function EditWorkerPassportPage() {
         facePhoto: workerRow.face_photo ?? '',
         passportPhoto: passportPhotoDisplay,
         rightToWorkPhoto: rightToWorkPhotoDisplay,
+        dob: workerRow.dob ?? '',
+        fullAddress: workerRow.full_address ?? '',
         niNumber: workerRow.ni_number ?? '',
         nextOfKinName: workerRow.next_of_kin_name ?? '',
         nextOfKinPhone: workerRow.next_of_kin_phone ?? '',
@@ -834,6 +838,8 @@ export default function EditWorkerPassportPage() {
           company: form.company.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
+          dob: form.dob || null,
+          full_address: form.fullAddress.trim(),
           cscs_card: form.cscsCard.trim(),
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
@@ -1884,6 +1890,24 @@ export default function EditWorkerPassportPage() {
                   value={form.phone}
                   onChange={handleChange}
                   placeholder="Your phone number"
+                />
+              </div>
+              <div className="field">
+                <label>Date of birth</label>
+                <input
+                  type="date"
+                  name="dob"
+                  value={form.dob}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="field">
+                <label>Full address</label>
+                <input
+                  name="fullAddress"
+                  value={form.fullAddress}
+                  onChange={handleChange}
+                  placeholder="House number, street, town, postcode"
                 />
               </div>
 
