@@ -377,7 +377,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code, employment_status)')
+        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code, employment_status, dob, full_address)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -439,6 +439,8 @@ export default function AgencyPage() {
             bankAccountNumber: (w.bank_account_number as string) ?? '',
             bankSortCode: (w.bank_sort_code as string) ?? '',
             employmentStatus: (w.employment_status as string) ?? null,
+            dob:            (w.dob as string) ?? '',
+            fullAddress:    (w.full_address as string) ?? '',
           }
         })
         .filter(Boolean) as AgencyWorker[]
@@ -547,8 +549,10 @@ export default function AgencyPage() {
           'Hours': hours,
           'Cost': cost,
           'Margin': marginGBP,
-          'DOB': worker?.niNumber || '',
+          'DOB': worker?.dob ? new Date(worker.dob).toLocaleDateString('en-GB') : '',
           'Number': worker?.phone || '',
+          'Email': worker?.email || '',
+          'Date of birth': worker?.dob ? new Date(worker.dob).toLocaleDateString('en-GB') : '',
           'Finishing': p.finishing_date || 'Ongoing',
         })
       }
