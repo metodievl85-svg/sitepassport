@@ -12,6 +12,7 @@ import AgencyDashboardMenu from './components/AgencyDashboardMenu'
 import AgencyTeamModal from './components/AgencyTeamModal'
 import { usePushNotifications } from '../lib/usePushNotifications'
 import * as XLSX from 'xlsx'
+import TimesheetSection from './TimesheetSection'
 
 type ComplianceStatus = 'valid' | 'expiring' | 'expired'
 
@@ -2463,6 +2464,7 @@ export default function AgencyPage() {
           </section>
         </div>
 
+        <TimesheetSection />
       </div>
 
       {placementModal && createPortal(
