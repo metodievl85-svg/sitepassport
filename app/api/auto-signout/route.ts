@@ -28,6 +28,9 @@ export async function GET(request: Request) {
   try {
     const now = new Date()
 
+    const ukDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(now)
+    const startOfTodayISO = new Date(ukDateStr + 'T00:00:00.000Z').toISOString()
+
     const ukTimeParts = new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Europe/London',
       hour: '2-digit',
@@ -72,6 +75,7 @@ export async function GET(request: Request) {
         .from('site_attendance')
         .select('id, company_id, worker_id, site_id, status, created_at')
         .eq('company_id', company.id)
+        .gte('created_at', startOfTodayISO)
         .order('created_at', { ascending: false })
 
       if (attendanceError) {

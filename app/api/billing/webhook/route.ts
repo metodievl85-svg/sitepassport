@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
                     <div style="font-size: 16px; font-weight: 600; margin-top: 2px;">${new Date(currentPeriodEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' })}</div>
                   </div>
                 </div>
-                <a href="https://nekaid.co.uk${accountType === 'agency' ? '/agency' : '/company'}" style="display: inline-block; background: #16307f; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; font-weight: 600;">Go to dashboard</a>
+                <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://nekaid.co.uk'}${accountType === 'agency' ? '/agency' : '/company'}" style="display: inline-block; background: #16307f; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; font-weight: 600;">Go to dashboard</a>
                 <p style="font-size: 13px; color: #888; margin-top: 32px;">
                   NekaID Ltd · <a href="https://nekaid.co.uk" style="color: #888; text-decoration: none;">nekaid.co.uk</a> · <a href="https://nekaid.co.uk/privacy" style="color: #888; text-decoration: none;">Privacy Policy</a> · <a href="https://nekaid.co.uk/terms" style="color: #888; text-decoration: none;">Terms</a>
                 </p>

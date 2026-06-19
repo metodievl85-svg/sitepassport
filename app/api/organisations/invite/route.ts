@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Could not create invite.' }, { status: 500 })
     }
 
-    const inviteUrl = `https://nekaid.co.uk/join?token=${invite.token}`
+    const inviteUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nekaid.co.uk'}/join?token=${invite.token}`
 
     await fetch('https://api.resend.com/emails', {
       method: 'POST',

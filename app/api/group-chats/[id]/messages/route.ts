@@ -6,7 +6,7 @@ const adminClient = () => createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-async function verifyAccess(supabase: any, user: any, chatId: string) {
+async function verifyAccess(supabase: any, user: any, chatId: string, token: string) {
   const { data: chat } = await supabase
     .from('group_chats')
     .select('id, agency_id, placement_id')
@@ -21,7 +21,16 @@ async function verifyAccess(supabase: any, user: any, chatId: string) {
     .eq('id', user.id)
     .single()
 
-  const isAgency = profile?.role === 'agency' && chat.agency_id === user.id
+  let isAgency = false
+  if (profile?.role === 'agency') {
+    const userClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    )
+    const { data: resolvedAgencyOwnerId } = await userClient.rpc('get_my_agency_owner_id')
+    isAgency = !!resolvedAgencyOwnerId && chat.agency_id === resolvedAgencyOwnerId
+  }
   let isWorker = false
 
   if (profile?.role === 'worker') {
@@ -58,7 +67,7 @@ export async function GET(
   const { data: { user }, error: authError } = await supabase.auth.getUser(token)
   if (!user || authError) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, id)
+  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, id, token)
   if (!chat) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!isAgency && !isWorker) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -107,7 +116,7 @@ export async function POST(
   const { data: { user }, error: authError } = await supabase.auth.getUser(token)
   if (!user || authError) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, id)
+  const { chat, isAgency, isWorker } = await verifyAccess(supabase, user, id, token)
   if (!chat) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   if (!isAgency && !isWorker) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 

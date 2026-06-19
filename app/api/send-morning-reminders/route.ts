@@ -40,6 +40,8 @@ export async function GET(request: Request) {
 
   try {
     const now = new Date()
+    const ukDateStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(now)
+    const startOfTodayISO = new Date(ukDateStr + 'T00:00:00.000Z').toISOString()
     const { hour: ukHour, minute: ukMinute, display: currentTime } = getUKTime(now)
     const ukTotal = ukHour * 60 + ukMinute
     console.log(`[morning-reminder] UK time: ${currentTime} (${ukTotal} mins)`)
@@ -92,6 +94,7 @@ export async function GET(request: Request) {
         .select('worker_id, status, created_at')
         .eq('company_id', company.id)
         .in('worker_id', workerIds)
+        .gte('created_at', startOfTodayISO)
         .order('created_at', { ascending: false })
 
       if (attendanceError) {

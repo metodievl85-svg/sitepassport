@@ -19,6 +19,15 @@ async function getAgencyId(req: NextRequest): Promise<string | null> {
   return data as string
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function formatWeekDate(weekStart: string): string {
   const [y, m, d] = weekStart.split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
@@ -110,16 +119,16 @@ export async function POST(
         <tr>
           <td style="background:#ffffff;padding:32px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;border-top:none;">
             <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1a1a1a;">Timesheet request</h1>
-            <p style="margin:0 0 24px;color:#555;font-size:15px;">Week commencing <strong>${weekLabel}</strong></p>
+            <p style="margin:0 0 24px;color:#555;font-size:15px;">Week commencing <strong>${escapeHtml(weekLabel)}</strong></p>
             <table cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:8px;padding:16px 20px;margin-bottom:28px;width:100%;box-sizing:border-box;">
-              <tr><td style="padding:4px 0;font-size:14px;color:#555;"><strong style="color:#1a1a1a;">Worker:</strong>&nbsp;&nbsp;${workerName}</td></tr>
-              <tr><td style="padding:4px 0;font-size:14px;color:#555;"><strong style="color:#1a1a1a;">Client:</strong>&nbsp;&nbsp;${clientName}</td></tr>
-              <tr><td style="padding:4px 0;font-size:14px;color:#555;"><strong style="color:#1a1a1a;">Site:</strong>&nbsp;&nbsp;${siteName}</td></tr>
+              <tr><td style="padding:4px 0;font-size:14px;color:#555;"><strong style="color:#1a1a1a;">Worker:</strong>&nbsp;&nbsp;${escapeHtml(workerName)}</td></tr>
+              <tr><td style="padding:4px 0;font-size:14px;color:#555;"><strong style="color:#1a1a1a;">Client:</strong>&nbsp;&nbsp;${escapeHtml(clientName)}</td></tr>
+              <tr><td style="padding:4px 0;font-size:14px;color:#555;"><strong style="color:#1a1a1a;">Site:</strong>&nbsp;&nbsp;${escapeHtml(siteName)}</td></tr>
             </table>
             <p style="margin:0 0 20px;color:#1a1a1a;font-size:15px;">Please reply to this email with hours worked each day (Monday to Sunday), or click below to complete online:</p>
             <a href="${magicLink}" style="display:inline-block;background:#16307f;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;margin-bottom:28px;">Complete timesheet online →</a>
             <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 20px;" />
-            <p style="margin:0;color:#888;font-size:12px;">Sent by ${agencyName} via NekaID &middot; <a href="https://nekaid.co.uk" style="color:#16307f;text-decoration:none;">nekaid.co.uk</a></p>
+            <p style="margin:0;color:#888;font-size:12px;">Sent by ${escapeHtml(agencyName)} via NekaID &middot; <a href="https://nekaid.co.uk" style="color:#16307f;text-decoration:none;">nekaid.co.uk</a></p>
           </td>
         </tr>
       </table>
