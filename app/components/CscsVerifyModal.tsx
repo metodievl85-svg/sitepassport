@@ -16,7 +16,7 @@ interface Props {
   }) => void
 }
 
-const CSCS_CHECKER_URL = 'https://www.cscs.uk.com/card-checker/'
+const CSCS_CHECKER_URL = 'https://cscssmartcheck.co.uk/'
 
 export default function CscsVerifyModal({
   workerId,
