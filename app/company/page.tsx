@@ -220,10 +220,19 @@ function getTodayRange() {
 function getCscsBadgeStyle(status: string) {
   if (status === 'verified') {
     return {
-      text: 'CSCS: NekaID checked',
-      background: '#eef3ff',
-      color: '#243caa',
-      border: '1px solid #cdd9ff',
+      text: 'CSCS verified',
+      background: '#ecfdf3',
+      color: '#167342',
+      border: '1px solid #b7e4c7',
+    }
+  }
+
+  if (status === 'not_found') {
+    return {
+      text: 'Card not found',
+      background: '#fff1f0',
+      color: '#b42318',
+      border: '1px solid #ffccc7',
     }
   }
 
@@ -247,9 +256,9 @@ function getCscsBadgeStyle(status: string) {
 
   return {
     text: 'CSCS: Self-declared',
-    background: '#eef3ff',
-    color: '#243caa',
-    border: '1px solid #cdd9ff',
+    background: '#f3f4f6',
+    color: '#374151',
+    border: '1px solid #e5e7eb',
   }
 }
 
@@ -2480,17 +2489,13 @@ export default function CompanyPage() {
                           >
                             {isSendingInduction ? 'Sending...' : 'Send induction'}
                           </button>
-                        ) : (
+                        ) : worker.inductionStatus === 'completed' ? null : (
                           <button
                             type="button"
                             disabled
                             style={getInductionButtonStyle(worker.inductionStatus)}
                           >
-                            {worker.inductionStatus === 'completed'
-                              ? 'Completed ✅'
-                              : worker.inductionStatus === 'opened'
-                                ? 'Opened'
-                                : 'Sent'}
+                            {worker.inductionStatus === 'opened' ? 'Opened' : 'Sent'}
                           </button>
                         )}
 
