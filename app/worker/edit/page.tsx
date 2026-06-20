@@ -37,6 +37,45 @@ function createEmptyQualification(): Qualification {
   }
 }
 
+async function resizeToBase64(file: File, maxPx = 1200): Promise<{ base64: string; mimeType: string }> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      resolve({ base64: canvas.toDataURL('image/jpeg', 0.88).split(',')[1], mimeType: 'image/jpeg' })
+    }
+    img.src = url
+  })
+}
+
+async function cropToFile(file: File, crop: { x: number; y: number; w: number; h: number }): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const sx = Math.round(img.width * crop.x / 100)
+      const sy = Math.round(img.height * crop.y / 100)
+      const sw = Math.round(img.width * crop.w / 100)
+      const sh = Math.round(img.height * crop.h / 100)
+      const canvas = document.createElement('canvas')
+      canvas.width = sw; canvas.height = sh
+      canvas.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh)
+      URL.revokeObjectURL(url)
+      canvas.toBlob((blob) => {
+        resolve(blob ? new File([blob], 'cscs-card.jpg', { type: 'image/jpeg' }) : file)
+      }, 'image/jpeg', 0.92)
+    }
+    img.src = url
+  })
+}
+
 export default function EditWorkerPassportPage() {
   const router = useRouter()
 
@@ -75,6 +114,45 @@ export default function EditWorkerPassportPage() {
   const [rtwCameraOpen, setRtwCameraOpen] = useState(false)
   const [rtwCameraError, setRtwCameraError] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [aiScanning, setAiScanning] = useState(false)
+
+  async function runAiExtraction(file: File) {
+    setAiScanning(true)
+    try {
+      const { base64, mimeType } = await resizeToBase64(file)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return file
+      const res = await fetch('/api/ai/extract-credential', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ imageBase64: base64, mimeType }),
+      })
+      const data = await res.json()
+      if (!data.success) return file
+      let finalFile = file
+      if (data.crop) {
+        finalFile = await cropToFile(file, data.crop)
+        if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
+        const croppedUrl = URL.createObjectURL(finalFile)
+        photoPreviewUrlRef.current = croppedUrl
+        setForm((prev) => ({ ...prev, photo: croppedUrl }))
+      }
+      setPhotoFile(finalFile)
+      setForm((prev) => ({
+        ...prev,
+        ...(data.card_number && !prev.cscsCard ? { cscsCard: data.card_number } : {}),
+        ...(data.expiry_date && !prev.cscsExpiry ? { cscsExpiry: data.expiry_date } : {}),
+        ...(data.trade && !prev.role ? { role: data.trade } : {}),
+        ...(data.full_name && !prev.fullName ? { fullName: data.full_name } : {}),
+      }))
+      return finalFile
+    } catch (err) {
+      console.error('[ai extract]', err)
+      return file
+    } finally {
+      setAiScanning(false)
+    }
+  }
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
   const [passportPhotoFile, setPassportPhotoFile] = useState<File | null>(null)
   const [rightToWorkPhotoFile, setRightToWorkPhotoFile] = useState<File | null>(null)
@@ -456,6 +534,7 @@ export default function EditWorkerPassportPage() {
     const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
+    void runAiExtraction(file)
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -639,6 +718,7 @@ export default function EditWorkerPassportPage() {
     setForm((prev) => ({ ...prev, photo: previewUrl }))
 
     e.target.value = ''
+    void runAiExtraction(file)
   }
 
   function handleFacePhotoChange(e: ChangeEvent<HTMLInputElement>) {
@@ -1302,6 +1382,11 @@ export default function EditWorkerPassportPage() {
                           border: 0,
                         }}
                       />
+                      {aiScanning && (
+                        <p style={{ fontSize: 13, color: '#16307f', margin: '10px 0 0', background: '#e8edf7', padding: '8px 12px', borderRadius: 8 }}>
+                          Reading card details...
+                        </p>
+                      )}
 
                       <label
                         htmlFor="cscs-card-image-upload"
