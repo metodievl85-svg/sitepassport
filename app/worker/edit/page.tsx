@@ -97,7 +97,7 @@ export default function EditWorkerPassportPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
 
-  async function runAiExtraction(file: File) {
+  async function runAiExtraction(file: File, applyCrop = true) {
     setAiScanning(true)
     try {
       const { base64, mimeType } = await resizeToBase64(file)
@@ -113,7 +113,7 @@ export default function EditWorkerPassportPage() {
         console.error('[ai extract] API failed:', JSON.stringify(data._debug))
         return file
       }
-      if (data.corners) {
+      if (applyCrop && data.corners) {
         const cropped = await warpCardToFile(file, data.corners)
         if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
         const croppedUrl = URL.createObjectURL(cropped)
@@ -461,10 +461,28 @@ export default function EditWorkerPassportPage() {
       return
     }
 
-    const maxDim = 1600
-    const scale = Math.min(1, maxDim / Math.max(videoWidth, videoHeight))
-    const outputWidth = Math.round(videoWidth * scale)
-    const outputHeight = Math.round(videoHeight * scale)
+    const containerAspect = 1.58
+    const videoAspect = videoWidth / videoHeight
+    let visX = 0, visY = 0, visW = videoWidth, visH = videoHeight
+    if (videoAspect > containerAspect) {
+      visW = videoHeight * containerAspect
+      visH = videoHeight
+      visX = (videoWidth - visW) / 2
+      visY = 0
+    } else {
+      visW = videoWidth
+      visH = videoWidth / containerAspect
+      visX = 0
+      visY = (videoHeight - visH) / 2
+    }
+    const frameFrac = 0.88
+    const cropW = visW * frameFrac
+    const cropH = visH * frameFrac
+    const cropX = visX + (visW - cropW) / 2
+    const cropY = visY + (visH - cropH) / 2
+
+    const outputWidth = 1200
+    const outputHeight = Math.round(outputWidth / containerAspect)
 
     canvas.width = outputWidth
     canvas.height = outputHeight
@@ -475,7 +493,7 @@ export default function EditWorkerPassportPage() {
       return
     }
 
-    context.drawImage(video, 0, 0, outputWidth, outputHeight)
+    context.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, outputWidth, outputHeight)
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, 'image/jpeg', 0.92)
@@ -496,7 +514,7 @@ export default function EditWorkerPassportPage() {
     const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
-    void runAiExtraction(file)
+    void runAiExtraction(file, false)
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -1174,11 +1192,11 @@ export default function EditWorkerPassportPage() {
                               left: '50%',
                               top: '50%',
                               transform: 'translate(-50%, -50%)',
-                              width: '45%',
+                              width: '88%',
                               aspectRatio: '1.58 / 1',
                               border: '3px solid #ffffff',
                               borderRadius: 14,
-                              boxShadow: '0 0 0 999px rgba(0,0,0,0.22)',
+                              boxShadow: '0 0 0 999px rgba(0,0,0,0.30)',
                               pointerEvents: 'none',
                             }}
                           />
