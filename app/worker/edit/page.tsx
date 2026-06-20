@@ -1194,28 +1194,6 @@ export default function EditWorkerPassportPage() {
                               pointerEvents: 'none',
                             }}
                           />
-                          <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 10, padding: '7px 10px', fontSize: 12, textAlign: 'center', pointerEvents: 'none' }}>
-                            Card edge to edge in the box — no hand or background visible
-                          </div>
-
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left: 12,
-                              right: 12,
-                              top: 12,
-                              background: 'rgba(245, 158, 11, 0.92)',
-                              color: '#ffffff',
-                              borderRadius: 14,
-                              padding: '10px 12px',
-                              fontSize: 14,
-                              fontWeight: 800,
-                              lineHeight: 1.35,
-                              textAlign: 'center',
-                            }}
-                          >
-                            📷 Move closer — card must fill the white box completely
-                          </div>
                         </div>
                       ) : form.photo ? (
                         <img
