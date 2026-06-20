@@ -37,6 +37,8 @@ function createEmptyForm() {
     passportPhoto: '',
     rightToWorkPhoto: '',
     niNumber: '',
+    dob: '',
+    fullAddress: '',
     nextOfKinName: '',
     nextOfKinPhone: '',
     bankName: '',
@@ -215,6 +217,8 @@ export default function CreateWorkerPassportPage() {
           passport_photo: passportPhotoPath,
           right_to_work_photo: rightToWorkPhotoPath,
           ni_number: form.niNumber.trim(),
+          dob: form.dob || null,
+          full_address: form.fullAddress.trim(),
           next_of_kin_name: form.nextOfKinName.trim(),
           next_of_kin_phone: form.nextOfKinPhone.trim(),
           bank_name: form.bankName.trim(),
@@ -389,6 +393,24 @@ export default function CreateWorkerPassportPage() {
               <div className="field">
                 <label>Phone</label>
                 <input name="phone" value={form.phone} onChange={handleChange} placeholder="Your phone number" />
+              </div>
+              <div className="field">
+                <label>Date of birth</label>
+                <input
+                  type="date"
+                  name="dob"
+                  value={form.dob}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="field">
+                <label>Full address</label>
+                <input
+                  name="fullAddress"
+                  value={form.fullAddress}
+                  onChange={handleChange}
+                  placeholder="House number, street, town, postcode"
+                />
               </div>
               <div className="field">
                 <label>National Insurance number</label>
