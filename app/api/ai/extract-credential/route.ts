@@ -70,7 +70,7 @@ Rules:
     if (!anthropicRes.ok) {
       const errBody = await anthropicRes.text()
       console.error('[extract-credential] Anthropic error', anthropicRes.status, errBody)
-      return NextResponse.json({ success: false })
+      return NextResponse.json({ success: false, _debug: { status: anthropicRes.status, body: errBody } })
     }
 
     const anthropicData = await anthropicRes.json()

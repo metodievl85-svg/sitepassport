@@ -128,7 +128,10 @@ export default function EditWorkerPassportPage() {
         body: JSON.stringify({ imageBase64: base64, mimeType }),
       })
       const data = await res.json()
-      if (!data.success) return file
+      if (!data.success) {
+        console.error('[ai extract] API failed:', JSON.stringify(data._debug))
+        return file
+      }
       let finalFile = file
       if (data.crop && !skipCrop) {
         finalFile = await cropToFile(file, data.crop)
