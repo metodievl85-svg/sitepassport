@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import jsPDF from 'jspdf'
 import { createPortal } from 'react-dom'
+import CscsVerifyModal from '@/components/CscsVerifyModal'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
@@ -35,6 +36,9 @@ type WorkerRow = {
   cscs_expiry: string | null
   right_to_work_expiry: string | null
   cscs_verification_status: string | null
+  cscs_card: string | null
+  cscs_verified_at: string | null
+  cscs_verified_by: string | null
 }
 
 type ScanLogRow = {
@@ -116,6 +120,9 @@ type SavedWorkerCard = {
   cscsExpiry: string
   rightToWorkExpiry: string
   cscsVerificationStatus: string
+  cscsCard: string
+  cscsVerifiedAt: string
+  cscsVerifiedBy: string
   siteStatus: 'IN' | 'OUT'
   lastAttendanceAt: string
   inductionStatus: InductionStatus
@@ -378,6 +385,7 @@ export default function CompanyPage() {
   const [email, setEmail] = useState('')
   const [companyId, setCompanyId] = useState('')
   const [companyName, setCompanyName] = useState('')
+  const [verifyWorker, setVerifyWorker] = useState<{ id: string; name: string; cscsCard: string | null } | null>(null)
   const [companyNameDraft, setCompanyNameDraft] = useState('')
   const [savingCompanyName, setSavingCompanyName] = useState(false)
   const [companyNameMessage, setCompanyNameMessage] = useState('')
@@ -661,7 +669,7 @@ export default function CompanyPage() {
 
           const { data: workerRows, error: workersError } = await supabase
             .from('workers')
-            .select('id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status')
+            .select('id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status, cscs_card, cscs_verified_at, cscs_verified_by')
             .in('id', workerIds)
             .limit(500)
 
@@ -697,6 +705,9 @@ export default function CompanyPage() {
                   rightToWorkExpiry: worker.right_to_work_expiry ?? '',
                   cscsVerificationStatus:
                     worker.cscs_verification_status ?? 'self_declared',
+                  cscsCard: worker.cscs_card ?? '',
+                  cscsVerifiedAt: worker.cscs_verified_at ?? '',
+                  cscsVerifiedBy: worker.cscs_verified_by ?? '',
                   siteStatus: 'OUT' as const,
                   lastAttendanceAt: '',
                   inductionStatus: induction?.status ?? 'none',
@@ -851,7 +862,7 @@ export default function CompanyPage() {
           photo: item.workers?.photo || null,
           siteStatus: null,
           lastSeen: null,
-          cscsVerificationStatus: item.workers?.cscs_verification_status || 'unverified',
+          cscsVerificationStatus: item.workers?.cscs_verification_status || 'self_declared',
           inductionStatus: null,
           savedWorkerId: item.id,
         })),
@@ -2366,6 +2377,14 @@ export default function CompanyPage() {
                           >
                             {cscsBadge.text}
                           </span>
+                          {worker.cscsCard && worker.cscsVerificationStatus !== 'verified' && (
+                            <button
+                              onClick={() => setVerifyWorker({ id: worker.workerId, name: worker.fullName, cscsCard: worker.cscsCard })}
+                              style={{ background: '#e8edf7', color: '#16307f', border: 'none', borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              Verify CSCS
+                            </button>
+                          )}
 
                           <span
                             style={{
@@ -2640,6 +2659,23 @@ export default function CompanyPage() {
           }
         }
       `}</style>
+      {verifyWorker && (
+        <CscsVerifyModal
+          workerId={verifyWorker.id}
+          workerName={verifyWorker.name}
+          cscsCard={verifyWorker.cscsCard}
+          verifierName={companyName}
+          onClose={() => setVerifyWorker(null)}
+          onVerified={(result) => {
+            setSavedWorkers(prev => prev.map(w =>
+              w.workerId === verifyWorker.id
+                ? { ...w, cscsVerificationStatus: result.cscs_verification_status, cscsVerifiedAt: result.cscs_verified_at, cscsVerifiedBy: result.cscs_verified_by }
+                : w
+            ))
+            setVerifyWorker(null)
+          }}
+        />
+      )}
     </main>
   )
 }

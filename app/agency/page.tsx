@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, Fragment } from 'react'
 import { createPortal } from 'react-dom'
 import jsPDF from 'jspdf'
+import CscsVerifyModal from '@/components/CscsVerifyModal'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
@@ -54,6 +55,9 @@ type AgencyWorker = {
   employmentStatus?: string | null
   dob: string
   fullAddress: string
+  cscsVerificationStatus: string
+  cscsVerifiedAt: string
+  cscsVerifiedBy: string
 }
 
 type PlacementGroup = {
@@ -266,6 +270,7 @@ export default function AgencyPage() {
   const [availableOnly, setAvailableOnly] = useState(false)
   const [hoveredStat, setHoveredStat] = useState<string | null>(null)
   const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set())
+  const [verifyWorker, setVerifyWorker] = useState<{ id: string; name: string; cscsCard: string | null } | null>(null)
   const [alertsExpanded, setAlertsExpanded] = useState(false)
   const messagesRef = useRef<HTMLDivElement>(null)
   const [statusMap, setStatusMap] = useState<Record<string, string>>({})
@@ -383,7 +388,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code, employment_status, dob, full_address)')
+        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code, employment_status, dob, full_address, cscs_verification_status, cscs_verified_at, cscs_verified_by)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -447,6 +452,9 @@ export default function AgencyPage() {
             employmentStatus: (w.employment_status as string) ?? null,
             dob:            (w.dob as string) ?? '',
             fullAddress:    (w.full_address as string) ?? '',
+            cscsVerificationStatus: (w.cscs_verification_status as string) ?? 'self_declared',
+            cscsVerifiedAt: (w.cscs_verified_at as string) ?? '',
+            cscsVerifiedBy: (w.cscs_verified_by as string) ?? '',
           }
         })
         .filter(Boolean) as AgencyWorker[]
@@ -2345,6 +2353,14 @@ export default function AgencyPage() {
                       >
                         Download PDF
                       </button>
+                      {worker.cscsCard && worker.cscsVerificationStatus !== 'verified' && (
+                        <button
+                          onClick={() => setVerifyWorker({ id: worker.workerId, name: worker.fullName, cscsCard: worker.cscsCard })}
+                          style={{ fontSize: 13, padding: '6px 14px', borderRadius: 8, border: '1px solid #16307f', background: '#e8edf7', color: '#16307f', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
+                        >
+                          Verify CSCS
+                        </button>
+                      )}
                     </div>
                     </div>
                     {(() => {
@@ -2474,6 +2490,23 @@ export default function AgencyPage() {
         <TimesheetSection />
       </div>
 
+      {verifyWorker && (
+        <CscsVerifyModal
+          workerId={verifyWorker.id}
+          workerName={verifyWorker.name}
+          cscsCard={verifyWorker.cscsCard}
+          verifierName=""
+          onClose={() => setVerifyWorker(null)}
+          onVerified={(result) => {
+            setWorkers(prev => prev.map(w =>
+              w.workerId === verifyWorker.id
+                ? { ...w, cscsVerificationStatus: result.cscs_verification_status, cscsVerifiedAt: result.cscs_verified_at, cscsVerifiedBy: result.cscs_verified_by }
+                : w
+            ))
+            setVerifyWorker(null)
+          }}
+        />
+      )}
       {placementModal && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div className="card" style={{ width: '100%', maxWidth: 440, padding: 28, borderRadius: 16, position: 'relative' }}>
