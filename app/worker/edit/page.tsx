@@ -113,9 +113,9 @@ export default function EditWorkerPassportPage() {
       }
       setForm((prev) => ({
         ...prev,
-        ...(data.card_number && !prev.cscsCard ? { cscsCard: data.card_number } : {}),
-        ...(data.expiry_date && !prev.cscsExpiry ? { cscsExpiry: data.expiry_date } : {}),
-        ...(data.trade && !prev.role ? { role: data.trade } : {}),
+        ...(data.card_number ? { cscsCard: data.card_number } : {}),
+        ...(data.expiry_date ? { cscsExpiry: data.expiry_date } : {}),
+        ...(data.trade ? { role: data.trade } : {}),
         ...(data.full_name && !prev.fullName ? { fullName: data.full_name } : {}),
       }))
       return file
