@@ -132,7 +132,6 @@ export default function EditWorkerPassportPage() {
         console.error('[ai extract] API failed:', JSON.stringify(data._debug))
         return file
       }
-      console.log('[ai extract] result:', JSON.stringify({ card_number: data.card_number, expiry_date: data.expiry_date, trade: data.trade, full_name: data.full_name, crop: data.crop }))
       let finalFile = file
       if (data.crop && !skipCrop) {
         finalFile = await cropToFile(file, data.crop)
@@ -538,7 +537,7 @@ export default function EditWorkerPassportPage() {
     const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
-    void runAiExtraction(file)
+    void runAiExtraction(file, { skipCrop: true })
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -1241,7 +1240,7 @@ export default function EditWorkerPassportPage() {
                               textAlign: 'center',
                             }}
                           >
-                            Place your CSCS card inside the white rectangle
+                            Move closer — fill the box completely with your card
                           </div>
                         </div>
                       ) : form.photo ? (

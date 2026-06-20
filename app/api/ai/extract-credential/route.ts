@@ -49,7 +49,9 @@ export async function POST(request: Request) {
 
 Return ONLY valid JSON, no other text, no markdown:
 {
-  "crop": { "x": <left edge as % of image width 0-100>, "y": <top edge as % of image height 0-100>, "w": <card width as % of image width 0-100>, "h": <card height as % of image height 0-100> },
+  "crop": { "x": <left edge of card in % of image width>, "y": <top edge of card in % of image height>, "w": <card width in % of image width>, "h": <card height in % of image height> },
+
+IMPORTANT: Return the TIGHTEST bounding box around the card only — no more than 2% padding on any side. If the card starts at 18% from the left, set x=17 or x=18, not x=5. Exclude all background, hands, and surroundings.
   "card_number": "<registration number, typically letter + 7 digits>",
   "expiry_date": "<expiry in YYYY-MM-DD format, use last day of month>",
   "trade": "<specific occupation skill on the card, e.g. Carpenter, Groundworker, Bricklayer, Electrician. Do NOT use the generic card tier label like Skilled Worker, Labourer, Trainee, Manager — only the specific trade if visible>",
