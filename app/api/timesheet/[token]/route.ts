@@ -1,6 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const rlMap = new Map<string, { count: number; resetAt: number }>()
+function checkRL(ip: string): boolean {
+  const now = Date.now()
+  const e = rlMap.get(ip)
+  if (!e || now > e.resetAt) { rlMap.set(ip, { count: 1, resetAt: now + 60_000 }); return true }
+  if (e.count >= 30) return false
+  e.count++
+  return true
+}
+
 // Public route — no auth. Manager accesses via magic link only.
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,10 +22,13 @@ const supabaseAdmin = createClient(
 // GET /api/timesheet/[token]
 // Returns timesheet data for the manager to view and fill
 export async function GET(
-  _req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params
+  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  if (!checkRL(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  if (!UUID_RE.test(token)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: ts, error } = await supabaseAdmin
     .from('timesheets')
@@ -68,10 +83,13 @@ export async function GET(
 // Manager submits completed hours
 // Body: { entries: [{ id, hours, notes? }] }
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params
+  const ip = (request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim()
+  if (!checkRL(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  if (!UUID_RE.test(token)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const { data: ts, error } = await supabaseAdmin
     .from('timesheets')
@@ -85,7 +103,7 @@ export async function POST(
     return NextResponse.json({ error: 'This timesheet has already been approved and cannot be changed' }, { status: 400 })
   }
 
-  const body = await req.json()
+  const body = await request.json()
   if (!body.entries || !Array.isArray(body.entries)) {
     return NextResponse.json({ error: 'entries array is required' }, { status: 400 })
   }
