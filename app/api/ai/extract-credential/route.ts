@@ -49,9 +49,6 @@ export async function POST(request: Request) {
 
 Return ONLY valid JSON, no other text, no markdown:
 {
-  "crop": { "x": <left edge of card in % of image width>, "y": <top edge of card in % of image height>, "w": <card width in % of image width>, "h": <card height in % of image height> },
-
-CRITICAL: The crop must be EXTREMELY tight. Find the exact edges of the card and set x/y/w/h so the crop boundary sits right at the card edge — zero padding. It is better to clip 1-2% of the card itself than to include ANY background. If the card left edge is at 22% of the image, set x=22 or x=23. Never leave more than 0.5% gap between the crop boundary and the card edge.
   "card_number": "<registration number, typically letter + 7 digits>",
   "expiry_date": "<expiry in YYYY-MM-DD format, use last day of month>",
   "trade": "<specific occupation skill on the card, e.g. Carpenter, Groundworker, Bricklayer, Electrician. Do NOT use the generic card tier label like Skilled Worker, Labourer, Trainee, Manager — only the specific trade if visible>",
@@ -59,7 +56,6 @@ CRITICAL: The crop must be EXTREMELY tight. Find the exact edges of the card and
 }
 
 Rules:
-- crop: percentages of where the CSCS card sits in the full image. If it fills the frame use x=2,y=2,w=96,h=96.
 - expiry_date: if card shows "03/2028" return "2028-03-31". If unreadable return null.
 - Return null for any field you cannot read clearly.
 - If this is not a CSCS card return: {"error":"not_a_cscs_card"}`,
@@ -91,7 +87,7 @@ Rules:
 
     return NextResponse.json({
       success: true,
-      crop: parsed.crop ?? null,
+      crop: null,
       card_number: parsed.card_number ?? null,
       expiry_date: parsed.expiry_date ?? null,
       trade: parsed.trade ?? null,

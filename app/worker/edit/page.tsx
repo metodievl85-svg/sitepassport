@@ -55,27 +55,6 @@ async function resizeToBase64(file: File, maxPx = 1200): Promise<{ base64: strin
   })
 }
 
-async function cropToFile(file: File, crop: { x: number; y: number; w: number; h: number }): Promise<File> {
-  return new Promise((resolve) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const sx = Math.round(img.width * crop.x / 100)
-      const sy = Math.round(img.height * crop.y / 100)
-      const sw = Math.round(img.width * crop.w / 100)
-      const sh = Math.round(img.height * crop.h / 100)
-      const canvas = document.createElement('canvas')
-      canvas.width = sw; canvas.height = sh
-      canvas.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh)
-      URL.revokeObjectURL(url)
-      canvas.toBlob((blob) => {
-        resolve(blob ? new File([blob], 'cscs-card.jpg', { type: 'image/jpeg' }) : file)
-      }, 'image/jpeg', 0.92)
-    }
-    img.src = url
-  })
-}
-
 export default function EditWorkerPassportPage() {
   const router = useRouter()
 
@@ -116,7 +95,7 @@ export default function EditWorkerPassportPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
 
-  async function runAiExtraction(file: File, { skipCrop = false }: { skipCrop?: boolean } = {}) {
+  async function runAiExtraction(file: File) {
     setAiScanning(true)
     try {
       const { base64, mimeType } = await resizeToBase64(file)
@@ -132,14 +111,6 @@ export default function EditWorkerPassportPage() {
         console.error('[ai extract] API failed:', JSON.stringify(data._debug))
         return file
       }
-      let finalFile = file
-      if (data.crop && !skipCrop) {
-        finalFile = await cropToFile(file, data.crop)
-        if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
-        const croppedUrl = URL.createObjectURL(finalFile)
-        photoPreviewUrlRef.current = croppedUrl
-        setForm((prev) => ({ ...prev, photo: croppedUrl }))
-      }
       setForm((prev) => ({
         ...prev,
         ...(data.card_number && !prev.cscsCard ? { cscsCard: data.card_number } : {}),
@@ -147,7 +118,7 @@ export default function EditWorkerPassportPage() {
         ...(data.trade && !prev.role ? { role: data.trade } : {}),
         ...(data.full_name && !prev.fullName ? { fullName: data.full_name } : {}),
       }))
-      return finalFile
+      return file
     } catch (err) {
       console.error('[ai extract]', err)
       return file
@@ -537,7 +508,7 @@ export default function EditWorkerPassportPage() {
     const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
-    void runAiExtraction(file, { skipCrop: true })
+    void runAiExtraction(file)
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -1223,6 +1194,9 @@ export default function EditWorkerPassportPage() {
                               pointerEvents: 'none',
                             }}
                           />
+                          <div style={{ position: 'absolute', left: 12, right: 12, bottom: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', borderRadius: 10, padding: '7px 10px', fontSize: 12, textAlign: 'center', pointerEvents: 'none' }}>
+                            Card edge to edge in the box — no hand or background visible
+                          </div>
 
                           <div
                             style={{
@@ -1230,7 +1204,7 @@ export default function EditWorkerPassportPage() {
                               left: 12,
                               right: 12,
                               top: 12,
-                              background: 'rgba(8, 21, 61, 0.78)',
+                              background: 'rgba(245, 158, 11, 0.92)',
                               color: '#ffffff',
                               borderRadius: 14,
                               padding: '10px 12px',
@@ -1240,7 +1214,7 @@ export default function EditWorkerPassportPage() {
                               textAlign: 'center',
                             }}
                           >
-                            Move closer — fill the box completely with your card
+                            📷 Move closer — card must fill the white box completely
                           </div>
                         </div>
                       ) : form.photo ? (
@@ -1322,6 +1296,9 @@ export default function EditWorkerPassportPage() {
                           >
                             {form.photo ? 'Retake CSCS Card Photo' : 'Take CSCS Card Photo'}
                           </button>
+                          <p style={{ fontSize: 12, color: '#888', textAlign: 'center', margin: '8px 0 0' }}>
+                            If the card does not fill the frame, tap Retake
+                          </p>
 
                           {photoCaptured && form.photo ? (
                             <div
