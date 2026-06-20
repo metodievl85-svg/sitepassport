@@ -26,7 +26,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
 
-    const { data: profile } = await supabaseAuth.from('profiles').select('role').eq('id', user.id).single()
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: profile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single()
     if (!profile || !['agency', 'company'].includes(profile.role)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -41,11 +46,6 @@ export async function PATCH(
     if (!verifiedBy) {
       return NextResponse.json({ error: 'verified_by is required' }, { status: 400 })
     }
-
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
 
     const { data, error } = await supabaseAdmin
       .from('workers')

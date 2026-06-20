@@ -153,7 +153,7 @@ export default function CscsVerifyModal({
             <hr style={divider} />
 
             <div style={{ background: '#f8f9fa', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#555', marginBottom: '18px' }}>
-              <strong style={{ color: '#1a1a1a' }}>On mobile?</strong> The free CSCS Smart Check app scans the card QR code and shows the database photo — stronger fraud detection than the web checker.
+              <strong style={{ color: '#1a1a1a' }}>What you&apos;ll need on the checker:</strong> card number (copied above), cardholder surname, card type, and NI number. On mobile, the free CSCS Smart Check app is faster — scan the card QR code directly.
             </div>
 
             <button style={{ ...btnPrimary, width: '100%', justifyContent: 'center' }} onClick={() => setStep(2)}>
