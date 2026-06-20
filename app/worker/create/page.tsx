@@ -48,6 +48,33 @@ function createEmptyForm() {
   }
 }
 
+async function cleanCardPhoto(file: File): Promise<File> {
+  const { removeBackground } = await import('@imgly/background-removal')
+  const pngBlob = await removeBackground(file, {
+    output: { format: 'image/png', quality: 1 },
+  })
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const img = new Image()
+    const url = URL.createObjectURL(pngBlob)
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(
+        (blob) => resolve(new File([blob!], 'cscs-card.jpg', { type: 'image/jpeg' })),
+        'image/jpeg',
+        0.92
+      )
+    }
+    img.src = url
+  })
+}
+
 async function resizeToBase64(file: File, maxPx = 1200): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve) => {
     const img = new Image()
@@ -97,6 +124,7 @@ export default function CreateWorkerPassportPage() {
   const [form, setForm] = useState(createEmptyForm())
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
+  const [bgRemoving, setBgRemoving] = useState(false)
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
   const [passportPhotoFile, setPassportPhotoFile] = useState<File | null>(null)
   const [rightToWorkPhotoFile, setRightToWorkPhotoFile] = useState<File | null>(null)
@@ -206,7 +234,21 @@ export default function CreateWorkerPassportPage() {
     } finally {
       setAiScanning(false)
     }
-  }
+
+  // Background removal in parallel
+  setBgRemoving(true)
+  cleanCardPhoto(file).then((cleanFile) => {
+    if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
+    const cleanUrl = URL.createObjectURL(cleanFile)
+    photoPreviewUrlRef.current = cleanUrl
+    setPhotoFile(cleanFile)
+    setForm((prev) => ({ ...prev, photo: cleanUrl }))
+  }).catch((err) => {
+    console.error('[bg removal]', err)
+  }).finally(() => {
+    setBgRemoving(false)
+  })
+}
   const handleFacePhotoChange = makePhotoHandler((f) => setFacePhotoFile(f), facePhotoPreviewUrlRef, 'facePhoto')
   const handlePassportPhotoChange = makePhotoHandler((f) => setPassportPhotoFile(f), passportPhotoPreviewUrlRef, 'passportPhoto')
   const handleRightToWorkPhotoChange = makePhotoHandler((f) => setRightToWorkPhotoFile(f), rightToWorkPhotoPreviewUrlRef, 'rightToWorkPhoto')
@@ -414,9 +456,9 @@ export default function CreateWorkerPassportPage() {
                   )}
                   <div>
                     <input type="file" accept="image/*" onChange={handlePhotoChange} />
-                  {aiScanning && (
+                  {(bgRemoving || aiScanning) && (
                     <p style={{ fontSize: 13, color: '#16307f', margin: '10px 0 0', background: '#e8edf7', padding: '8px 12px', borderRadius: 8 }}>
-                      Reading card details...
+                      {bgRemoving ? 'Enhancing photo...' : 'Reading card details...'}
                     </p>
                   )}
                     <p style={{ margin: '12px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.6 }}>Upload a clear front photo of your CSCS card. Make sure the card number and expiry date are visible.</p>

@@ -55,6 +55,33 @@ async function resizeToBase64(file: File, maxPx = 1200): Promise<{ base64: strin
   })
 }
 
+async function cleanCardPhoto(file: File): Promise<File> {
+  const { removeBackground } = await import('@imgly/background-removal')
+  const pngBlob = await removeBackground(file, {
+    output: { format: 'image/png', quality: 1 },
+  })
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas')
+    const img = new Image()
+    const url = URL.createObjectURL(pngBlob)
+    img.onload = () => {
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(
+        (blob) => resolve(new File([blob!], 'cscs-card.jpg', { type: 'image/jpeg' })),
+        'image/jpeg',
+        0.92
+      )
+    }
+    img.src = url
+  })
+}
+
 async function cropToFile(file: File, crop: { x: number; y: number; w: number; h: number }): Promise<File> {
   return new Promise((resolve) => {
     const img = new Image()
@@ -115,6 +142,7 @@ export default function EditWorkerPassportPage() {
   const [rtwCameraError, setRtwCameraError] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
+  const [bgRemoving, setBgRemoving] = useState(false)
 
   async function runAiExtraction(file: File, { skipCrop = false }: { skipCrop?: boolean } = {}) {
     setAiScanning(true)
@@ -140,7 +168,6 @@ export default function EditWorkerPassportPage() {
         photoPreviewUrlRef.current = croppedUrl
         setForm((prev) => ({ ...prev, photo: croppedUrl }))
       }
-      setPhotoFile(finalFile)
       setForm((prev) => ({
         ...prev,
         ...(data.card_number && !prev.cscsCard ? { cscsCard: data.card_number } : {}),
@@ -154,6 +181,22 @@ export default function EditWorkerPassportPage() {
       return file
     } finally {
       setAiScanning(false)
+    }
+  }
+
+  async function runBgRemoval(file: File) {
+    setBgRemoving(true)
+    try {
+      const cleanFile = await cleanCardPhoto(file)
+      if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
+      const cleanUrl = URL.createObjectURL(cleanFile)
+      photoPreviewUrlRef.current = cleanUrl
+      setPhotoFile(cleanFile)
+      setForm((prev) => ({ ...prev, photo: cleanUrl }))
+    } catch (err) {
+      console.error('[bg removal]', err)
+    } finally {
+      setBgRemoving(false)
     }
   }
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
@@ -538,6 +581,7 @@ export default function EditWorkerPassportPage() {
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
     void runAiExtraction(file)
+    void runBgRemoval(file)
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -722,6 +766,7 @@ export default function EditWorkerPassportPage() {
 
     e.target.value = ''
     void runAiExtraction(file)
+    void runBgRemoval(file)
   }
 
   function handleFacePhotoChange(e: ChangeEvent<HTMLInputElement>) {
@@ -1384,9 +1429,9 @@ export default function EditWorkerPassportPage() {
                           border: 0,
                         }}
                       />
-                      {aiScanning && (
+                      {(bgRemoving || aiScanning) && (
                         <p style={{ fontSize: 13, color: '#16307f', margin: '10px 0 0', background: '#e8edf7', padding: '8px 12px', borderRadius: 8 }}>
-                          Reading card details...
+                          {bgRemoving ? 'Enhancing photo...' : 'Reading card details...'}
                         </p>
                       )}
 
