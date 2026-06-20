@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { warpCardToFile } from '@/lib/cardWarp'
 
 type Qualification = {
   id: string
@@ -61,27 +62,6 @@ async function resizeToBase64(file: File, maxPx = 1200): Promise<{ base64: strin
       canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
       URL.revokeObjectURL(url)
       resolve({ base64: canvas.toDataURL('image/jpeg', 0.88).split(',')[1], mimeType: 'image/jpeg' })
-    }
-    img.src = url
-  })
-}
-
-async function cropToFile(file: File, crop: { x: number; y: number; w: number; h: number }): Promise<File> {
-  return new Promise((resolve) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const sx = Math.round(img.width * crop.x / 100)
-      const sy = Math.round(img.height * crop.y / 100)
-      const sw = Math.round(img.width * crop.w / 100)
-      const sh = Math.round(img.height * crop.h / 100)
-      const canvas = document.createElement('canvas')
-      canvas.width = sw; canvas.height = sh
-      canvas.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh)
-      URL.revokeObjectURL(url)
-      canvas.toBlob((blob) => {
-        resolve(blob ? new File([blob], 'cscs-card.jpg', { type: 'image/jpeg' }) : file)
-      }, 'image/jpeg', 0.92)
     }
     img.src = url
   })
@@ -185,8 +165,8 @@ export default function CreateWorkerPassportPage() {
       if (!data.success) return
 
       let finalFile = file
-      if (data.crop) {
-        finalFile = await cropToFile(file, data.crop)
+      if (data.corners) {
+        finalFile = await warpCardToFile(file, data.corners)
         if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
         const croppedUrl = URL.createObjectURL(finalFile)
         photoPreviewUrlRef.current = croppedUrl

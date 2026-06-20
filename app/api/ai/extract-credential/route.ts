@@ -53,14 +53,19 @@ Return ONLY valid JSON, no other text, no markdown:
   "expiry_date": "<expiry in YYYY-MM-DD format, use last day of month>",
   "trade": "<specific occupation skill on the card, e.g. Carpenter, Groundworker, Bricklayer, Electrician. Do NOT use the generic card tier label like Skilled Worker, Labourer, Trainee, Manager — only the specific trade if visible>",
   "full_name": "<cardholder full name>",
-  "card_box": { "x": <number>, "y": <number>, "w": <number>, "h": <number> }
+  "card_corners": [
+    { "x": <top-left x %>, "y": <top-left y %> },
+    { "x": <top-right x %>, "y": <top-right y %> },
+    { "x": <bottom-right x %>, "y": <bottom-right y %> },
+    { "x": <bottom-left x %>, "y": <bottom-left y %> }
+  ]
 }
 
 Rules:
 - expiry_date: if card shows "03/2028" return "2028-03-31". If unreadable return null.
 - Return null for any field you cannot read clearly.
 - If this is not a CSCS card return: {"error":"not_a_cscs_card"}
-- card_box: the bounding box of the ENTIRE CSCS card in the image, as percentages of image width and height (0-100). x and y are the top-left corner of the whole card; w and h are the card's width and height. Box the whole card edge to edge — NOT the photo on it, NOT a coloured band, the entire card. If you cannot locate the card, set card_box to null.`,
+- card_corners: the four corners of the CSCS card, as percentages of image width and height (0-100), in this exact order: top-left, top-right, bottom-right, bottom-left. Trace the card's own four corners even if the card is tilted, rotated, or at an angle. Do NOT include any finger, hand, or background — follow the card's real edges. If you cannot clearly see all four corners, set card_corners to null.`,
             },
           ],
         }],
@@ -87,30 +92,36 @@ Rules:
       return NextResponse.json({ success: false, reason: parsed.error })
     }
 
-    let crop: { x: number; y: number; w: number; h: number } | null = null
-    const box = parsed.card_box as { x?: number; y?: number; w?: number; h?: number } | null
+    let corners: { x: number; y: number }[] | null = null
+    const raw = parsed.card_corners as Array<{ x?: number; y?: number }> | null
     if (
-      box &&
-      typeof box.x === 'number' &&
-      typeof box.y === 'number' &&
-      typeof box.w === 'number' &&
-      typeof box.h === 'number'
+      Array.isArray(raw) &&
+      raw.length === 4 &&
+      raw.every(
+        (p) =>
+          p &&
+          typeof p.x === 'number' &&
+          typeof p.y === 'number' &&
+          p.x >= 0 && p.x <= 100 &&
+          p.y >= 0 && p.y <= 100
+      )
     ) {
-      const pad = 4
-      const left = Math.max(0, Math.min(100, box.x - pad))
-      const top = Math.max(0, Math.min(100, box.y - pad))
-      const right = Math.max(0, Math.min(100, box.x + box.w + pad))
-      const bottom = Math.max(0, Math.min(100, box.y + box.h + pad))
-      const w = right - left
-      const h = bottom - top
-      if (w > 5 && h > 5) {
-        crop = { x: left, y: top, w, h }
+      const pts = raw.map((p) => ({ x: p.x as number, y: p.y as number }))
+      const area =
+        Math.abs(
+          pts[0].x * pts[1].y - pts[1].x * pts[0].y +
+            pts[1].x * pts[2].y - pts[2].x * pts[1].y +
+            pts[2].x * pts[3].y - pts[3].x * pts[2].y +
+            pts[3].x * pts[0].y - pts[0].x * pts[3].y
+        ) / 2
+      if (area > 100) {
+        corners = pts
       }
     }
 
     return NextResponse.json({
       success: true,
-      crop,
+      corners,
       card_number: parsed.card_number ?? null,
       expiry_date: parsed.expiry_date ?? null,
       trade: parsed.trade ?? null,

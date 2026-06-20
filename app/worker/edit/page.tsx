@@ -4,6 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import { warpCardToFile } from '@/lib/cardWarp'
 
 type Qualification = {
   id: string
@@ -55,26 +56,6 @@ async function resizeToBase64(file: File, maxPx = 1200): Promise<{ base64: strin
   })
 }
 
-async function cropToFile(file: File, crop: { x: number; y: number; w: number; h: number }): Promise<File> {
-  return new Promise((resolve) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      const sx = Math.round(img.width * crop.x / 100)
-      const sy = Math.round(img.height * crop.y / 100)
-      const sw = Math.round(img.width * crop.w / 100)
-      const sh = Math.round(img.height * crop.h / 100)
-      const canvas = document.createElement('canvas')
-      canvas.width = sw; canvas.height = sh
-      canvas.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh)
-      URL.revokeObjectURL(url)
-      canvas.toBlob((blob) => {
-        resolve(blob ? new File([blob], 'cscs-card.jpg', { type: 'image/jpeg' }) : file)
-      }, 'image/jpeg', 0.92)
-    }
-    img.src = url
-  })
-}
 
 export default function EditWorkerPassportPage() {
   const router = useRouter()
@@ -132,8 +113,8 @@ export default function EditWorkerPassportPage() {
         console.error('[ai extract] API failed:', JSON.stringify(data._debug))
         return file
       }
-      if (data.crop) {
-        const cropped = await cropToFile(file, data.crop)
+      if (data.corners) {
+        const cropped = await warpCardToFile(file, data.corners)
         if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
         const croppedUrl = URL.createObjectURL(cropped)
         photoPreviewUrlRef.current = croppedUrl
@@ -480,8 +461,10 @@ export default function EditWorkerPassportPage() {
       return
     }
 
-    const outputWidth = 1200
-    const outputHeight = Math.round(outputWidth / 1.58)
+    const maxDim = 1600
+    const scale = Math.min(1, maxDim / Math.max(videoWidth, videoHeight))
+    const outputWidth = Math.round(videoWidth * scale)
+    const outputHeight = Math.round(videoHeight * scale)
 
     canvas.width = outputWidth
     canvas.height = outputHeight
@@ -492,31 +475,7 @@ export default function EditWorkerPassportPage() {
       return
     }
 
-    const cropWidth = videoWidth * 0.45
-    const cropHeight = cropWidth / 1.58
-
-    let sourceCropWidth = cropWidth
-    let sourceCropHeight = cropHeight
-
-    if (sourceCropHeight > videoHeight * 0.82) {
-      sourceCropHeight = videoHeight * 0.82
-      sourceCropWidth = sourceCropHeight * 1.58
-    }
-
-    const sourceX = Math.max(0, (videoWidth - sourceCropWidth) / 2)
-    const sourceY = Math.max(0, (videoHeight - sourceCropHeight) / 2)
-
-    context.drawImage(
-      video,
-      sourceX,
-      sourceY,
-      sourceCropWidth,
-      sourceCropHeight,
-      0,
-      0,
-      outputWidth,
-      outputHeight
-    )
+    context.drawImage(video, 0, 0, outputWidth, outputHeight)
 
     const blob = await new Promise<Blob | null>((resolve) => {
       canvas.toBlob(resolve, 'image/jpeg', 0.92)
