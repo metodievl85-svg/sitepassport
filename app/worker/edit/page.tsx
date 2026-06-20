@@ -116,7 +116,7 @@ export default function EditWorkerPassportPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
 
-  async function runAiExtraction(file: File) {
+  async function runAiExtraction(file: File, { skipCrop = false }: { skipCrop?: boolean } = {}) {
     setAiScanning(true)
     try {
       const { base64, mimeType } = await resizeToBase64(file)
@@ -130,7 +130,7 @@ export default function EditWorkerPassportPage() {
       const data = await res.json()
       if (!data.success) return file
       let finalFile = file
-      if (data.crop) {
+      if (data.crop && !skipCrop) {
         finalFile = await cropToFile(file, data.crop)
         if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
         const croppedUrl = URL.createObjectURL(finalFile)
@@ -534,7 +534,7 @@ export default function EditWorkerPassportPage() {
     const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
-    void runAiExtraction(file)
+    void runAiExtraction(file, { skipCrop: true })
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -1349,16 +1349,15 @@ export default function EditWorkerPassportPage() {
                         >
                           <button
                             type="button"
-                            className="btn btn-primary"
                             onClick={capturePhoto}
+                            style={{ background: '#16307f', color: '#fff', border: 'none', borderRadius: 8, padding: '14px 20px', fontSize: 16, fontWeight: 600, cursor: 'pointer', width: '100%', marginBottom: 10 }}
                           >
-                            Capture
+                            Take photo
                           </button>
-
                           <button
                             type="button"
-                            className="btn btn-outline"
                             onClick={stopCamera}
+                            style={{ background: 'transparent', color: '#555', border: '1px solid #d1d5db', borderRadius: 8, padding: '12px 20px', fontSize: 14, cursor: 'pointer', width: '100%' }}
                           >
                             Cancel
                           </button>
