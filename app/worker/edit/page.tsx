@@ -132,6 +132,7 @@ export default function EditWorkerPassportPage() {
         console.error('[ai extract] API failed:', JSON.stringify(data._debug))
         return file
       }
+      console.log('[ai extract] result:', JSON.stringify({ card_number: data.card_number, expiry_date: data.expiry_date, trade: data.trade, full_name: data.full_name, crop: data.crop }))
       let finalFile = file
       if (data.crop && !skipCrop) {
         finalFile = await cropToFile(file, data.crop)

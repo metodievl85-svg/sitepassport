@@ -52,7 +52,7 @@ Return ONLY valid JSON, no other text, no markdown:
   "crop": { "x": <left edge as % of image width 0-100>, "y": <top edge as % of image height 0-100>, "w": <card width as % of image width 0-100>, "h": <card height as % of image height 0-100> },
   "card_number": "<registration number, typically letter + 7 digits>",
   "expiry_date": "<expiry in YYYY-MM-DD format, use last day of month>",
-  "trade": "<occupation or trade on the card>",
+  "trade": "<specific occupation skill on the card, e.g. Carpenter, Groundworker, Bricklayer, Electrician. Do NOT use the generic card tier label like Skilled Worker, Labourer, Trainee, Manager — only the specific trade if visible>",
   "full_name": "<cardholder full name>"
 }
 
