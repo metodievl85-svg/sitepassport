@@ -492,7 +492,7 @@ export default function EditWorkerPassportPage() {
       return
     }
 
-    const cropWidth = videoWidth * 0.86
+    const cropWidth = videoWidth * 0.70
     const cropHeight = cropWidth / 1.58
 
     let sourceCropWidth = cropWidth
@@ -537,7 +537,7 @@ export default function EditWorkerPassportPage() {
     const file = new File([blob], 'cscs-capture.jpg', { type: 'image/jpeg' })
     setPhotoFile(file)
     setForm((prev) => ({ ...prev, photo: previewUrl }))
-    void runAiExtraction(file, { skipCrop: true })
+    void runAiExtraction(file)
 
     setPhotoCaptured(true)
     setCameraError('')
@@ -1215,7 +1215,7 @@ export default function EditWorkerPassportPage() {
                               left: '50%',
                               top: '50%',
                               transform: 'translate(-50%, -50%)',
-                              width: '86%',
+                              width: '70%',
                               aspectRatio: '1.58 / 1',
                               border: '3px solid #ffffff',
                               borderRadius: 14,
