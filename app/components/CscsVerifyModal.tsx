@@ -140,6 +140,14 @@ export default function CscsVerifyModal({
               <p style={{ fontSize: '14px', color: '#ef4444', margin: '0 0 16px' }}>No card number on record — ask the operative to update their passport first.</p>
             )}
 
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, background: '#f8f9fa', borderRadius: 8, padding: '10px 14px', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Surname to enter on CSCS checker</p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a', margin: 0, letterSpacing: '1px' }}>
+                  {workerName.trim().split(' ').pop()?.toUpperCase() ?? workerName.toUpperCase()}
+                </p>
+              </div>
+            </div>
             <button style={btnCopy} onClick={copyAndOpen} disabled={!cscsCard}>
               📋 Copy number &amp; open CSCS checker
             </button>
