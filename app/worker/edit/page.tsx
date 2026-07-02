@@ -79,6 +79,7 @@ export default function EditWorkerPassportPage() {
   const rtwVideoRef = useRef<HTMLVideoElement | null>(null)
   const rtwCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const rtwCameraStreamRef = useRef<MediaStream | null>(null)
+  const initialRtwShareCodeRef = useRef<string>('')
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -96,6 +97,7 @@ export default function EditWorkerPassportPage() {
   const [rtwCameraError, setRtwCameraError] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
+  const [rtwShareCodeError, setRtwShareCodeError] = useState('')
 
   async function runAiExtraction(file: File, applyCrop = true) {
     setAiScanning(true)
@@ -153,6 +155,7 @@ export default function EditWorkerPassportPage() {
     cscsCard: '',
     cscsExpiry: '',
     rightToWorkExpiry: '',
+    rtwShareCode: '',
     employmentStatus: '',
     notes: '',
     medicalInfo: '',
@@ -232,6 +235,7 @@ export default function EditWorkerPassportPage() {
 
       setUserId(session.user.id)
       setWorkerId(workerRow.id)
+      initialRtwShareCodeRef.current = workerRow.rtw_share_code ?? ''
 
       const rawPassportPhoto = workerRow.passport_photo ?? ''
       const rawRightToWorkPhoto = workerRow.right_to_work_photo ?? ''
@@ -258,6 +262,7 @@ export default function EditWorkerPassportPage() {
         cscsCard: workerRow.cscs_card ?? '',
         cscsExpiry: workerRow.cscs_expiry ?? '',
         rightToWorkExpiry: workerRow.right_to_work_expiry ?? '',
+        rtwShareCode: workerRow.rtw_share_code ?? '',
         employmentStatus: workerRow.employment_status || '',
         notes: workerRow.notes ?? '',
         medicalInfo: workerRow.medical_info ?? '',
@@ -827,6 +832,17 @@ export default function EditWorkerPassportPage() {
       return
     }
 
+    const normalizedShareCode = form.rtwShareCode.replace(/\s+/g, '').toUpperCase()
+    setRtwShareCodeError('')
+    if (normalizedShareCode && !/^W[A-Z0-9]{8}$/.test(normalizedShareCode)) {
+      if (normalizedShareCode.startsWith('R') || normalizedShareCode.startsWith('S')) {
+        setRtwShareCodeError('This looks like a right to rent or status code — you need a right to WORK code. Get one at gov.uk/prove-right-to-work.')
+      } else {
+        setRtwShareCodeError('A share code is 9 characters and starts with W, e.g. W1X2Y3Z4A.')
+      }
+      return
+    }
+
     setSaving(true)
 
     try {
@@ -903,6 +919,10 @@ export default function EditWorkerPassportPage() {
           cscs_card: form.cscsCard.trim(),
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
+          rtw_share_code: normalizedShareCode || null,
+          ...(normalizedShareCode && normalizedShareCode !== initialRtwShareCodeRef.current
+            ? { rtw_share_code_submitted_at: new Date().toISOString(), rtw_status: 'self_declared' }
+            : {}),
           employment_status: form.employmentStatus && form.employmentStatus !== '' ? form.employmentStatus : null,
           notes: form.notes.trim(),
           medical_info: form.medicalInfo.trim(),
@@ -1997,6 +2017,24 @@ export default function EditWorkerPassportPage() {
                   value={form.rightToWorkExpiry}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="field">
+                <label>Right to work share code</label>
+                <input
+                  name="rtwShareCode"
+                  value={form.rtwShareCode}
+                  onChange={(e) => { handleChange(e); if (rtwShareCodeError) setRtwShareCodeError('') }}
+                  placeholder="e.g. W1X2Y3Z4A"
+                />
+                <p style={{ fontSize: 12.5, color: '#555', margin: '6px 0 0', lineHeight: 1.5 }}>
+                  Only for non-British/Irish workers. Get yours free at gov.uk/prove-right-to-work — takes two minutes.
+                </p>
+                {rtwShareCodeError ? (
+                  <p style={{ fontSize: 12.5, color: '#b42318', margin: '6px 0 0', lineHeight: 1.5, fontWeight: 700 }}>
+                    {rtwShareCodeError}
+                  </p>
+                ) : null}
               </div>
             </div>
 

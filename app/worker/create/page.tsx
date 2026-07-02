@@ -32,6 +32,7 @@ function createEmptyForm() {
     cscsCard: '',
     cscsExpiry: '',
     rightToWorkExpiry: '',
+    rtwShareCode: '',
     notes: '',
     photo: '',
     facePhoto: '',
@@ -77,6 +78,7 @@ export default function CreateWorkerPassportPage() {
   const [form, setForm] = useState(createEmptyForm())
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [aiScanning, setAiScanning] = useState(false)
+  const [rtwShareCodeError, setRtwShareCodeError] = useState('')
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
   const [passportPhotoFile, setPassportPhotoFile] = useState<File | null>(null)
   const [rightToWorkPhotoFile, setRightToWorkPhotoFile] = useState<File | null>(null)
@@ -250,6 +252,18 @@ export default function CreateWorkerPassportPage() {
     e.preventDefault()
     if (!form.fullName.trim()) { alert('Please enter full name.'); return }
     if (!userId) { alert('No logged-in user found.'); return }
+
+    const normalizedShareCode = form.rtwShareCode.replace(/\s+/g, '').toUpperCase()
+    setRtwShareCodeError('')
+    if (normalizedShareCode && !/^W[A-Z0-9]{8}$/.test(normalizedShareCode)) {
+      if (normalizedShareCode.startsWith('R') || normalizedShareCode.startsWith('S')) {
+        setRtwShareCodeError('This looks like a right to rent or status code — you need a right to WORK code. Get one at gov.uk/prove-right-to-work.')
+      } else {
+        setRtwShareCodeError('A share code is 9 characters and starts with W, e.g. W1X2Y3Z4A.')
+      }
+      return
+    }
+
     setSaving(true)
 
     try {
@@ -276,6 +290,8 @@ export default function CreateWorkerPassportPage() {
           cscs_card: form.cscsCard.trim(),
           cscs_expiry: form.cscsExpiry || null,
           right_to_work_expiry: form.rightToWorkExpiry || null,
+          rtw_share_code: normalizedShareCode || null,
+          ...(normalizedShareCode ? { rtw_share_code_submitted_at: new Date().toISOString() } : {}),
           notes: form.notes.trim(),
           photo: photoUrl,
           face_photo: facePhotoUrl,
@@ -497,6 +513,23 @@ export default function CreateWorkerPassportPage() {
               <div className="field">
                 <label>Right to work expiry</label>
                 <input type="date" name="rightToWorkExpiry" value={form.rightToWorkExpiry} onChange={handleChange} />
+              </div>
+              <div className="field">
+                <label>Right to work share code</label>
+                <input
+                  name="rtwShareCode"
+                  value={form.rtwShareCode}
+                  onChange={(e) => { handleChange(e); if (rtwShareCodeError) setRtwShareCodeError('') }}
+                  placeholder="e.g. W1X2Y3Z4A"
+                />
+                <p style={{ fontSize: 12.5, color: '#555', margin: '6px 0 0', lineHeight: 1.5 }}>
+                  Only for non-British/Irish workers. Get yours free at gov.uk/prove-right-to-work — takes two minutes.
+                </p>
+                {rtwShareCodeError ? (
+                  <p style={{ fontSize: 12.5, color: '#b42318', margin: '6px 0 0', lineHeight: 1.5, fontWeight: 700 }}>
+                    {rtwShareCodeError}
+                  </p>
+                ) : null}
               </div>
             </div>
 
