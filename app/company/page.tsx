@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import jsPDF from 'jspdf'
 import { createPortal } from 'react-dom'
 import CscsVerifyModal from '@/components/CscsVerifyModal'
+import RtwVerifyModal from '@/components/RtwVerifyModal'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../lib/supabase'
@@ -39,6 +40,12 @@ type WorkerRow = {
   cscs_card: string | null
   cscs_verified_at: string | null
   cscs_verified_by: string | null
+  rtw_status: string | null
+  rtw_share_code: string | null
+  rtw_share_code_submitted_at: string | null
+  rtw_verified_at: string | null
+  rtw_verified_by: string | null
+  dob: string | null
 }
 
 type ScanLogRow = {
@@ -123,6 +130,12 @@ type SavedWorkerCard = {
   cscsCard: string
   cscsVerifiedAt: string
   cscsVerifiedBy: string
+  rtwStatus: string
+  rtwShareCode: string
+  rtwShareCodeSubmittedAt: string
+  rtwVerifiedAt: string
+  rtwVerifiedBy: string
+  dob: string
   siteStatus: 'IN' | 'OUT'
   lastAttendanceAt: string
   inductionStatus: InductionStatus
@@ -262,6 +275,32 @@ function getCscsBadgeStyle(status: string) {
   }
 }
 
+function getRtwPillStyle(rtwStatus: string, rightToWorkExpiry: string) {
+  const green = { background: '#dcfce7', color: '#15803d' }
+  const amber = { background: '#fef3c7', color: '#b45309' }
+  const red = { background: '#fee2e2', color: '#b91c1c' }
+  const grey = { background: '#e5e7eb', color: '#555' }
+
+  if (rtwStatus === 'verified') {
+    if (rightToWorkExpiry) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const expiry = new Date(rightToWorkExpiry)
+      expiry.setHours(0, 0, 0, 0)
+      const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      if (diffDays < 0) return { text: 'RTW expired', ...red }
+      if (diffDays <= 30) return { text: 'RTW: Follow-up due', ...amber }
+    }
+    return { text: 'RTW verified', ...green }
+  }
+
+  if (rtwStatus === 'no_right_to_work') {
+    return { text: 'No right to work', ...red }
+  }
+
+  return { text: 'RTW: Self-declared', ...grey }
+}
+
 function isWorkerActive(worker: SavedWorkerCard) {
   const cscsStatus = getStatus(worker.cscsExpiry)
   const rightToWorkStatus = getStatus(worker.rightToWorkExpiry)
@@ -395,6 +434,7 @@ export default function CompanyPage() {
   const [companyId, setCompanyId] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [verifyWorker, setVerifyWorker] = useState<{ id: string; name: string; cscsCard: string | null } | null>(null)
+  const [verifyRtwWorker, setVerifyRtwWorker] = useState<SavedWorkerCard | null>(null)
   const [companyNameDraft, setCompanyNameDraft] = useState('')
   const [savingCompanyName, setSavingCompanyName] = useState(false)
   const [companyNameMessage, setCompanyNameMessage] = useState('')
@@ -678,7 +718,7 @@ export default function CompanyPage() {
 
           const { data: workerRows, error: workersError } = await supabase
             .from('workers')
-            .select('id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status, cscs_card, cscs_verified_at, cscs_verified_by')
+            .select('id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status, cscs_card, cscs_verified_at, cscs_verified_by, rtw_status, rtw_share_code, rtw_share_code_submitted_at, rtw_verified_at, rtw_verified_by, dob')
             .in('id', workerIds)
             .limit(500)
 
@@ -717,6 +757,12 @@ export default function CompanyPage() {
                   cscsCard: worker.cscs_card ?? '',
                   cscsVerifiedAt: worker.cscs_verified_at ?? '',
                   cscsVerifiedBy: worker.cscs_verified_by ?? '',
+                  rtwStatus: worker.rtw_status ?? '',
+                  rtwShareCode: worker.rtw_share_code ?? '',
+                  rtwShareCodeSubmittedAt: worker.rtw_share_code_submitted_at ?? '',
+                  rtwVerifiedAt: worker.rtw_verified_at ?? '',
+                  rtwVerifiedBy: worker.rtw_verified_by ?? '',
+                  dob: worker.dob ?? '',
                   siteStatus: 'OUT' as const,
                   lastAttendanceAt: '',
                   inductionStatus: induction?.status ?? 'none',
@@ -2304,7 +2350,7 @@ export default function CompanyPage() {
           ) : (
             <div style={{ display: 'grid', gap: 14 }}>
               {displayedWorkers.map((worker) => {
-                const rtwStatus = getStatus(worker.rightToWorkExpiry)
+                const rtwPill = getRtwPillStyle(worker.rtwStatus, worker.rightToWorkExpiry)
                 const cscsBadge = getCscsBadgeStyle(worker.cscsVerificationStatus)
                 const isOnSite = worker.siteStatus === 'IN'
                 const isSendingInduction = sendingInductionId === worker.workerId
@@ -2397,16 +2443,24 @@ export default function CompanyPage() {
 
                           <span
                             style={{
-                              background: rtwStatus.bg,
-                              color: rtwStatus.color,
+                              background: rtwPill.background,
+                              color: rtwPill.color,
                               borderRadius: 999,
                               padding: '6px 10px',
                               fontSize: 12,
                               fontWeight: 800,
                             }}
                           >
-                            RTW: {rtwStatus.text}
+                            {rtwPill.text}
                           </span>
+                          {worker.rtwStatus !== 'verified' && (
+                            <button
+                              onClick={() => setVerifyRtwWorker(worker)}
+                              style={{ background: '#e8edf7', color: '#16307f', border: 'none', borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                            >
+                              Verify RTW
+                            </button>
+                          )}
 
                           {worker.inductionStatus !== 'none' && (
                             <span
@@ -2678,6 +2732,31 @@ export default function CompanyPage() {
                 : w
             ))
             setVerifyWorker(null)
+          }}
+        />
+      )}
+      {verifyRtwWorker && (
+        <RtwVerifyModal
+          workerId={verifyRtwWorker.workerId}
+          workerName={verifyRtwWorker.fullName}
+          shareCode={verifyRtwWorker.rtwShareCode || null}
+          shareCodeSubmittedAt={verifyRtwWorker.rtwShareCodeSubmittedAt || null}
+          dob={verifyRtwWorker.dob || null}
+          verifierName={companyName}
+          onClose={() => setVerifyRtwWorker(null)}
+          onVerified={(updated) => {
+            setSavedWorkers(prev => prev.map(w =>
+              w.workerId === verifyRtwWorker.workerId
+                ? {
+                    ...w,
+                    rtwStatus: updated.rtw_status,
+                    rtwVerifiedAt: updated.rtw_verified_at,
+                    rtwVerifiedBy: updated.rtw_verified_by,
+                    rightToWorkExpiry: updated.right_to_work_expiry ?? '',
+                  }
+                : w
+            ))
+            setVerifyRtwWorker(null)
           }}
         />
       )}
