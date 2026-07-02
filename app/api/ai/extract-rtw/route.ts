@@ -19,6 +19,13 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
     if (authError || !user) {
       console.log('[extract-rtw] getUser error:', authError?.message, 'token length:', token?.length);
+      try {
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        console.log('[extract-rtw] token iss:', payload.iss, '| ref:', payload.ref, '| exp:', payload.exp, '| now:', Math.floor(Date.now()/1000), '| expired:', payload.exp < Math.floor(Date.now()/1000), '| role:', payload.role);
+      } catch (e) {
+        console.log('[extract-rtw] token decode failed — not a valid JWT structure');
+      }
+      console.log('[extract-rtw] server supabase url:', process.env.NEXT_PUBLIC_SUPABASE_URL);
       return NextResponse.json({ error: 'Unauthorised — token rejected' }, { status: 401 })
     }
 
