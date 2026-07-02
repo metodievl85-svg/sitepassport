@@ -7,8 +7,7 @@ export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      console.log('[extract-rtw] auth header present:', !!request.headers.get('authorization'));
-      return NextResponse.json({ error: 'Unauthorised — no token received' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
     const token = authHeader.slice(7)
 
@@ -18,15 +17,7 @@ export async function POST(request: Request) {
     )
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
     if (authError || !user) {
-      console.log('[extract-rtw] getUser error:', authError?.message, 'token length:', token?.length);
-      try {
-        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-        console.log('[extract-rtw] token iss:', payload.iss, '| ref:', payload.ref, '| exp:', payload.exp, '| now:', Math.floor(Date.now()/1000), '| expired:', payload.exp < Math.floor(Date.now()/1000), '| role:', payload.role);
-      } catch (e) {
-        console.log('[extract-rtw] token decode failed — not a valid JWT structure');
-      }
-      console.log('[extract-rtw] server supabase url:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-      return NextResponse.json({ error: 'Unauthorised — token rejected' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
 
     const body = await request.json()

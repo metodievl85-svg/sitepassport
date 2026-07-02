@@ -126,8 +126,8 @@ export default function RtwVerifyModal({
     setAiLoading(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setAiError('Session expired — please refresh the page.')
+      if (!session || !session.access_token) {
+        setAiError('Your session has expired — refresh the page and log in again, then retry.')
         return
       }
       const res = await fetch('/api/ai/extract-rtw', {
@@ -138,6 +138,10 @@ export default function RtwVerifyModal({
         },
         body: JSON.stringify({ image_base64: base64, image_mime: mimeType }),
       })
+      if (res.status === 401) {
+        setAiError('Your session has expired — refresh the page and log in again, then retry.')
+        return
+      }
       const data = await res.json()
       if (data.success) {
         if (data.outcome === 'has_right' || data.outcome === 'time_limited' || data.outcome === 'no_right') {
@@ -176,8 +180,8 @@ export default function RtwVerifyModal({
     setError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setError('Session expired — please refresh the page.')
+      if (!session || !session.access_token) {
+        setError('Your session has expired — refresh the page and log in again, then retry.')
         setSaving(false)
         return
       }
@@ -207,6 +211,11 @@ export default function RtwVerifyModal({
           evidence_mime: evidenceMime || undefined,
         }),
       })
+      if (res.status === 401) {
+        setError('Your session has expired — refresh the page and log in again, then retry.')
+        setSaving(false)
+        return
+      }
       const data = await res.json()
       if (!res.ok || !data.success) {
         setError(data.error ?? 'Save failed — please try again.')
