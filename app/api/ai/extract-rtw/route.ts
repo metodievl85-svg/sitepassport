@@ -7,7 +7,8 @@ export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+      console.log('[extract-rtw] auth header present:', !!request.headers.get('authorization'));
+      return NextResponse.json({ error: 'Unauthorised — no token received' }, { status: 401 })
     }
     const token = authHeader.slice(7)
 
@@ -17,7 +18,8 @@ export async function POST(request: Request) {
     )
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+      console.log('[extract-rtw] getUser error:', authError?.message, 'token length:', token?.length);
+      return NextResponse.json({ error: 'Unauthorised — token rejected' }, { status: 401 })
     }
 
     const body = await request.json()
