@@ -94,6 +94,7 @@ export default function CompanyDashboardMenu({ onAddOperative, onExportReport, o
             { label: '💳 Billing', href: '/company/billing' },
             { label: '⚙️ Attendance settings', href: '/company/attendance-settings' },
             { label: '👥 Team & Organisation', href: '#organisation-panel' },
+            { label: '📄 Site documents', href: '/company/site-documents' },
             { label: '📍 Site location', href: '/company/site-location' },
             { label: '🖨️ Print site QR', href: '/company/print-qr' },
           ].map(item => (
