@@ -250,6 +250,8 @@ export default function WorkerPage() {
   const [completingInduction, setCompletingInduction] = useState(false)
   const [inductionMessage, setInductionMessage] = useState('')
 
+  const [unsignedDocsCount, setUnsignedDocsCount] = useState(0)
+
   usePushNotifications(passport?.user_id ?? '', passport?.id ?? '')
 
   useEffect(() => {
@@ -368,6 +370,21 @@ export default function WorkerPage() {
         } else {
           setAttendanceStatus(lastAttendance?.status === 'IN' ? 'IN' : 'OUT')
         }
+      }
+
+      try {
+        const res = await fetch('/api/site-documents/worker', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (res.ok) {
+          const json = await res.json()
+          const count = (json.documents || []).filter(
+            (d: { needs_signature?: boolean }) => d.needs_signature === true
+          ).length
+          setUnsignedDocsCount(count)
+        }
+      } catch (docsError) {
+        console.error('site documents load error:', docsError)
       }
 
       setLoading(false)
@@ -911,6 +928,23 @@ export default function WorkerPage() {
   return (
     <main className="page-shell">
       <div className="container">
+        {unsignedDocsCount > 0 ? (
+          <div
+            onClick={() => router.push('/worker/site-documents')}
+            style={{
+              background: '#fee2e2',
+              borderRadius: 12,
+              padding: 16,
+              color: '#b91c1c',
+              fontWeight: 600,
+              cursor: 'pointer',
+              marginBottom: 24,
+            }}
+          >
+            ⚠️ {unsignedDocsCount} document{unsignedDocsCount === 1 ? ' needs' : 's need'} your signature
+          </div>
+        ) : null}
+
         <section className="hero worker-hero">
           <div style={{ minWidth: 0 }}>
             <NekaIDLogo />

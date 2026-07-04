@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     .from('document_briefings')
     .select('*')
     .eq('document_id', id)
-    .order('signed_at', { ascending: false });
+    .order('assigned_at', { ascending: false });
   if (error) return NextResponse.json({ error: 'Could not load signatures' }, { status: 500 });
 
   return NextResponse.json({ briefings: briefings || [] });

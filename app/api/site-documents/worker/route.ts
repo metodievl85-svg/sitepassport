@@ -15,31 +15,54 @@ export async function GET(req: NextRequest) {
   const companyIds = [...new Set((links || []).map(l => l.company_id))];
   if (companyIds.length === 0) return NextResponse.json({ documents: [] });
 
-  const { data: documents, error } = await admin
-    .from('site_documents')
-    .select('id, company_id, site_id, doc_type, title, ref_code, revision, contractor_name, status, approved_at, created_at')
-    .in('company_id', companyIds)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false });
-  if (error) return NextResponse.json({ error: 'Could not load documents' }, { status: 500 });
+  // Assignments for this worker: presence = "sent to you", signed_at = signed (nullable).
+  const { data: assignments } = await admin
+    .from('document_briefings')
+    .select('document_id, signed_at')
+    .eq('worker_id', worker.id);
+  const assignmentMap = new Map<string, string | null>();
+  for (const a of assignments || []) assignmentMap.set(a.document_id, a.signed_at);
+  const assignedDocIds = [...assignmentMap.keys()];
 
-  const ids = (documents || []).map(d => d.id);
-  let signedMap: Record<string, string> = {};
-  if (ids.length > 0) {
-    const { data: briefings } = await admin
-      .from('document_briefings')
-      .select('document_id, signed_at')
-      .eq('worker_id', worker.id)
-      .in('document_id', ids);
-    for (const b of briefings || []) signedMap[b.document_id] = b.signed_at;
+  const selectCols = 'id, company_id, site_id, doc_type, title, ref_code, revision, contractor_name, status, approved_at, created_at';
+  const byId = new Map<string, any>();
+
+  // (a) documents assigned to this worker (any doc_type)
+  if (assignedDocIds.length > 0) {
+    const { data: assignedDocs, error: assignedErr } = await admin
+      .from('site_documents')
+      .select(selectCols)
+      .in('company_id', companyIds)
+      .eq('status', 'approved')
+      .in('id', assignedDocIds);
+    if (assignedErr) return NextResponse.json({ error: 'Could not load documents' }, { status: 500 });
+    for (const d of assignedDocs || []) byId.set(d.id, d);
   }
 
+  // (b) all site procedures (reference docs — no assignment needed)
+  const { data: procedureDocs, error: procErr } = await admin
+    .from('site_documents')
+    .select(selectCols)
+    .in('company_id', companyIds)
+    .eq('status', 'approved')
+    .eq('doc_type', 'procedure');
+  if (procErr) return NextResponse.json({ error: 'Could not load documents' }, { status: 500 });
+  for (const d of procedureDocs || []) byId.set(d.id, d);
+
+  const documents = [...byId.values()].sort((a, b) =>
+    (b.created_at || '').localeCompare(a.created_at || '')
+  );
+
   return NextResponse.json({
-    documents: (documents || []).map(d => ({
-      ...d,
-      signed: !!signedMap[d.id],
-      signed_at: signedMap[d.id] || null,
-      needs_signature: d.doc_type !== 'procedure' && !signedMap[d.id],
-    })),
+    documents: documents.map(d => {
+      const hasAssignment = assignmentMap.has(d.id);
+      const signedAt = hasAssignment ? assignmentMap.get(d.id) || null : null;
+      return {
+        ...d,
+        signed: hasAssignment && !!signedAt,
+        signed_at: signedAt,
+        needs_signature: d.doc_type !== 'procedure' && hasAssignment && !signedAt,
+      };
+    }),
   });
 }

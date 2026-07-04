@@ -32,22 +32,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .maybeSingle();
   if (!link) return NextResponse.json({ error: 'This document is not available to sign' }, { status: 403 });
 
-  const { data: existing } = await admin
+  const { data: assignment } = await admin
     .from('document_briefings')
     .select('id, signed_at')
     .eq('document_id', doc.id)
     .eq('worker_id', worker.id)
     .maybeSingle();
-  if (existing) return NextResponse.json({ briefing: existing, already_signed: true });
+  if (!assignment) return NextResponse.json({ error: 'This document has not been sent to you' }, { status: 403 });
+  if (assignment.signed_at) return NextResponse.json({ briefing: assignment, already_signed: true });
 
   const { data: briefing, error } = await admin
     .from('document_briefings')
-    .insert({
-      document_id: doc.id,
-      worker_id: worker.id,
+    .update({
+      signed_at: new Date().toISOString(),
       worker_name: worker.full_name,
       cscs_number: worker.cscs_card || null,
     })
+    .eq('id', assignment.id)
     .select()
     .single();
   if (error) return NextResponse.json({ error: 'Could not record signature — try again' }, { status: 500 });

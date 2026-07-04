@@ -22,19 +22,21 @@ export async function GET(req: NextRequest) {
   if (error) return NextResponse.json({ error: 'Could not load documents' }, { status: 500 });
 
   const ids = (documents || []).map(d => d.id);
-  let counts: Record<string, number> = {};
+  let assignedCounts: Record<string, number> = {};
+  let signedCounts: Record<string, number> = {};
   if (ids.length > 0) {
     const { data: briefings } = await admin
       .from('document_briefings')
-      .select('document_id')
+      .select('document_id, signed_at')
       .in('document_id', ids);
     for (const b of briefings || []) {
-      counts[b.document_id] = (counts[b.document_id] || 0) + 1;
+      assignedCounts[b.document_id] = (assignedCounts[b.document_id] || 0) + 1;
+      if (b.signed_at) signedCounts[b.document_id] = (signedCounts[b.document_id] || 0) + 1;
     }
   }
 
   return NextResponse.json({
-    documents: (documents || []).map(d => ({ ...d, signed_count: counts[d.id] || 0 })),
+    documents: (documents || []).map(d => ({ ...d, assigned_count: assignedCounts[d.id] || 0, signed_count: signedCounts[d.id] || 0 })),
   });
 }
 
@@ -84,5 +86,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Could not save document' }, { status: 500 });
   }
 
-  return NextResponse.json({ document: { ...inserted, signed_count: 0 } });
+  return NextResponse.json({ document: { ...inserted, assigned_count: 0, signed_count: 0 } });
 }

@@ -27,7 +27,9 @@
       "Bash(mkdir -p \"c:/Users/metod/myapp/app/api/workers/[id]/cscs-verify\")",
       "PowerShell(npm install @imgly/background-removal)",
       "PowerShell(npx tsc --noEmit)",
-      "PowerShell(git push)"
+      "PowerShell(git push)",
+      "Bash(node --check scripts/import-site-documents.mjs)",
+      "Bash(node scripts/import-site-documents.mjs \"C:\\\\Users\\\\metod\\\\Downloads\\\\RGW risk and COSHH assessments - split\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\metod\\myapp\\app\\api\\workers\\[id]"
