@@ -51,7 +51,8 @@ export default function WorkerGroupMessages({ workerId, userId }: { workerId: st
             ...msg,
             sender_name: msg.sender_id === userId ? 'You' : (msg.sender_type === 'agency' ? 'Agency' : 'Operative')
           }
-          setMessages(prev => [...prev, resolved])
+          // Idempotent append — never add the same row twice (e.g. a re-fired/replayed subscription).
+          setMessages(prev => (prev.some(m => m.id === resolved.id) ? prev : [...prev, resolved]))
           setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
         })
         .subscribe()

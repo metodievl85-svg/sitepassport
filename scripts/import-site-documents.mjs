@@ -10,9 +10,11 @@ import { createClient } from '@supabase/supabase-js';
 
 // ---- Constants ----
 const COMPANY_ID = 'ee7c4367-f6c8-4f73-a98b-8dda7b4ba1fc';
+const SITE_ID = '74b69fbf-7ab3-432c-abaa-a7803e95bcb9';
 const BUCKET = 'site-documents';
 const REVIEW_DATE = '2025-11-01';
 const UPLOADED_BY = 'Rigby and Rigby';
+const IMPORT_STATUS = 'approved';
 
 // ---- Small helpers ----
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -44,10 +46,13 @@ function loadEnvLocal() {
 }
 
 // Filename patterns.
-//   Risk:  "RA RGW 01-001 revH - Working at height.pdf"
-//   COSHH: "COSHH 1F revB - Cement and cement products.pdf"
+//   Risk:      "RA RGW 01-001 revH - Working at height.pdf"
+//   COSHH:     "COSHH 1F revB - Cement and cement products.pdf"
+//   Procedure: "RGW F1 - Title.pdf" / "RGW F2 14.0 - Title.pdf"
+//              ref_code = everything before " - " (e.g. "RGW F1", "RGW F2 14.0"); revision null.
 const RA_RE = /^(RA RGW \d{2}-\d{3})\s+rev([A-Za-z0-9]+)\s*-\s*(.+?)\.pdf$/i;
 const COSHH_RE = /^(COSHH \S+)\s+rev([A-Za-z0-9]+)\s*-\s*(.+?)\.pdf$/i;
+const PROC_RE = /^(RGW F\d+(?: \d+\.\d+)?)\s*-\s*(.+?)\.pdf$/i;
 
 function parseFilename(name) {
   let m = name.match(RA_RE);
@@ -58,15 +63,21 @@ function parseFilename(name) {
   if (m) {
     return { doc_type: 'coshh', ref_code: m[1].trim(), revision: m[2].trim(), title: m[3].trim() };
   }
+  m = name.match(PROC_RE);
+  if (m) {
+    return { doc_type: 'procedure', ref_code: m[1].trim(), revision: null, title: m[2].trim() };
+  }
   return null;
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const folder = args.find((a) => !a.startsWith('--'));
+  // Source directory: prefer `--dir "<path>"`, fall back to a bare positional path.
+  const dirIdx = args.indexOf('--dir');
+  const folder = dirIdx !== -1 ? args[dirIdx + 1] : args.find((a) => !a.startsWith('--'));
   if (!folder) {
-    console.error('Usage: node scripts/import-site-documents.mjs [--dry-run] "<folder path>"');
+    console.error('Usage: node scripts/import-site-documents.mjs [--dry-run] --dir "<folder path>"');
     process.exit(1);
   }
   if (dryRun) console.log('*** DRY RUN — no uploads or inserts will be performed ***');
@@ -83,19 +94,18 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // ---- Look up the site ----
+  // ---- Look up the site (by the exact target id, scoped to this company) ----
   const { data: site, error: siteError } = await admin
     .from('company_sites')
     .select('id, site_name')
+    .eq('id', SITE_ID)
     .eq('company_id', COMPANY_ID)
-    .limit(1)
     .single();
 
   if (siteError || !site) {
-    console.error('Could not find a company_sites row for this company:', siteError?.message || 'none found');
+    console.error(`Could not find company_sites row ${SITE_ID} for this company:`, siteError?.message || 'none found');
     process.exit(1);
   }
-  const SITE_ID = site.id;
   console.log(`Site found: "${site.site_name}" (id ${SITE_ID})`);
 
   // ---- Read the folder ----
@@ -122,10 +132,26 @@ async function main() {
     parsed.push({ ...info, filename: name });
   }
 
+  // ---- Parsed table ----
+  console.log('\n----- Parsed files -----');
+  for (const d of parsed) {
+    console.log(
+      [
+        `file=${d.filename}`,
+        `doc_type=${d.doc_type}`,
+        `ref_code=${d.ref_code}`,
+        `revision=${d.revision === null ? 'null' : d.revision}`,
+        `title=${d.title}`,
+      ].join('  |  ')
+    );
+  }
+  const byType = parsed.reduce((acc, d) => { acc[d.doc_type] = (acc[d.doc_type] || 0) + 1; return acc; }, {});
+  console.log(`\nParsed ${parsed.length} file(s): ${Object.entries(byType).map(([k, v]) => `${v} ${k}`).join(', ') || 'none'}; unparseable ${unparseable}.`);
+
   // ---- Duplicate guard: existing rows for this company ----
   const { data: existing, error: existingError } = await admin
     .from('site_documents')
-    .select('ref_code, title')
+    .select('ref_code')
     .eq('company_id', COMPANY_ID);
 
   if (existingError) {
@@ -134,10 +160,8 @@ async function main() {
   }
 
   const seenRefs = new Set();
-  const seenTitles = new Set();
   for (const row of existing || []) {
     if (row.ref_code) seenRefs.add(row.ref_code.trim().toLowerCase());
-    if (row.title) seenTitles.add(row.title.trim().toLowerCase());
   }
 
   // ---- Import loop ----
@@ -148,20 +172,18 @@ async function main() {
 
   for (const doc of parsed) {
     const refKey = doc.ref_code.toLowerCase();
-    const titleKey = doc.title.toLowerCase();
 
-    if (seenRefs.has(refKey) || seenTitles.has(titleKey)) {
-      console.log(`SKIP (duplicate): ${doc.ref_code} — ${doc.title}`);
+    if (seenRefs.has(refKey)) {
+      console.log(`SKIP (duplicate ref_code): ${doc.ref_code} — ${doc.title}`);
       skippedDuplicate++;
       continue;
     }
 
     if (dryRun) {
-      // Mark as seen so an in-folder duplicate is also reported as duplicate.
+      // Mark as seen so an in-folder duplicate ref_code is also reported as duplicate.
       seenRefs.add(refKey);
-      seenTitles.add(titleKey);
       imported++;
-      console.log(`WOULD IMPORT: ${doc.ref_code} — ${doc.title}  [${doc.doc_type}, rev ${doc.revision}]`);
+      console.log(`WOULD IMPORT: ${doc.ref_code} — ${doc.title}  [${doc.doc_type}, rev ${doc.revision === null ? 'null' : doc.revision}]`);
       continue;
     }
 
@@ -195,8 +217,9 @@ async function main() {
       title: doc.title,
       ref_code: doc.ref_code,
       revision: doc.revision,
+      contractor_name: null,
       file_path: filePath,
-      status: 'pending',
+      status: IMPORT_STATUS,
       review_date: REVIEW_DATE,
       uploaded_by: UPLOADED_BY,
     });
@@ -209,9 +232,8 @@ async function main() {
       continue;
     }
 
-    // Mark as seen so a duplicate within the same folder is also skipped.
+    // Mark as seen so a duplicate ref_code within the same folder is also skipped.
     seenRefs.add(refKey);
-    seenTitles.add(titleKey);
     imported++;
     console.log(`${doc.ref_code} — ${doc.title}`);
 

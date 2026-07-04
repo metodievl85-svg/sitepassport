@@ -90,7 +90,8 @@ export default function GroupMessages({ agencyId, placements }: Props) {
             .single()
           msg.sender_name = data?.full_name || 'Operative'
         }
-        setMessages(prev => [...prev, msg])
+        // Idempotent append — never add the same row twice (e.g. a re-fired/replayed subscription).
+        setMessages(prev => (prev.some(m => m.id === msg.id) ? prev : [...prev, msg]))
         setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
       })
       .subscribe()

@@ -37,7 +37,8 @@ export default function WorkerMessages({ workerId, userId }: Props) {
   const [messageText, setMessageText] = useState('')
   const [sending, setSending] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [sendError, setSendError] = useState('')
   const [accessToken, setAccessToken] = useState('')
   const [mobileShowThread, setMobileShowThread] = useState(false)
 
@@ -173,67 +174,98 @@ export default function WorkerMessages({ workerId, userId }: Props) {
     }
   }
 
+  // Posts a single message row and appends it optimistically. The append is idempotent:
+  // if the realtime refetch already brought this row in, we do not add a second copy.
+  async function postMessageRow(
+    text: string | null,
+    fileUrl: string | null,
+    fileType: string | null,
+    fileName: string | null
+  ): Promise<boolean> {
+    if (!selectedCompanyId || !accessToken) return false
+    const response = await fetch('/api/messages/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        receiver_id: selectedCompanyId,
+        company_id: selectedCompanyId,
+        worker_id: workerId,
+        message_text: text,
+        file_url: fileUrl,
+        file_type: fileType,
+        file_name: fileName,
+      }),
+    })
+    if (!response.ok) return false
+    const data = await response.json()
+    if (data.message) {
+      const incoming = data.message as Message
+      setMessages((prev) => (prev.some((m) => m.id === incoming.id) ? prev : [...prev, incoming]))
+    }
+    return true
+  }
+
   async function handleSend() {
-    if (!selectedCompanyId || (!messageText.trim() && !selectedFile) || !accessToken) return
+    if (!selectedCompanyId || (!messageText.trim() && selectedFiles.length === 0) || !accessToken) return
 
     try {
       setSending(true)
+      setSendError('')
+      let textPending: string | null = messageText.trim() || null
 
-      let fileUrl: string | null = null
-      let fileType: string | null = null
-      let fileName: string | null = null
+      // Text-only message (no attachments): one row, unchanged behaviour.
+      if (selectedFiles.length === 0) {
+        const ok = await postMessageRow(textPending, null, null, null)
+        if (ok) { setMessageText(''); textPending = null }
+        else setSendError('Could not send your message. Please try again.')
+        return
+      }
 
-      if (selectedFile) {
-        setUploading(true)
-
-        const path = `${selectedCompanyId}/${workerId}/${Date.now()}-${selectedFile.name}`
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('message-attachments')
-          .upload(path, selectedFile, { upsert: false })
-
-        setUploading(false)
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError)
-          return
+      // One message row per file, uploaded sequentially. Any typed text rides on the first
+      // row that sends so it is never dropped. A failure on one file never blocks the rest.
+      const failures: string[] = []
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i]
+        try {
+          setUploading(true)
+          const path = `${selectedCompanyId}/${workerId}/${Date.now()}-${i}-${file.name}`
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('message-attachments')
+            .upload(path, file, { upsert: false })
+          if (uploadError || !uploadData) { console.error('Upload error:', uploadError); failures.push(file.name); continue }
+          const { data: publicUrlData } = supabase.storage
+            .from('message-attachments')
+            .getPublicUrl(uploadData.path)
+          const fileType = file.type.startsWith('image/') ? 'image' : 'pdf'
+          const ok = await postMessageRow(textPending, publicUrlData.publicUrl, fileType, file.name)
+          if (ok) { if (textPending) setMessageText(''); textPending = null }
+          else failures.push(file.name)
+        } catch (err) {
+          console.error('File send error:', err)
+          failures.push(file.name)
+        } finally {
+          setUploading(false)
         }
-
-        const { data: publicUrlData } = supabase.storage
-          .from('message-attachments')
-          .getPublicUrl(uploadData.path)
-
-        fileUrl = publicUrlData.publicUrl
-        fileType = selectedFile.type.startsWith('image/') ? 'image' : 'pdf'
-        fileName = selectedFile.name
       }
 
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          receiver_id: selectedCompanyId,
-          company_id: selectedCompanyId,
-          worker_id: workerId,
-          message_text: messageText.trim() || null,
-          file_url: fileUrl,
-          file_type: fileType,
-          file_name: fileName,
-        }),
-      })
-
-      if (!response.ok) return
-
-      const data = await response.json()
-      if (data.message) {
-        setMessages((prev) => [...prev, data.message as Message])
+      // If no file row carried the text (e.g. every file failed to upload), still send the text.
+      if (textPending) {
+        const ok = await postMessageRow(textPending, null, null, null)
+        if (ok) { setMessageText(''); textPending = null }
       }
 
-      setMessageText('')
-      setSelectedFile(null)
+      if (failures.length > 0) {
+        const names = failures.join(', ')
+        setSendError(
+          failures.length === 1
+            ? `Could not send "${names}". Everything else was sent.`
+            : `Could not send these files: ${names}. Everything else was sent.`
+        )
+      }
+      setSelectedFiles([])
     } finally {
       setSending(false)
     }
@@ -552,48 +584,60 @@ export default function WorkerMessages({ workerId, userId }: Props) {
                         gap: 8,
                       }}
                     >
-                      {selectedFile && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            padding: '6px 10px',
-                            background: '#eef3ff',
-                            borderRadius: 10,
-                            border: '1px solid #cdd9ff',
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: '#243caa',
-                          }}
-                        >
-                          <span>{selectedFile.type.startsWith('image/') ? '🖼️' : '📄'}</span>
-                          <span
-                            style={{
-                              flex: 1,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {selectedFile.name}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedFile(null)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: '#5a6f96',
-                              fontWeight: 900,
-                              fontSize: 18,
-                              lineHeight: 1,
-                              padding: 0,
-                            }}
-                          >
-                            ×
-                          </button>
+                      {selectedFiles.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {selectedFiles.map((file, i) => (
+                            <div
+                              key={`${file.name}-${i}`}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                padding: '6px 10px',
+                                background: '#eef3ff',
+                                borderRadius: 10,
+                                border: '1px solid #cdd9ff',
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: '#243caa',
+                              }}
+                            >
+                              <span>{file.type.startsWith('image/') ? '🖼️' : '📄'}</span>
+                              <span
+                                style={{
+                                  flex: 1,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {file.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                                disabled={sending}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  cursor: sending ? 'not-allowed' : 'pointer',
+                                  color: '#5a6f96',
+                                  fontWeight: 900,
+                                  fontSize: 18,
+                                  lineHeight: 1,
+                                  padding: 0,
+                                }}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {sendError && (
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#b42318', padding: '2px 4px' }}>
+                          {sendError}
                         </div>
                       )}
 
@@ -627,10 +671,11 @@ export default function WorkerMessages({ workerId, userId }: Props) {
                           ref={fileInputRef}
                           type="file"
                           accept="image/*,.pdf"
+                          multiple
                           style={{ display: 'none' }}
                           onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) setSelectedFile(file)
+                            const files = e.target.files ? Array.from(e.target.files) : []
+                            if (files.length > 0) setSelectedFiles((prev) => [...prev, ...files])
                             e.target.value = ''
                           }}
                         />
@@ -661,7 +706,7 @@ export default function WorkerMessages({ workerId, userId }: Props) {
                         <button
                           type="button"
                           onClick={() => void handleSend()}
-                          disabled={sending || uploading || (!messageText.trim() && !selectedFile)}
+                          disabled={sending || uploading || (!messageText.trim() && selectedFiles.length === 0)}
                           style={{
                             minWidth: 64,
                             minHeight: 44,
@@ -672,11 +717,11 @@ export default function WorkerMessages({ workerId, userId }: Props) {
                             fontSize: 14,
                             fontWeight: 900,
                             cursor:
-                              sending || uploading || (!messageText.trim() && !selectedFile)
+                              sending || uploading || (!messageText.trim() && selectedFiles.length === 0)
                                 ? 'not-allowed'
                                 : 'pointer',
                             opacity:
-                              sending || uploading || (!messageText.trim() && !selectedFile) ? 0.6 : 1,
+                              sending || uploading || (!messageText.trim() && selectedFiles.length === 0) ? 0.6 : 1,
                             flexShrink: 0,
                           }}
                         >
