@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import { sendWebPush } from '@/lib/push'
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -135,16 +136,7 @@ export async function POST(request: NextRequest) {
 
         if (subscriptions?.length) {
           const payload = JSON.stringify({ title: 'New Toolbox Talk', body: talk.title, url: '/worker' })
-          for (const sub of subscriptions) {
-            try {
-              await webpush.sendNotification(
-                { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                payload
-              )
-            } catch (pushErr) {
-              console.error('Push notification failed:', pushErr)
-            }
-          }
+          await sendWebPush(admin, subscriptions, payload)
         }
       }
     } catch (pushErr) {

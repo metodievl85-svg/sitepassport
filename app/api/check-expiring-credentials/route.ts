@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import { sendWebPush } from '@/lib/push'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -88,21 +89,10 @@ export async function GET(req: Request) {
     for (const manager of managers) {
       const { data: subs } = await supabase
         .from('push_subscriptions')
-        .select('subscription')
+        .select('endpoint, p256dh, auth')
         .eq('user_id', manager.id)
 
-      if (subs && subs.length > 0) {
-        for (const row of subs) {
-          try {
-            await webpush.sendNotification(
-              row.subscription,
-              JSON.stringify({ title, body, url: '/company' })
-            )
-          } catch (e) {
-            console.error('Push failed:', e)
-          }
-        }
-      }
+      await sendWebPush(supabase, subs, JSON.stringify({ title, body, url: '/company' }))
 
       try {
         const resendRes = await fetch('https://api.resend.com/emails', {

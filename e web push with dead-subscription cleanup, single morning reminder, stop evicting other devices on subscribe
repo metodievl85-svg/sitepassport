@@ -1,0 +1,13 @@
+warning: in the working copy of 'app/api/check-expiring-credentials/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/group-chats/[id]/messages/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/messages/send/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/push-subscribe/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/send-morning-reminders/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/api/toolbox-talks/route.ts', LF will be replaced by CRLF the next time Git touches it
+ app/api/check-expiring-credentials/route.ts | 16 [32m+++[m[31m----------[m
+ app/api/group-chats/[id]/messages/route.ts  | 19 [32m+++[m[31m------------[m
+ app/api/messages/send/route.ts              | 16 [32m+++++[m[31m--------[m
+ app/api/push-subscribe/route.ts             | 12 [32m++++[m[31m------[m
+ app/api/send-morning-reminders/route.ts     | 36 [32m++++++++++++++[m[31m---------------[m
+ app/api/toolbox-talks/route.ts              | 12 [32m++[m[31m--------[m
+ 6 files changed, 36 insertions(+), 75 deletions(-)

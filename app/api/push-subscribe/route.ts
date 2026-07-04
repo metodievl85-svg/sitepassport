@@ -18,13 +18,11 @@ export async function POST(req: NextRequest) {
     const { endpoint, p256dh, auth, worker_id } = await req.json()
     if (!endpoint || !p256dh || !auth) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-    // Remove stale subscriptions for this user on different endpoints
-    await supabaseAdmin
-      .from('push_subscriptions')
-      .delete()
-      .eq('user_id', user.id)
-      .neq('endpoint', endpoint)
-
+    // NOTE: we intentionally do NOT delete this user's other endpoints here. Each device/browser
+    // has its own endpoint and its own row; deleting "other endpoints" capped every user to a
+    // single device and silently killed notifications on their other devices whenever the app was
+    // opened elsewhere. Dead endpoints are now cleaned up on send (410/404) instead. The upsert
+    // below re-creates this device's row whenever it is missing.
     await supabaseAdmin
       .from('push_subscriptions')
       .upsert(

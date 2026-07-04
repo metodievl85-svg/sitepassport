@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendWebPush } from '@/lib/push'
 
 const adminClient = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -168,14 +169,7 @@ export async function POST(
         url: '/worker'
       })
 
-      await Promise.allSettled(
-        subscriptions.map((sub: any) =>
-          webpush.default.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            payload
-          )
-        )
-      )
+      await sendWebPush(supabase, subscriptions, payload)
     }
   }
 
@@ -212,14 +206,7 @@ export async function POST(
         url: '/agency'
       })
 
-      await Promise.allSettled(
-        agencySubscriptions.map((sub: any) =>
-          webpush2.default.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            agencyPayload
-          )
-        )
-      )
+      await sendWebPush(supabase, agencySubscriptions, agencyPayload)
     }
   }
 

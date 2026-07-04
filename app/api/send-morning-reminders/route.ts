@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
+import { sendWebPush } from '@/lib/push'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,9 +71,11 @@ export async function GET(request: Request) {
 
       const [rHour, rMinute] = reminderTime.split(':').map(Number)
       const reminderTotal = rHour * 60 + rMinute
-      const withinWindow = ukTotal >= reminderTotal && ukTotal < reminderTotal + 30
+      // 10-minute window matches the cron interval, so a reminder time hits exactly ONE tick
+      // per day (previously a 30-min window matched 3 consecutive ticks → triple sends).
+      const withinWindow = ukTotal >= reminderTotal && ukTotal < reminderTotal + 10
 
-      console.log(`[morning-reminder] → Reminder at ${reminderTime} (${reminderTotal} mins), within 30-min window: ${withinWindow}`)
+      console.log(`[morning-reminder] → Reminder at ${reminderTime} (${reminderTotal} mins), within 10-min window: ${withinWindow}`)
       if (!withinWindow) continue
 
       const { data: savedWorkers, error: savedError } = await supabaseAdmin
@@ -145,23 +148,18 @@ export async function GET(request: Request) {
       console.log(`[morning-reminder] → Push subscriptions found: ${subscriptions?.length ?? 0}`)
       if (!subscriptions?.length) continue
 
-      for (const sub of subscriptions) {
-        try {
-          await webpush.sendNotification(
-            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            JSON.stringify({
-              title: 'NekaID — Sign in reminder',
-              body: "Don't forget to sign in on site today.",
-              url: '/worker',
-            })
-          )
-          console.log(`[morning-reminder] ✅ Sent to endpoint: ${sub.endpoint.slice(0, 50)}...`)
-          totalSent++
-        } catch (err) {
-          console.error(`[morning-reminder] ❌ Push failed:`, err)
-          totalSkipped++
-        }
-      }
+      const { sent, removed, failed } = await sendWebPush(
+        supabaseAdmin,
+        subscriptions,
+        JSON.stringify({
+          title: 'NekaID — Sign in reminder',
+          body: "Don't forget to sign in on site today.",
+          url: '/worker',
+        })
+      )
+      totalSent += sent
+      totalSkipped += failed
+      console.log(`[morning-reminder] ✅ Sent: ${sent}, removed dead: ${removed}, failed: ${failed}`)
     }
 
     console.log(`[morning-reminder] ✅ Done — sent: ${totalSent}, skipped: ${totalSkipped}`)

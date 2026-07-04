@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import { sendWebPush } from '@/lib/push'
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -122,16 +123,11 @@ export async function POST(request: NextRequest) {
           ? `${senderName}: ${message_text.slice(0, 60)}`
           : `${senderName} sent a file`
 
-        for (const sub of subscriptions) {
-          try {
-            await webpush.sendNotification(
-              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-              JSON.stringify({ title: 'NekaID — New message', body: notificationBody, url: receiverUrl })
-            )
-          } catch (pushErr) {
-            console.error('Push notification failed:', pushErr)
-          }
-        }
+        await sendWebPush(
+          supabaseAdmin,
+          subscriptions,
+          JSON.stringify({ title: 'NekaID — New message', body: notificationBody, url: receiverUrl })
+        )
       }
     } catch (pushErr) {
       console.error('Push subscription lookup failed:', pushErr)
