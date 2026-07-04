@@ -321,7 +321,7 @@ export default function SiteDocumentsPage() {
             <button onClick={() => router.push('/company')} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 4 }}>← Dashboard</button>
             <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>Site documents</h1>
           </div>
-          <button style={{ ...btn, background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)' }} onClick={() => setShowUpload(true)}>Upload document</button>
+          <button style={{ ...btn, background: 'transparent', color: '#fff', border: '1.5px solid rgba(255,255,255,0.7)' }} onClick={() => { setUpType(tab === 'proc' ? 'procedure' : tab === 'risk' ? 'risk_assessment' : 'method_statement'); setShowUpload(true); }}>Upload document</button>
         </div>
       </div>
 
