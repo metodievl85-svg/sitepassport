@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthedUser, extFromMime } from '@/lib/siteDocuments';
+import { getAuthedUser } from '@/lib/siteDocuments';
 
 const DOC_TYPES = ['method_statement', 'risk_assessment', 'coshh', 'procedure'];
 
@@ -48,21 +48,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
 
-  const { site_id, doc_type, title, ref_code, revision, contractor_name, review_date, file_base64, file_mime } = body;
+  const { site_id, doc_type, title, ref_code, revision, contractor_name, review_date, file_path } = body;
 
   if (!DOC_TYPES.includes(doc_type)) return NextResponse.json({ error: 'Invalid document type' }, { status: 400 });
   if (!title || typeof title !== 'string' || !title.trim()) return NextResponse.json({ error: 'Title is required' }, { status: 400 });
-  if (!file_base64 || typeof file_base64 !== 'string') return NextResponse.json({ error: 'File is required' }, { status: 400 });
+  if (!file_path || typeof file_path !== 'string') return NextResponse.json({ error: 'File is required' }, { status: 400 });
+  if (!file_path.startsWith(`${user.id}/`)) return NextResponse.json({ error: 'Invalid file path' }, { status: 400 });
 
-  const mime = typeof file_mime === 'string' && file_mime ? file_mime : 'application/pdf';
-  const filePath = `${user.id}/${Date.now()}.${extFromMime(mime)}`;
-  const fileBuffer = Buffer.from(file_base64, 'base64');
-  if (fileBuffer.length > 15 * 1024 * 1024) return NextResponse.json({ error: 'File too large — 15MB maximum' }, { status: 400 });
-
-  const { error: uploadError } = await admin.storage
-    .from('site-documents')
-    .upload(filePath, fileBuffer, { contentType: mime, upsert: false });
-  if (uploadError) return NextResponse.json({ error: 'File upload failed — try again' }, { status: 500 });
+  const { data: fileCheck } = await admin.storage.from('site-documents').list(user.id, { search: file_path.split('/')[1] });
+  if (!fileCheck || fileCheck.length === 0) return NextResponse.json({ error: 'File upload incomplete — try again' }, { status: 400 });
 
   const isProcedure = doc_type === 'procedure';
   const { data: inserted, error: insertError } = await admin
@@ -76,7 +70,7 @@ export async function POST(req: NextRequest) {
       revision: revision?.trim() || null,
       contractor_name: contractor_name?.trim() || null,
       review_date: review_date || null,
-      file_path: filePath,
+      file_path: file_path,
       status: isProcedure ? 'approved' : 'pending',
       uploaded_by: companyName || user.email || null,
       approved_by: isProcedure ? (companyName || user.email || null) : null,
@@ -86,7 +80,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (insertError) {
-    await admin.storage.from('site-documents').remove([filePath]);
+    await admin.storage.from('site-documents').remove([file_path]);
     return NextResponse.json({ error: 'Could not save document' }, { status: 500 });
   }
 

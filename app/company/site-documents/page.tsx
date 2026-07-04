@@ -127,19 +127,28 @@ export default function SiteDocumentsPage() {
     setUpError('');
     if (!upTitle.trim()) { setUpError('Enter a document title.'); return; }
     if (!upFile) { setUpError('Choose a PDF file.'); return; }
-    if (upFile.size > 15 * 1024 * 1024) { setUpError('File too large — 15MB maximum.'); return; }
+    if (upFile.size > 50 * 1024 * 1024) { setUpError('File too large — 50MB maximum.'); return; }
     setUploading(true);
     const token = await getToken();
     if (!token) { setUpError(SESSION_EXPIRED); setUploading(false); return; }
 
-    const base64 = await new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve((r.result as string).split(',')[1]);
-      r.onerror = () => reject(new Error('read failed'));
-      r.readAsDataURL(upFile);
-    }).catch(() => null);
-    if (!base64) { setUpError('Could not read the file — try again.'); setUploading(false); return; }
+    // 1. Get a signed upload URL
+    const prepRes = await fetch('/api/site-documents/upload-url', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file_mime: upFile.type || 'application/pdf' }),
+    });
+    if (prepRes.status === 401) { setUpError(SESSION_EXPIRED); setUploading(false); return; }
+    if (!prepRes.ok) { setUpError('Could not prepare the upload — try again.'); setUploading(false); return; }
+    const prep = await prepRes.json();
 
+    // 2. Upload the file directly to Supabase Storage (bypasses Vercel body limit)
+    const { error: storageError } = await supabase.storage
+      .from('site-documents')
+      .uploadToSignedUrl(prep.path, prep.token, upFile, { contentType: upFile.type || 'application/pdf' });
+    if (storageError) { setUpError('File upload failed — try again.'); setUploading(false); return; }
+
+    // 3. Save the document record (metadata only)
     const res = await fetch('/api/site-documents', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -151,8 +160,7 @@ export default function SiteDocumentsPage() {
         revision: upRevision,
         contractor_name: upContractor,
         review_date: upReviewDate || null,
-        file_base64: base64,
-        file_mime: upFile.type || 'application/pdf',
+        file_path: prep.path,
       }),
     });
     setUploading(false);
