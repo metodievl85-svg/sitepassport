@@ -37,14 +37,10 @@ type Worker = {
   photo: string
   createdAt: string
   cscsVerificationStatus: string
-  passportPhoto: string
   rightToWorkPhoto: string
   niNumber: string
   nextOfKinName: string
   nextOfKinPhone: string
-  bankName: string
-  bankAccountNumber: string
-  bankSortCode: string
   qualifications: Qualification[]
 }
 
@@ -187,14 +183,10 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
     photo: worker.photo ?? '',
     createdAt: worker.created_at ?? '',
     cscsVerificationStatus: worker.cscs_verification_status ?? 'self_declared',
-    passportPhoto: worker.passport_photo ?? '',
     rightToWorkPhoto: worker.right_to_work_photo ?? '',
     niNumber: worker.ni_number ?? '',
     nextOfKinName: worker.next_of_kin_name ?? '',
     nextOfKinPhone: worker.next_of_kin_phone ?? '',
-    bankName: worker.bank_name ?? '',
-    bankAccountNumber: worker.bank_account_number ?? '',
-    bankSortCode: worker.bank_sort_code ?? '',
     qualifications: Array.isArray(qualifications)
       ? qualifications.map((q) => ({
           id: q.id,
@@ -336,10 +328,6 @@ export default function PublicWorkerPage() {
 
       const mapped = mapWorkerRow(workerRow, qualificationRows ?? [])
 
-      if (mapped.passportPhoto && !mapped.passportPhoto.startsWith('http')) {
-        const { data: ppSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mapped.passportPhoto, 3600)
-        if (ppSigned?.signedUrl) mapped.passportPhoto = ppSigned.signedUrl
-      }
       if (mapped.rightToWorkPhoto && !mapped.rightToWorkPhoto.startsWith('http')) {
         const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mapped.rightToWorkPhoto, 3600)
         if (rtwSigned?.signedUrl) mapped.rightToWorkPhoto = rtwSigned.signedUrl
@@ -814,70 +802,6 @@ export default function PublicWorkerPage() {
                       />
                     </a>
                     <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-
-            {userRole === 'agency' ? (
-              <>
-                {worker.passportPhoto ? (
-                  <div
-                    style={{
-                      border: '1px solid #d7e0ec',
-                      borderRadius: 22,
-                      padding: 18,
-                      background: '#fbfdff',
-                      marginBottom: 24,
-                    }}
-                  >
-                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
-                      Passport photo
-                    </div>
-                    <a href={worker.passportPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
-                      <img
-                        src={worker.passportPhoto}
-                        alt="Passport"
-                        style={{ width: '100%', maxWidth: '400px', height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
-                      />
-                    </a>
-                    <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
-                  </div>
-                ) : null}
-
-                {(worker.bankName || worker.bankAccountNumber || worker.bankSortCode) ? (
-                  <div
-                    style={{
-                      border: '1px solid #d7e0ec',
-                      borderRadius: 22,
-                      padding: 18,
-                      background: '#fbfdff',
-                      marginBottom: 24,
-                    }}
-                  >
-                    <div style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
-                      Bank details
-                    </div>
-                    <div className="profile-meta-grid" style={{ marginTop: 0 }}>
-                      {worker.bankName ? (
-                        <div>
-                          <div className="meta-label">Bank name</div>
-                          <div className="meta-value">{worker.bankName}</div>
-                        </div>
-                      ) : null}
-                      {worker.bankAccountNumber ? (
-                        <div>
-                          <div className="meta-label">Account number</div>
-                          <div className="meta-value">{worker.bankAccountNumber}</div>
-                        </div>
-                      ) : null}
-                      {worker.bankSortCode ? (
-                        <div>
-                          <div className="meta-label">Sort code</div>
-                          <div className="meta-value">{worker.bankSortCode}</div>
-                        </div>
-                      ) : null}
-                    </div>
                   </div>
                 ) : null}
               </>

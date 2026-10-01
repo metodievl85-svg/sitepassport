@@ -68,14 +68,9 @@ export default function EditWorkerPassportPage() {
   const faceCameraStreamRef = useRef<MediaStream | null>(null)
   const photoPreviewUrlRef = useRef<string>('')
   const facePhotoPreviewUrlRef = useRef<string>('')
-  const passportPhotoPreviewUrlRef = useRef<string>('')
   const rightToWorkPhotoPreviewUrlRef = useRef<string>('')
-  const passportPhotoPathRef = useRef<string>('')
   const rightToWorkPhotoPathRef = useRef<string>('')
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
-  const passportVideoRef = useRef<HTMLVideoElement | null>(null)
-  const passportCanvasRef = useRef<HTMLCanvasElement | null>(null)
-  const passportCameraStreamRef = useRef<MediaStream | null>(null)
   const rtwVideoRef = useRef<HTMLVideoElement | null>(null)
   const rtwCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const rtwCameraStreamRef = useRef<MediaStream | null>(null)
@@ -91,8 +86,6 @@ export default function EditWorkerPassportPage() {
   const [faceCameraOpen, setFaceCameraOpen] = useState(false)
   const [faceCameraError, setFaceCameraError] = useState('')
   const [facePhotoCaptured, setFacePhotoCaptured] = useState(false)
-  const [passportCameraOpen, setPassportCameraOpen] = useState(false)
-  const [passportCameraError, setPassportCameraError] = useState('')
   const [rtwCameraOpen, setRtwCameraOpen] = useState(false)
   const [rtwCameraError, setRtwCameraError] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -140,7 +133,6 @@ export default function EditWorkerPassportPage() {
   }
 
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
-  const [passportPhotoFile, setPassportPhotoFile] = useState<File | null>(null)
   const [rightToWorkPhotoFile, setRightToWorkPhotoFile] = useState<File | null>(null)
   const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
 
@@ -161,14 +153,10 @@ export default function EditWorkerPassportPage() {
     medicalInfo: '',
     photo: '',
     facePhoto: '',
-    passportPhoto: '',
     rightToWorkPhoto: '',
     niNumber: '',
     nextOfKinName: '',
     nextOfKinPhone: '',
-    bankName: '',
-    bankAccountNumber: '',
-    bankSortCode: '',
     qualifications: [createEmptyQualification()] as Qualification[],
   })
 
@@ -237,16 +225,9 @@ export default function EditWorkerPassportPage() {
       setWorkerId(workerRow.id)
       initialRtwShareCodeRef.current = workerRow.rtw_share_code ?? ''
 
-      const rawPassportPhoto = workerRow.passport_photo ?? ''
       const rawRightToWorkPhoto = workerRow.right_to_work_photo ?? ''
-      passportPhotoPathRef.current = rawPassportPhoto
       rightToWorkPhotoPathRef.current = rawRightToWorkPhoto
 
-      let passportPhotoDisplay = rawPassportPhoto
-      if (rawPassportPhoto && !rawPassportPhoto.startsWith('http')) {
-        const { data: ppSigned } = await supabase.storage.from('worker-photos').createSignedUrl(rawPassportPhoto, 3600)
-        passportPhotoDisplay = ppSigned?.signedUrl ?? rawPassportPhoto
-      }
       let rightToWorkPhotoDisplay = rawRightToWorkPhoto
       if (rawRightToWorkPhoto && !rawRightToWorkPhoto.startsWith('http')) {
         const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(rawRightToWorkPhoto, 3600)
@@ -268,16 +249,12 @@ export default function EditWorkerPassportPage() {
         medicalInfo: workerRow.medical_info ?? '',
         photo: workerRow.photo ?? '',
         facePhoto: workerRow.face_photo ?? '',
-        passportPhoto: passportPhotoDisplay,
         rightToWorkPhoto: rightToWorkPhotoDisplay,
         dob: workerRow.dob ?? '',
         fullAddress: workerRow.full_address ?? '',
         niNumber: workerRow.ni_number ?? '',
         nextOfKinName: workerRow.next_of_kin_name ?? '',
         nextOfKinPhone: workerRow.next_of_kin_phone ?? '',
-        bankName: workerRow.bank_name ?? '',
-        bankAccountNumber: workerRow.bank_account_number ?? '',
-        bankSortCode: workerRow.bank_sort_code ?? '',
         qualifications: mappedQualifications,
       })
 
@@ -289,7 +266,6 @@ export default function EditWorkerPassportPage() {
     return () => {
       stopCamera()
       stopFaceCamera()
-      stopPassportCamera()
       stopRtwCamera()
       if (photoPreviewUrlRef.current) {
         URL.revokeObjectURL(photoPreviewUrlRef.current)
@@ -298,10 +274,6 @@ export default function EditWorkerPassportPage() {
       if (facePhotoPreviewUrlRef.current) {
         URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
         facePhotoPreviewUrlRef.current = ''
-      }
-      if (passportPhotoPreviewUrlRef.current) {
-        URL.revokeObjectURL(passportPhotoPreviewUrlRef.current)
-        passportPhotoPreviewUrlRef.current = ''
       }
       if (rightToWorkPhotoPreviewUrlRef.current) {
         URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current)
@@ -526,86 +498,6 @@ export default function EditWorkerPassportPage() {
     stopCamera()
   }
 
-  async function startPassportCamera() {
-    try {
-      setPassportCameraError('')
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setPassportCameraError('Camera is not supported on this device. Please use upload instead.')
-        setPassportCameraOpen(false)
-        return
-      }
-      setPassportCameraOpen(true)
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false,
-      })
-      passportCameraStreamRef.current = stream
-      setTimeout(() => {
-        const video = passportVideoRef.current
-        if (!video) { setPassportCameraError('Camera preview could not start. Please try again.'); return }
-        video.srcObject = stream
-        video.muted = true
-        video.playsInline = true
-        video.onloadedmetadata = () => {
-          video.play().catch((error) => {
-            console.error('video play error:', error)
-            setPassportCameraError('Camera opened but preview could not play. Please try again.')
-          })
-        }
-      }, 250)
-    } catch (error) {
-      console.error('camera error:', error)
-      setPassportCameraError('Could not open camera. Please allow camera permission or use upload.')
-      setPassportCameraOpen(false)
-    }
-  }
-
-  function stopPassportCamera() {
-    if (passportCameraStreamRef.current) {
-      passportCameraStreamRef.current.getTracks().forEach((track) => track.stop())
-      passportCameraStreamRef.current = null
-    }
-    if (passportVideoRef.current) { passportVideoRef.current.srcObject = null }
-    setPassportCameraOpen(false)
-  }
-
-  async function capturePassportPhoto() {
-    const video = passportVideoRef.current
-    const canvas = passportCanvasRef.current
-    if (!video || !canvas) { setPassportCameraError('Camera is not ready. Please try again.'); return }
-    const videoWidth = video.videoWidth
-    const videoHeight = video.videoHeight
-    if (!videoWidth || !videoHeight) { setPassportCameraError('Camera is still loading. Please try again.'); return }
-    const outputWidth = 1200
-    const outputHeight = 900
-    canvas.width = outputWidth
-    canvas.height = outputHeight
-    const context = canvas.getContext('2d')
-    if (!context) { setPassportCameraError('Could not capture photo. Please use upload instead.'); return }
-    const aspectRatio = outputWidth / outputHeight
-    const cropWidth = videoWidth * 0.86
-    const cropHeight = cropWidth / aspectRatio
-    let sourceCropWidth = cropWidth
-    let sourceCropHeight = cropHeight
-    if (sourceCropHeight > videoHeight * 0.82) {
-      sourceCropHeight = videoHeight * 0.82
-      sourceCropWidth = sourceCropHeight * aspectRatio
-    }
-    const sourceX = Math.max(0, (videoWidth - sourceCropWidth) / 2)
-    const sourceY = Math.max(0, (videoHeight - sourceCropHeight) / 2)
-    context.drawImage(video, sourceX, sourceY, sourceCropWidth, sourceCropHeight, 0, 0, outputWidth, outputHeight)
-    const blob = await new Promise<Blob | null>((resolve) => { canvas.toBlob(resolve, 'image/jpeg', 0.92) })
-    if (!blob) { setPassportCameraError('Could not capture photo. Please use upload instead.'); return }
-    if (passportPhotoPreviewUrlRef.current) URL.revokeObjectURL(passportPhotoPreviewUrlRef.current)
-    const previewUrl = URL.createObjectURL(blob)
-    passportPhotoPreviewUrlRef.current = previewUrl
-    const file = new File([blob], 'passport-capture.jpg', { type: 'image/jpeg' })
-    setPassportPhotoFile(file)
-    setForm((prev) => ({ ...prev, passportPhoto: previewUrl }))
-    setPassportCameraError('')
-    stopPassportCamera()
-  }
-
   async function startRtwCamera() {
     try {
       setRtwCameraError('')
@@ -733,12 +625,6 @@ export default function EditWorkerPassportPage() {
       setForm((prev) => ({ ...prev, [formKey]: url }))
     }
   }
-
-  const handlePassportPhotoChange = makeUploadHandler(
-    (f) => setPassportPhotoFile(f),
-    passportPhotoPreviewUrlRef,
-    'passportPhoto'
-  )
 
   const handleRightToWorkPhotoChange = makeUploadHandler(
     (f) => setRightToWorkPhotoFile(f),
@@ -890,14 +776,6 @@ export default function EditWorkerPassportPage() {
         facePhotoValue = faceUrlData.publicUrl
       }
 
-      let passportPhotoValue = passportPhotoPathRef.current
-      if (passportPhotoFile) {
-        const ppPath = `${userId}/passport-${ts()}.jpg`
-        const { error: ppUploadError } = await supabase.storage.from('worker-photos').upload(ppPath, passportPhotoFile, { contentType: passportPhotoFile.type || 'image/jpeg', upsert: false })
-        if (ppUploadError) { alert('Passport photo upload failed.'); setSaving(false); return }
-        passportPhotoValue = ppPath
-      }
-
       let rightToWorkPhotoValue = rightToWorkPhotoPathRef.current
       if (rightToWorkPhotoFile) {
         const rtwPath = `${userId}/rtw-${ts()}.jpg`
@@ -928,14 +806,10 @@ export default function EditWorkerPassportPage() {
           medical_info: form.medicalInfo.trim(),
           photo: photoValue,
           face_photo: facePhotoValue,
-          passport_photo: passportPhotoValue,
           right_to_work_photo: rightToWorkPhotoValue,
           ni_number: form.niNumber.trim(),
           next_of_kin_name: form.nextOfKinName.trim(),
           next_of_kin_phone: form.nextOfKinPhone.trim(),
-          bank_name: form.bankName.trim(),
-          bank_account_number: form.bankAccountNumber.trim(),
-          bank_sort_code: form.bankSortCode.trim(),
         })
         .eq('id', workerId)
 
@@ -1013,10 +887,6 @@ export default function EditWorkerPassportPage() {
       if (facePhotoPreviewUrlRef.current) {
         URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
         facePhotoPreviewUrlRef.current = ''
-      }
-      if (passportPhotoPreviewUrlRef.current) {
-        URL.revokeObjectURL(passportPhotoPreviewUrlRef.current)
-        passportPhotoPreviewUrlRef.current = ''
       }
       if (rightToWorkPhotoPreviewUrlRef.current) {
         URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current)
@@ -1410,252 +1280,6 @@ export default function EditWorkerPassportPage() {
                         <br />
                         Only the area inside the white rectangle will be saved.
                         Make sure the card number, name, and expiry date are visible.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Passport photo */}
-            <div className="form-grid-1" style={{ marginBottom: 20 }}>
-              <div className="field">
-                <label>Passport photo</label>
-                <div className="card" style={{ padding: 16 }}>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                      gap: 24,
-                      alignItems: 'start',
-                      width: '100%',
-                    }}
-                  >
-                    <div
-                      style={{
-                        border: '1px solid #d7e0ec',
-                        borderRadius: 22,
-                        background: '#ffffff',
-                        padding: 14,
-                        minWidth: 0,
-                        width: '100%',
-                      }}
-                    >
-                      {passportCameraOpen ? (
-                        <div
-                          style={{
-                            position: 'relative',
-                            width: '100%',
-                            aspectRatio: '4 / 3',
-                            borderRadius: 16,
-                            overflow: 'hidden',
-                            background: '#08153d',
-                            border: '1px solid #d7e0ec',
-                          }}
-                        >
-                          <video
-                            ref={passportVideoRef}
-                            playsInline
-                            muted
-                            autoPlay
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              display: 'block',
-                            }}
-                          />
-
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left: '50%',
-                              top: '50%',
-                              transform: 'translate(-50%, -50%)',
-                              width: '86%',
-                              aspectRatio: '4 / 3',
-                              border: '3px solid #ffffff',
-                              borderRadius: 14,
-                              boxShadow: '0 0 0 999px rgba(0,0,0,0.22)',
-                              pointerEvents: 'none',
-                            }}
-                          />
-
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left: 12,
-                              right: 12,
-                              top: 12,
-                              background: 'rgba(8, 21, 61, 0.78)',
-                              color: '#ffffff',
-                              borderRadius: 14,
-                              padding: '10px 12px',
-                              fontSize: 14,
-                              fontWeight: 800,
-                              lineHeight: 1.35,
-                              textAlign: 'center',
-                            }}
-                          >
-                            Place your passport inside the white rectangle
-                          </div>
-                        </div>
-                      ) : form.passportPhoto ? (
-                        <img
-                          src={form.passportPhoto}
-                          alt="Passport preview"
-                          style={{
-                            width: '100%',
-                            maxWidth: '100%',
-                            aspectRatio: '4 / 3',
-                            objectFit: 'contain',
-                            display: 'block',
-                            borderRadius: 16,
-                            border: '1px solid #d7e0ec',
-                            background: '#ffffff',
-                          }}
-                        />
-                      ) : (
-                        <div
-                          style={{
-                            width: '100%',
-                            maxWidth: '100%',
-                            aspectRatio: '4 / 3',
-                            borderRadius: 16,
-                            border: '1px dashed #c7d5e6',
-                            background: '#eef3ff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            textAlign: 'center',
-                            padding: 20,
-                            color: '#16307f',
-                            fontSize: 18,
-                            fontWeight: 800,
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          No passport photo
-                        </div>
-                      )}
-
-                      <canvas ref={passportCanvasRef} style={{ display: 'none' }} />
-                    </div>
-
-                    <div
-                      style={{
-                        minWidth: 0,
-                        width: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'stretch',
-                      }}
-                    >
-                      {form.passportPhoto ? (
-                        <button
-                          type="button"
-                          className="btn btn-danger"
-                          onClick={() => {
-                            if (passportPhotoPreviewUrlRef.current) { URL.revokeObjectURL(passportPhotoPreviewUrlRef.current); passportPhotoPreviewUrlRef.current = '' }
-                            setPassportPhotoFile(null)
-                            passportPhotoPathRef.current = ''
-                            setForm((prev) => ({ ...prev, passportPhoto: '' }))
-                          }}
-                          style={{ width: '100%', marginBottom: 12 }}
-                        >
-                          Remove photo
-                        </button>
-                      ) : null}
-
-                      {!passportCameraOpen ? (
-                        <button
-                          type="button"
-                          className="btn btn-primary"
-                          onClick={startPassportCamera}
-                          style={{ width: '100%', marginBottom: 12 }}
-                        >
-                          {form.passportPhoto ? 'Retake Passport Photo' : 'Take Passport Photo'}
-                        </button>
-                      ) : (
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: 10,
-                            marginBottom: 12,
-                          }}
-                        >
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={capturePassportPhoto}
-                          >
-                            Capture
-                          </button>
-
-                          <button
-                            type="button"
-                            className="btn btn-outline"
-                            onClick={stopPassportCamera}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-
-                      <input
-                        id="passport-photo-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePassportPhotoChange}
-                        style={{
-                          position: 'absolute',
-                          width: 1,
-                          height: 1,
-                          padding: 0,
-                          margin: -1,
-                          overflow: 'hidden',
-                          clip: 'rect(0, 0, 0, 0)',
-                          whiteSpace: 'nowrap',
-                          border: 0,
-                        }}
-                      />
-
-                      <label
-                        htmlFor="passport-photo-upload"
-                        className="btn btn-secondary"
-                        style={{ width: '100%', cursor: 'pointer' }}
-                      >
-                        Upload Passport Photo
-                      </label>
-
-                      {passportCameraError ? (
-                        <p
-                          style={{
-                            margin: '14px 0 0',
-                            color: '#b42318',
-                            fontSize: 16,
-                            lineHeight: 1.5,
-                            fontWeight: 800,
-                          }}
-                        >
-                          {passportCameraError}
-                        </p>
-                      ) : null}
-
-                      <p
-                        style={{
-                          margin: '16px 0 0',
-                          color: '#4d648c',
-                          fontSize: 18,
-                          lineHeight: 1.65,
-                          wordBreak: 'normal',
-                          overflowWrap: 'break-word',
-                        }}
-                      >
-                        Take a clear photo of your passport photo page.
-                        <br />
-                        Only the area inside the white rectangle will be saved.
                       </p>
                     </div>
                   </div>
@@ -2087,40 +1711,6 @@ export default function EditWorkerPassportPage() {
                   value={form.nextOfKinPhone}
                   onChange={handleChange}
                   placeholder="Next of kin phone number"
-                />
-              </div>
-            </div>
-
-            {/* Bank details */}
-            <div className="form-grid" style={{ marginTop: 18 }}>
-              <div className="field" style={{ gridColumn: '1 / -1' }}>
-                <label style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: '#62779a', textTransform: 'uppercase' }}>Bank details</label>
-              </div>
-              <div className="field">
-                <label>Bank name</label>
-                <input
-                  name="bankName"
-                  value={form.bankName}
-                  onChange={handleChange}
-                  placeholder="e.g. Barclays"
-                />
-              </div>
-              <div className="field">
-                <label>Account number</label>
-                <input
-                  name="bankAccountNumber"
-                  value={form.bankAccountNumber}
-                  onChange={handleChange}
-                  placeholder="12345678"
-                />
-              </div>
-              <div className="field">
-                <label>Sort code</label>
-                <input
-                  name="bankSortCode"
-                  value={form.bankSortCode}
-                  onChange={handleChange}
-                  placeholder="00-00-00"
                 />
               </div>
             </div>

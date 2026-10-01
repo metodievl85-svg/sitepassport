@@ -34,10 +34,6 @@ type Worker = {
   niNumber: string
   nextOfKinName: string
   nextOfKinPhone: string
-  bankName: string
-  bankAccountNumber: string
-  bankSortCode: string
-  passportPhoto: string
   rightToWorkPhoto: string
   createdAt: string
   qualifications: Qualification[]
@@ -165,10 +161,6 @@ function mapWorkerRow(worker: any, qualifications: any[] | null | undefined): Wo
     niNumber: worker.ni_number ?? '',
     nextOfKinName: worker.next_of_kin_name ?? '',
     nextOfKinPhone: worker.next_of_kin_phone ?? '',
-    bankName: worker.bank_name ?? '',
-    bankAccountNumber: worker.bank_account_number ?? '',
-    bankSortCode: worker.bank_sort_code ?? '',
-    passportPhoto: worker.passport_photo ?? '',
     rightToWorkPhoto: worker.right_to_work_photo ?? '',
     createdAt: worker.created_at ?? '',
     qualifications: Array.isArray(qualifications)
@@ -314,10 +306,6 @@ export default function WorkerPage() {
 
       const mappedPassport = mapWorkerRow(workerRow, qualificationsRows ?? [])
 
-      if (mappedPassport.passportPhoto && !mappedPassport.passportPhoto.startsWith('http')) {
-        const { data: ppSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mappedPassport.passportPhoto, 3600)
-        if (ppSigned?.signedUrl) mappedPassport.passportPhoto = ppSigned.signedUrl
-      }
       if (mappedPassport.rightToWorkPhoto && !mappedPassport.rightToWorkPhoto.startsWith('http')) {
         const { data: rtwSigned } = await supabase.storage.from('worker-photos').createSignedUrl(mappedPassport.rightToWorkPhoto, 3600)
         if (rtwSigned?.signedUrl) mappedPassport.rightToWorkPhoto = rtwSigned.signedUrl
@@ -1331,66 +1319,6 @@ export default function WorkerPage() {
                       </div>
                     ) : null}
                   </div>
-                </div>
-              ) : null}
-
-              {(passport.bankName || passport.bankAccountNumber || passport.bankSortCode) ? (
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 24,
-                    padding: 20,
-                    background: '#fbfdff',
-                    marginTop: 20,
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: 1.6, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
-                    Bank Details
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
-                    {passport.bankName ? (
-                      <div>
-                        <div className="meta-label">Bank Name</div>
-                        <div className="meta-value">{passport.bankName}</div>
-                      </div>
-                    ) : null}
-                    {passport.bankAccountNumber ? (
-                      <div>
-                        <div className="meta-label">Account Number</div>
-                        <div className="meta-value">{passport.bankAccountNumber}</div>
-                      </div>
-                    ) : null}
-                    {passport.bankSortCode ? (
-                      <div>
-                        <div className="meta-label">Sort Code</div>
-                        <div className="meta-value">{passport.bankSortCode}</div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-
-              {passport.passportPhoto ? (
-                <div
-                  style={{
-                    border: '1px solid #d7e0ec',
-                    borderRadius: 24,
-                    padding: 20,
-                    background: '#fbfdff',
-                    marginTop: 20,
-                  }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 900, letterSpacing: 1.6, textTransform: 'uppercase', color: '#62779a', marginBottom: 10 }}>
-                    Passport Photo
-                  </div>
-                  <a href={passport.passportPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block' }}>
-                    <img
-                      src={passport.passportPhoto}
-                      alt="Passport"
-                      style={{ width: '100%', maxWidth: 400, height: 'auto', borderRadius: 8, border: '1px solid #d7e0ec', display: 'block' }}
-                    />
-                  </a>
-                  <div style={{ marginTop: 6, fontSize: 12, color: '#9aaabf' }}>Click to view full size</div>
                 </div>
               ) : null}
 

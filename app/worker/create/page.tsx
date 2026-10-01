@@ -36,16 +36,12 @@ function createEmptyForm() {
     notes: '',
     photo: '',
     facePhoto: '',
-    passportPhoto: '',
     rightToWorkPhoto: '',
     niNumber: '',
     dob: '',
     fullAddress: '',
     nextOfKinName: '',
     nextOfKinPhone: '',
-    bankName: '',
-    bankAccountNumber: '',
-    bankSortCode: '',
     qualifications: [createEmptyQualification()] as Qualification[],
   }
 }
@@ -80,12 +76,10 @@ export default function CreateWorkerPassportPage() {
   const [aiScanning, setAiScanning] = useState(false)
   const [rtwShareCodeError, setRtwShareCodeError] = useState('')
   const [facePhotoFile, setFacePhotoFile] = useState<File | null>(null)
-  const [passportPhotoFile, setPassportPhotoFile] = useState<File | null>(null)
   const [rightToWorkPhotoFile, setRightToWorkPhotoFile] = useState<File | null>(null)
   const [qualPhotoFiles, setQualPhotoFiles] = useState<Record<string, File>>({})
   const photoPreviewUrlRef = useRef<string>('')
   const facePhotoPreviewUrlRef = useRef<string>('')
-  const passportPhotoPreviewUrlRef = useRef<string>('')
   const rightToWorkPhotoPreviewUrlRef = useRef<string>('')
   const qualPhotoPreviewUrlsRef = useRef<Record<string, string>>({})
 
@@ -117,7 +111,6 @@ export default function CreateWorkerPassportPage() {
     return () => {
       if (photoPreviewUrlRef.current) URL.revokeObjectURL(photoPreviewUrlRef.current)
       if (facePhotoPreviewUrlRef.current) URL.revokeObjectURL(facePhotoPreviewUrlRef.current)
-      if (passportPhotoPreviewUrlRef.current) URL.revokeObjectURL(passportPhotoPreviewUrlRef.current)
       if (rightToWorkPhotoPreviewUrlRef.current) URL.revokeObjectURL(rightToWorkPhotoPreviewUrlRef.current)
       Object.values(qualPhotoPreviewUrlsRef.current).forEach((url) => URL.revokeObjectURL(url))
     }
@@ -191,7 +184,6 @@ export default function CreateWorkerPassportPage() {
 
 }
   const handleFacePhotoChange = makePhotoHandler((f) => setFacePhotoFile(f), facePhotoPreviewUrlRef, 'facePhoto')
-  const handlePassportPhotoChange = makePhotoHandler((f) => setPassportPhotoFile(f), passportPhotoPreviewUrlRef, 'passportPhoto')
   const handleRightToWorkPhotoChange = makePhotoHandler((f) => setRightToWorkPhotoFile(f), rightToWorkPhotoPreviewUrlRef, 'rightToWorkPhoto')
 
   function handleQualPhotoChange(id: string, e: ChangeEvent<HTMLInputElement>) {
@@ -271,11 +263,9 @@ export default function CreateWorkerPassportPage() {
 
       const photoUrl = photoFile ? await uploadPhoto(photoFile, `${userId}/${ts()}.jpg`, 'worker-photos') ?? '' : ''
       const facePhotoUrl = facePhotoFile ? await uploadPhoto(facePhotoFile, `${userId}/face-${ts()}.jpg`, 'worker-photos') ?? '' : ''
-      const passportPhotoPath = passportPhotoFile ? await uploadPhotoGetPath(passportPhotoFile, `${userId}/passport-${ts()}.jpg`, 'worker-photos') ?? '' : ''
       const rightToWorkPhotoPath = rightToWorkPhotoFile ? await uploadPhotoGetPath(rightToWorkPhotoFile, `${userId}/rtw-${ts()}.jpg`, 'worker-photos') ?? '' : ''
 
       if (photoFile && !photoUrl) { alert('CSCS card photo upload failed.'); setSaving(false); return }
-      if (passportPhotoFile && !passportPhotoPath) { alert('Passport photo upload failed.'); setSaving(false); return }
       if (rightToWorkPhotoFile && !rightToWorkPhotoPath) { alert('Right to work photo upload failed.'); setSaving(false); return }
 
       const { data: insertedWorker, error: workerError } = await supabase
@@ -295,16 +285,12 @@ export default function CreateWorkerPassportPage() {
           notes: form.notes.trim(),
           photo: photoUrl,
           face_photo: facePhotoUrl,
-          passport_photo: passportPhotoPath,
           right_to_work_photo: rightToWorkPhotoPath,
           ni_number: form.niNumber.trim(),
           dob: form.dob || null,
           full_address: form.fullAddress.trim(),
           next_of_kin_name: form.nextOfKinName.trim(),
           next_of_kin_phone: form.nextOfKinPhone.trim(),
-          bank_name: form.bankName.trim(),
-          bank_account_number: form.bankAccountNumber.trim(),
-          bank_sort_code: form.bankSortCode.trim(),
         }])
         .select()
         .single()
@@ -422,24 +408,6 @@ export default function CreateWorkerPassportPage() {
               </div>
             </div>
 
-            {/* Passport photo */}
-            <div className="form-grid-1" style={{ marginBottom: 20 }}>
-              <div className="field">
-                <label>Passport photo</label>
-                <div className="photo-upload-box">
-                  {form.passportPhoto ? (
-                    <img src={form.passportPhoto} alt="Passport preview" style={{ width: 120, height: 160, objectFit: 'cover', borderRadius: 8, border: '1px solid #d7e0ec' }} />
-                  ) : (
-                    <div className="photo-preview-placeholder" style={{ fontSize: 16, padding: 16, textAlign: 'center', lineHeight: 1.4 }}>No passport photo</div>
-                  )}
-                  <div>
-                    <input type="file" accept="image/*" onChange={handlePassportPhotoChange} />
-                    <p style={{ margin: '12px 0 0', color: '#4d648c', fontSize: 16, lineHeight: 1.6 }}>Upload a photo of your passport photo page.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Right to work photo */}
             <div className="form-grid-1" style={{ marginBottom: 20 }}>
               <div className="field">
@@ -545,25 +513,6 @@ export default function CreateWorkerPassportPage() {
               <div className="field">
                 <label>Phone number</label>
                 <input name="nextOfKinPhone" value={form.nextOfKinPhone} onChange={handleChange} placeholder="Next of kin phone number" />
-              </div>
-            </div>
-
-            {/* Bank details */}
-            <div className="form-grid" style={{ marginTop: 18 }}>
-              <div className="field" style={{ gridColumn: '1 / -1' }}>
-                <label style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: '#62779a', textTransform: 'uppercase' }}>Bank details</label>
-              </div>
-              <div className="field">
-                <label>Bank name</label>
-                <input name="bankName" value={form.bankName} onChange={handleChange} placeholder="e.g. Barclays" />
-              </div>
-              <div className="field">
-                <label>Account number</label>
-                <input name="bankAccountNumber" value={form.bankAccountNumber} onChange={handleChange} placeholder="12345678" />
-              </div>
-              <div className="field">
-                <label>Sort code</label>
-                <input name="bankSortCode" value={form.bankSortCode} onChange={handleChange} placeholder="00-00-00" />
               </div>
             </div>
 

@@ -49,9 +49,6 @@ type AgencyWorker = {
   niNumber: string
   nextOfKinName: string
   nextOfKinPhone: string
-  bankName: string
-  bankAccountNumber: string
-  bankSortCode: string
   employmentStatus?: string | null
   dob: string
   fullAddress: string
@@ -388,7 +385,7 @@ export default function AgencyPage() {
 
       const { data: poolRows, error: poolError } = await supabase
         .from('agency_workers')
-        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, bank_name, bank_account_number, bank_sort_code, employment_status, dob, full_address, cscs_verification_status, cscs_verified_at, cscs_verified_by)')
+        .select('id, worker_id, added_at, status, notes, workers(id, full_name, photo, face_photo, cscs_expiry, right_to_work_expiry, user_id, role, company, email, phone, cscs_card, notes, medical_info, ni_number, next_of_kin_name, next_of_kin_phone, employment_status, dob, full_address, cscs_verification_status, cscs_verified_at, cscs_verified_by)')
         .eq('agency_id', currentAgencyId)
 
       if (poolError) {
@@ -446,9 +443,6 @@ export default function AgencyPage() {
             niNumber: (w.ni_number as string) ?? '',
             nextOfKinName: (w.next_of_kin_name as string) ?? '',
             nextOfKinPhone: (w.next_of_kin_phone as string) ?? '',
-            bankName: (w.bank_name as string) ?? '',
-            bankAccountNumber: (w.bank_account_number as string) ?? '',
-            bankSortCode: (w.bank_sort_code as string) ?? '',
             employmentStatus: (w.employment_status as string) ?? null,
             dob:            (w.dob as string) ?? '',
             fullAddress:    (w.full_address as string) ?? '',
@@ -833,9 +827,6 @@ export default function AgencyPage() {
       ['NI Number', w.niNumber],
       ['Next of Kin', w.nextOfKinName],
       ['Next of Kin Phone', w.nextOfKinPhone],
-      ['Bank Name', w.bankName],
-      ['Account Number', w.bankAccountNumber],
-      ['Sort Code', w.bankSortCode],
       ['CSCS Card', w.cscsCard],
       ['Notes', w.workerNotes],
       ['Medical Info', w.medicalInfo],
