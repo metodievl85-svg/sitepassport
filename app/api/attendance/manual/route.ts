@@ -61,6 +61,16 @@ export async function POST(req: NextRequest) {
     .single()
   if (!site) return NextResponse.json({ error: 'Site not found' }, { status: 404 })
 
+  const { data: ownedWorker } = await admin
+    .from('saved_workers')
+    .select('id')
+    .eq('company_id', user.id)
+    .eq('worker_id', worker_id)
+    .maybeSingle()
+  if (!ownedWorker) {
+    return NextResponse.json({ error: 'This worker is not on your dashboard.' }, { status: 403 })
+  }
+
   const rangeStart = getMidnightInLondon(date).toISOString()
   const rangeEnd = getMidnightInLondon(addDays(date, 1)).toISOString()
 
