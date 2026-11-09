@@ -70,14 +70,47 @@ export async function GET(req: NextRequest) {
   const siteId = searchParams.get('site_id')
   const mode = (searchParams.get('mode') || 'week') as 'week' | 'month'
   const dateParam = searchParams.get('date') || getLondonDateStr(new Date())
+  const asUser = searchParams.get('as_user')
 
   if (!siteId) return NextResponse.json({ error: 'site_id required' }, { status: 400 })
+
+  let companyId = user.id
+
+  if (asUser && asUser !== user.id) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(asUser)) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+    }
+
+    // Same check as organisations/sites/[userId]: requester is owner or admin in the same org as target
+    const { data: myMembership } = await admin
+      .from('organisation_members')
+      .select('organisation_id, role')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!myMembership || !['owner', 'admin'].includes(myMembership.role)) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+    }
+
+    const { data: targetMembership } = await admin
+      .from('organisation_members')
+      .select('organisation_id')
+      .eq('user_id', asUser)
+      .eq('organisation_id', myMembership.organisation_id)
+      .maybeSingle()
+
+    if (!targetMembership) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 })
+    }
+
+    companyId = asUser
+  }
 
   const { data: site } = await admin
     .from('company_sites')
     .select('id, site_name')
     .eq('id', siteId)
-    .eq('company_id', user.id)
+    .eq('company_id', companyId)
     .single()
   if (!site) return NextResponse.json({ error: 'Site not found' }, { status: 404 })
 
@@ -113,7 +146,7 @@ export async function GET(req: NextRequest) {
     admin
       .from('saved_workers')
       .select('worker_id')
-      .eq('company_id', user.id),
+      .eq('company_id', companyId),
   ])
 
   const workerIdSet = new Set<string>()
