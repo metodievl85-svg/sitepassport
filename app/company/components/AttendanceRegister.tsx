@@ -298,13 +298,19 @@ export default function AttendanceRegister({ siteId, siteName, viewAsUserId, rea
           const cell = worker.attendance[day]
           if (!cell?.present) return
           const x = margin + nameColW + tradeColW + i * dayColW + dayColW / 2
-          doc.setFont('helvetica', 'bold')
-          doc.setFontSize(10)
-          doc.setTextColor(22, 115, 66)
-          doc.text(cell.manually_added ? 'M' : 'X', x, y + 5.5, { align: 'center' })
-          doc.setFontSize(7)
-          doc.setFont('helvetica', 'normal')
-          doc.setTextColor(15, 15, 15)
+          // Green tick drawn as two strokes (Helvetica has no ✓ glyph); shrink for narrow month cells
+          const cy = y + rowH / 2
+          const s = Math.min(1, dayColW / 6)
+          const prevDrawColor = doc.getDrawColor()
+          const prevLineWidth = doc.getLineWidth()
+          doc.setDrawColor(22, 115, 66)
+          doc.setLineWidth(0.5 * s)
+          doc.setLineCap('round')
+          doc.line(x - 1.4 * s, cy + 0.1 * s, x - 0.4 * s, cy + 1.2 * s)
+          doc.line(x - 0.4 * s, cy + 1.2 * s, x + 1.6 * s, cy - 1.4 * s)
+          doc.setDrawColor(prevDrawColor)
+          doc.setLineWidth(prevLineWidth)
+          doc.setLineCap('butt')
         })
 
         y += rowH
