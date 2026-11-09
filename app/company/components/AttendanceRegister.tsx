@@ -29,6 +29,8 @@ type Props = {
   companyId: string
   siteId: string
   siteName: string
+  viewAsUserId?: string
+  readOnly?: boolean
 }
 
 function formatDayHeader(dateStr: string): string {
@@ -73,7 +75,7 @@ const todayBtnStyle: React.CSSProperties = {
   cursor: 'pointer',
 }
 
-export default function AttendanceRegister({ siteId }: Props) {
+export default function AttendanceRegister({ siteId, siteName, viewAsUserId, readOnly }: Props) {
   const [mode, setMode] = useState<'week' | 'month'>('week')
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date())
   const [data, setData] = useState<RegisterData | null>(null)
@@ -92,7 +94,7 @@ export default function AttendanceRegister({ siteId }: Props) {
       if (!session) return
       const dateStr = getCurrentDateStr()
       const res = await fetch(
-        `/api/attendance/register?site_id=${encodeURIComponent(siteId)}&mode=${mode}&date=${dateStr}`,
+        `/api/attendance/register?site_id=${encodeURIComponent(siteId)}&mode=${mode}&date=${dateStr}${viewAsUserId ? `&as_user=${encodeURIComponent(viewAsUserId)}` : ''}`,
         { headers: { Authorization: `Bearer ${session.access_token}` } }
       )
       if (!res.ok) return
@@ -108,7 +110,7 @@ export default function AttendanceRegister({ siteId }: Props) {
   useEffect(() => {
     void fetchData()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId, mode, currentDate])
+  }, [siteId, viewAsUserId, mode, currentDate])
 
   function navigate(direction: -1 | 1) {
     setCurrentDate(prev => {
@@ -232,7 +234,7 @@ export default function AttendanceRegister({ siteId }: Props) {
       doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(200, 215, 255)
-      doc.text(data.site_name, margin, 21)
+      doc.text(siteName || data.site_name, margin, 21)
       doc.text(
         `${mode === 'week' ? 'Week' : 'Month'}: ${formatPeriod(data.period_start, data.period_end)}`,
         margin,
@@ -320,7 +322,7 @@ export default function AttendanceRegister({ siteId }: Props) {
         { align: 'center' }
       )
 
-      const safeName = (data.site_name || 'site').replace(/\s+/g, '-')
+      const safeName = (siteName || data.site_name || 'site').replace(/\s+/g, '-')
       doc.save(`NekaID-Attendance-${safeName}-${data.period_start}.pdf`)
     } finally {
       setExportLoading(false)
@@ -528,6 +530,7 @@ export default function AttendanceRegister({ siteId }: Props) {
                         <td
                           key={day}
                           onClick={() => {
+                            if (readOnly) return
                             if (!isPresent) {
                               void handleMarkPresent(worker.worker_id, day)
                             } else if (isManual) {
@@ -535,7 +538,9 @@ export default function AttendanceRegister({ siteId }: Props) {
                             }
                           }}
                           title={
-                            !isPresent
+                            readOnly
+                              ? undefined
+                              : !isPresent
                               ? 'Click to mark present'
                               : isManual
                                 ? 'Click to remove'
@@ -545,7 +550,7 @@ export default function AttendanceRegister({ siteId }: Props) {
                             textAlign: 'center',
                             minWidth: 80,
                             padding: '8px 4px',
-                            cursor: !isPresent || isManual ? 'pointer' : 'default',
+                            cursor: !readOnly && (!isPresent || isManual) ? 'pointer' : 'default',
                             background: rowBg,
                             fontSize: 18,
                             borderBottom: '1px solid #f0f0f0',

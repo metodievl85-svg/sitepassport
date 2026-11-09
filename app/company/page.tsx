@@ -2690,6 +2690,17 @@ export default function CompanyPage() {
             siteName={companySite?.site_name ?? 'Site'}
           />
           )}
+          {/* company_sites comes back oldest first, the same site getOrCreateCompanySite picks */}
+          {viewingSite && viewingSiteData?.company_sites?.[0]?.id && (
+          <AttendanceRegister
+            key={viewingSite.userId}
+            companyId={viewingSite.userId}
+            siteId={viewingSiteData.company_sites[0].id}
+            siteName={viewingSiteData.company_sites[0].site_name || 'Site'}
+            viewAsUserId={viewingSite.userId}
+            readOnly
+          />
+          )}
         </div>
       </div>
 
