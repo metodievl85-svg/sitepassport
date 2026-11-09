@@ -57,7 +57,7 @@ export async function GET(
     const [savedWorkersRes, attendanceRes, sitesRes, profileRes] = await Promise.all([
       admin
         .from('saved_workers')
-        .select('*, workers(*)')
+        .select('*, workers(id, user_id, full_name, role, company, photo, face_photo, cscs_expiry, right_to_work_expiry, cscs_verification_status, cscs_card, cscs_verified_at, cscs_verified_by, rtw_status, rtw_share_code, rtw_share_code_submitted_at, rtw_verified_at, rtw_verified_by, dob)')
         .eq('company_id', targetUserId)
         .order('created_at', { ascending: false }),
       admin
