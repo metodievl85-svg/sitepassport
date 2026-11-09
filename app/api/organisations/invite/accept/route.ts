@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const { data: invite, error: inviteError } = await supabaseAdmin
       .from('organisation_invites')
-      .select('id, organisation_id, role, expires_at, accepted_at')
+      .select('id, organisation_id, email, role, expires_at, accepted_at')
       .eq('token', token)
       .maybeSingle()
 
@@ -46,6 +46,17 @@ export async function POST(request: NextRequest) {
 
     if (new Date(invite.expires_at) < new Date()) {
       return NextResponse.json({ error: 'Invite has expired.' }, { status: 400 })
+    }
+
+    const inviteEmail = (invite.email || '').trim().toLowerCase()
+    const userEmail = (user.email || '').trim().toLowerCase()
+    if (!inviteEmail || inviteEmail !== userEmail) {
+      return NextResponse.json({ error: 'This invite was sent to a different email address. Log in with the email the invite was sent to.' }, { status: 403 })
+    }
+
+    const { data: acceptorProfile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single()
+    if (acceptorProfile?.role !== 'company') {
+      return NextResponse.json({ error: 'Only a company account can accept this invite.' }, { status: 403 })
     }
 
     const { data: existing } = await supabaseAdmin
