@@ -348,7 +348,7 @@ export default function OrganisationPanel({ onViewSite }: Props) {
                     {removingId === member.id ? 'Removing...' : 'Remove'}
                   </button>
                 )}
-                {member.user_id !== myUserId && (
+                {false && member.user_id !== myUserId && ( // hidden until /head-office exists — View site is not read-only
                   <button
                     type="button"
                     onClick={() => onViewSite(member.user_id, member.full_name || member.email || member.user_id)}
