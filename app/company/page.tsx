@@ -467,7 +467,7 @@ export default function CompanyPage() {
   const [loadingWorkers, setLoadingWorkers] = useState(true)
   const [onSiteFilter, setOnSiteFilter] = useState(false)
   const [viewingSite, setViewingSite] = useState<{ userId: string; name: string } | null>(null)
-  const [viewingSiteData, setViewingSiteData] = useState<{ saved_workers: any[]; site_attendance: any[]; company_sites: any[] } | null>(null)
+  const [viewingSiteData, setViewingSiteData] = useState<{ saved_workers: SavedWorkerCard[]; site_attendance: any[]; company_sites: any[] } | null>(null)
   const [viewingSiteLoading, setViewingSiteLoading] = useState(false)
   const [billingSuccess, setBillingSuccess] = useState(false)
   const [companySite, setCompanySite] = useState<CompanySiteRow | null>(null)
@@ -897,35 +897,85 @@ export default function CompanyPage() {
 
   async function loadMemberSite(userId: string, name: string) {
     setViewingSiteLoading(true)
-    setViewingSite({ userId, name })
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
       const res = await fetch(`/api/organisations/sites/${userId}`, {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(data.error || 'Could not load this site.')
+        return
+      }
+
+      // Latest attendance row per worker (rows are newest first), same as the normal load
+      const attendanceByWorker = new Map<string, { status: 'IN' | 'OUT'; created_at: string }>()
+      for (const attendance of (data.site_attendance || []) as SiteAttendanceRow[]) {
+        if (!attendanceByWorker.has(attendance.worker_id)) {
+          attendanceByWorker.set(attendance.worker_id, {
+            status: attendance.status,
+            created_at: attendance.created_at,
+          })
+        }
+      }
+
+      // The route does not return dob, rtw_share_code or induction data, so those stay empty
+      const viewedWorkers: SavedWorkerCard[] = (data.saved_workers || [])
+        .filter((item: any) => item.workers)
+        .map((item: any) => {
+          const worker = item.workers
+          const attendance = attendanceByWorker.get(item.worker_id)
+
+          return {
+            savedId: item.id,
+            savedAt: item.created_at ?? '',
+            workerId: item.worker_id,
+            userId: worker.user_id ?? '',
+            fullName: worker.full_name ?? '',
+            role: worker.role ?? '',
+            company: worker.company ?? '',
+            photo: worker.photo ?? '',
+            facePhoto: worker.face_photo ?? '',
+            cscsExpiry: worker.cscs_expiry ?? '',
+            rightToWorkExpiry: worker.right_to_work_expiry ?? '',
+            cscsVerificationStatus: worker.cscs_verification_status ?? 'self_declared',
+            cscsCard: worker.cscs_card ?? '',
+            cscsVerifiedAt: worker.cscs_verified_at ?? '',
+            cscsVerifiedBy: worker.cscs_verified_by ?? '',
+            rtwStatus: worker.rtw_status ?? '',
+            rtwShareCode: '',
+            rtwShareCodeSubmittedAt: worker.rtw_share_code_submitted_at ?? '',
+            rtwVerifiedAt: worker.rtw_verified_at ?? '',
+            rtwVerifiedBy: worker.rtw_verified_by ?? '',
+            dob: '',
+            siteStatus: attendance?.status ?? 'OUT',
+            lastAttendanceAt: attendance?.created_at ?? '',
+            inductionStatus: 'none',
+            inductionRequestId: '',
+          }
+        })
+
+      for (const w of viewedWorkers) {
+        if (w.photo && !w.photo.startsWith('http')) {
+          const { data: photoSigned } = await supabase.storage.from('worker-photos').createSignedUrl(w.photo, 3600)
+          if (photoSigned?.signedUrl) w.photo = photoSigned.signedUrl
+        }
+        if (w.facePhoto && !w.facePhoto.startsWith('http')) {
+          const { data: faceSigned } = await supabase.storage.from('worker-photos').createSignedUrl(w.facePhoto, 3600)
+          if (faceSigned?.signedUrl) w.facePhoto = faceSigned.signedUrl
+        }
+      }
+
       setViewingSiteData({
-        saved_workers: (data.saved_workers || []).map((item: any) => ({
-          workerId: item.worker_id,
-          fullName: item.workers?.full_name || '',
-          workerRole: item.workers?.role || '',
-          workerCompany: item.workers?.company || '',
-          cscsCard: item.workers?.cscs_card || '',
-          cscsExpiry: item.workers?.cscs_expiry || null,
-          rightToWorkExpiry: item.workers?.right_to_work_expiry || null,
-          photo: item.workers?.photo || null,
-          siteStatus: null,
-          lastSeen: null,
-          cscsVerificationStatus: item.workers?.cscs_verification_status || 'self_declared',
-          inductionStatus: null,
-          savedWorkerId: item.id,
-        })),
+        saved_workers: viewedWorkers,
         site_attendance: data.site_attendance || [],
         company_sites: data.company_sites || [],
       })
+      setViewingSite({ userId, name })
     } catch (err) {
       console.error('loadMemberSite error:', err)
+      alert('Could not load this site.')
     } finally {
       setViewingSiteLoading(false)
     }
