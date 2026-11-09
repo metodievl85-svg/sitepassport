@@ -1597,7 +1597,7 @@ export default function CompanyPage() {
                       </div>
 
                       <div className="visitor-actions">
-                        {visitor.status === 'IN' ? (
+                        {viewingSite ? null : visitor.status === 'IN' ? (
                           <button
                             type="button"
                             onClick={() => void handleVisitorSignOut(visitor.id)}
@@ -1986,9 +1986,9 @@ export default function CompanyPage() {
             </button>
           </div>
         )}
-        <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => setAddOperativeOpen(true)} onExportReport={() => void exportComplianceReport()} onToolboxTalk={() => setShowToolboxModal(true)} />
+        <CompanyHero email={email} handleLogout={handleLogout} onAddOperative={() => { if (!viewingSite) setAddOperativeOpen(true) }} onExportReport={() => { if (!viewingSite) void exportComplianceReport() }} onToolboxTalk={() => { if (!viewingSite) setShowToolboxModal(true) }} />
 
-        {(() => {
+        {!viewingSite && (() => {
           const now = new Date()
 
           type UrgentItem = {
@@ -2195,6 +2195,7 @@ export default function CompanyPage() {
           onExpiredClick={() => setFilter('expired')}
           onOnSiteClick={() => setOnSiteFilter(true)}
         />
+        {!viewingSite && (
         <CompanySettings
           companyName={companyName}
           companyNameDraft={companyNameDraft}
@@ -2209,6 +2210,7 @@ export default function CompanyPage() {
           handleSaveInductionLink={handleSaveInductionLink}
           handleCopySiteLink={handleCopySiteLink}
         />
+        )}
 
         <section className="card">
           <div
@@ -2236,13 +2238,17 @@ export default function CompanyPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {!viewingSite && (
               <button type="button" className="btn btn-secondary" onClick={() => void loadCompanyDashboard()}>
                 Refresh
               </button>
+              )}
 
+              {!viewingSite && (
               <Link href="/scan" className="btn btn-secondary">
                 Scan QR
               </Link>
+              )}
             </div>
           </div>
 
@@ -2341,9 +2347,11 @@ export default function CompanyPage() {
           ) : displayWorkers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, border: '2px dashed #d7e1ef', borderRadius: 20 }}>
               <h3>No operatives yet</h3>
+              {!viewingSite && (
               <Link href="/scan" className="btn btn-primary">
                 Scan first
               </Link>
+              )}
             </div>
           ) : displayedWorkers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 30 }}>No results</div>
@@ -2432,7 +2440,7 @@ export default function CompanyPage() {
                           >
                             {cscsBadge.text}
                           </span>
-                          {worker.cscsCard && worker.cscsVerificationStatus !== 'verified' && (
+                          {!viewingSite && worker.cscsCard && worker.cscsVerificationStatus !== 'verified' && (
                             <button
                               onClick={() => setVerifyWorker({ id: worker.workerId, name: worker.fullName, cscsCard: worker.cscsCard })}
                               style={{ background: '#e8edf7', color: '#16307f', border: 'none', borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -2453,7 +2461,7 @@ export default function CompanyPage() {
                           >
                             {rtwPill.text}
                           </span>
-                          {worker.rtwStatus !== 'verified' && (
+                          {!viewingSite && worker.rtwStatus !== 'verified' && (
                             <button
                               onClick={() => setVerifyRtwWorker(worker)}
                               style={{ background: '#e8edf7', color: '#16307f', border: 'none', borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}
@@ -2530,7 +2538,7 @@ export default function CompanyPage() {
                           View
                         </Link>
 
-                        {worker.inductionStatus === 'none' ? (
+                        {viewingSite ? null : worker.inductionStatus === 'none' ? (
                           <button
                             type="button"
                             onClick={() => void handleSendInduction(worker.workerId)}
@@ -2553,7 +2561,7 @@ export default function CompanyPage() {
                           </button>
                         )}
 
-                        {!isOnSite && companySite?.id && (
+                        {!viewingSite && !isOnSite && companySite?.id && (
                           <button
                             onClick={() => void handleManualSignIn(worker.workerId, companySite.id!)}
                             style={{
@@ -2572,6 +2580,7 @@ export default function CompanyPage() {
                           </button>
                         )}
 
+                        {!viewingSite && (
                         <button
                           onClick={() => handleRemoveSavedWorker(worker.savedId)}
                           disabled={removingId === worker.savedId}
@@ -2592,6 +2601,7 @@ export default function CompanyPage() {
                         >
                           {removingId === worker.savedId ? 'Removing...' : 'Remove'}
                         </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2623,11 +2633,13 @@ export default function CompanyPage() {
         )}
 
         <div id="attendance-register" style={{ marginTop: '2rem' }}>
+          {!viewingSite && (
           <AttendanceRegister
             companyId={companyId}
             siteId={companySite?.id ?? ''}
             siteName={companySite?.site_name ?? 'Site'}
           />
+          )}
         </div>
       </div>
 
